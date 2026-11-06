@@ -1,0 +1,16 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+const services = [
+["Paver Block Installation","Installation of paver blocks for suitable outdoor surfaces.","/services/paver-block-installation/"],
+["Road Construction & Paving","Paving and related road construction work for project sites.","/services/road-construction/"],
+["Footpath Construction","Footpath and pedestrian-surface construction.","/services/footpath-construction/"],
+["Parking Area Construction","Paving and construction for parking areas.","/services/parking-area-construction/"],
+["Industrial Flooring","Industrial surface and flooring-related civil work.","/services/industrial-flooring/"],
+["Government & Private Contracts","Civil and paving work for government and private-sector projects.","/services/contracts/"]
+];
+---
+<SiteLayout title="Paving & Civil Construction Services in Pakistan | Paver Blocks" description="Explore paver block installation, road paving, footpath construction, parking areas, industrial flooring and contract services." canonical="https://paverblocks.com.pk/services/">
+  <section class="page-hero"><p class="eyebrow">What We Do</p><h1>Paving and civil construction services.</h1><p>Discuss your project requirements, site conditions and scope of work with Paver Blocks.</p></section>
+  <section class="content-section soft-section"><div class="card-grid">{services.map(([name,desc,url])=><article class="info-card"><p class="eyebrow">Paver Blocks / Service</p><h3>{name}</h3><p>{desc}</p><a class="button" href={url}>Explore service</a></article>)}</div></section>
+  <section class="content-section"><h2>Need help defining the scope?</h2><p>Share your project location, intended use and approximate area so we can understand your requirements.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Request a Quote</a><a class="button" href="https://wa.me/923162753210">WhatsApp Us</a></div></section>
+</SiteLayout>

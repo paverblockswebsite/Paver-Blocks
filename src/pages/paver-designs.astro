@@ -1,0 +1,9 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+const designs = ["I-Shape","Zigzag","Rectangular","Uni-Paver","Other Designs"];
+---
+<SiteLayout title="Paver Block Designs & Options | Paver Blocks Pakistan" description="Explore I-shape, zigzag, rectangular, uni-paver and other paver design options. Product sourcing is coordinated through third-party suppliers." canonical="https://paverblocks.com.pk/paver-designs/">
+  <section class="page-hero"><p class="eyebrow">Paver Options</p><h1>Explore paver designs.</h1><p>We help clients identify suitable paver designs and connect with third-party suppliers when product sourcing is required.</p></section>
+  <section class="content-section"><div class="card-grid">{designs.map((design,index)=><article class="info-card"><p class="eyebrow">Design option 0{index+1}</p><h3>{design}</h3><p>Ask us about suitability, available sizes, thicknesses and colours. Availability depends on independent suppliers.</p></article>)}</div></section>
+  <section class="content-section soft-section"><h2>Not sure which design is suitable?</h2><p>Tell us about the intended use and site conditions. We can discuss options and supplier sourcing where needed.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Discuss Your Requirements</a></div></section>
+</SiteLayout>

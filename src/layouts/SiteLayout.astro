@@ -5,6 +5,8 @@ const {
   canonical = "https://paverblocks.com.pk/",
   ogImage = "/images/og-default.svg"
 } = Astro.props;
+const deploymentBranch = (import.meta as any).env?.CF_PAGES_BRANCH || "main";
+const isPreviewDeployment = deploymentBranch !== "main";
 const nav = [
   { label: "About", href: "/about/" },
   { label: "Services", href: "/services/" },
@@ -20,7 +22,7 @@ const nav = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#172B45" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="robots" content={isPreviewDeployment ? "noindex, nofollow" : "index, follow, max-image-preview:large"} />
     <link rel="canonical" href={canonical} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Paver Blocks" />

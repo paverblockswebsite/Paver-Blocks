@@ -1,0 +1,55 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+const faqs = [
+  {
+    question: "What services does Paver Blocks provide?",
+    answer: "Our listed services include paver block installation, road construction and paving, footpath construction, parking area construction, industrial flooring-related civil work, and government or private contract enquiries. The exact scope is discussed for each project."
+  },
+  {
+    question: "Does Paver Blocks manufacture paver blocks?",
+    answer: "No. Paver Blocks focuses on installation and paving-related civil work. When product sourcing is needed, we can help clients identify suitable options from independent third-party manufacturers and suppliers."
+  },
+  {
+    question: "Where is Paver Blocks based, and which areas do you serve?",
+    answer: "Paver Blocks is based in Hyderabad, Sindh, Pakistan, and welcomes project enquiries from across Pakistan. Availability and project suitability are discussed case by case."
+  },
+  {
+    question: "What information should I share to request a quotation?",
+    answer: "Please share your project location, type of work, approximate area or dimensions, intended use, existing site conditions and any available drawings or scope documents. These details help us understand the enquiry."
+  },
+  {
+    question: "Can I request a quotation for a government or private project?",
+    answer: "Yes. You can contact us about government and private-sector paving or civil-work opportunities. Please share the relevant scope, location and tender or procurement documents if applicable."
+  },
+  {
+    question: "Where can I see completed project photographs?",
+    answer: "Our project portfolio will show project details and photographs as verified material is provided and approved for publication. We do not present stock images or unverified examples as completed Paver Blocks projects."
+  }
+];
+---
+<SiteLayout title="Paving & Construction FAQs | Paver Blocks Pakistan" description="Answers to common questions about Paver Blocks services, paver sourcing, service areas, quotation enquiries and project information." canonical="https://paverblocks.com.pk/faqs/">
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faqs.map((faq) => ({
+        "@type": "Question",
+        "name": faq.question,
+        "acceptedAnswer": { "@type": "Answer", "text": faq.answer }
+      }))
+    })} />
+  </Fragment>
+  <section class="page-hero"><p class="eyebrow">Helpful Information</p><h1>Frequently asked questions.</h1><p>Clear answers about our services, paver sourcing, project enquiries and how to get started.</p></section>
+  <section class="content-section">
+    <div class="faq-list">
+      {faqs.map((faq, index) => <details class="faq-item" open={index === 0}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}
+    </div>
+  </section>
+  <section class="content-section soft-section"><h2>Have another question?</h2><p>Contact us directly and tell us what you need to know.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Discuss a Project</a><a class="button" href="/contact/">Contact Us</a></div></section>
+</SiteLayout>
+<style>
+.faq-list{max-width:900px;display:grid;gap:12px}
+.faq-item{padding:20px 22px;border:1px solid #e0e5eb;border-radius:9px;background:#fff}
+.faq-item summary{cursor:pointer;color:#172B45;font-size:17px;font-weight:800}
+.faq-item p{margin:12px 0 0;color:#667386}
+</style>

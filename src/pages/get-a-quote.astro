@@ -1,7 +1,19 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
+const whatsappMessage = encodeURIComponent("Hello Paver Blocks, I would like to discuss a project.\n\nName:\nLocation:\nType of work:\nApproximate area:\nProject details:");
 ---
-<SiteLayout title="Request a Paving & Construction Quote | Paver Blocks" description="Start a quotation enquiry for paver block installation, road paving, footpaths, parking areas and related civil construction in Pakistan." canonical="https://paverblocks.com.pk/get-a-quote/">
-  <section class="page-hero"><p class="eyebrow">Request a Quote</p><h1>Tell us about your project.</h1><p>Share the basic project details with us. We will discuss the requirements and next steps with you.</p></section>
-  <section class="content-section"><div class="info-card"><h2>Start your enquiry</h2><p>For now, contact us directly by WhatsApp, phone or email. A secure website enquiry form that saves submissions to the private admin panel will be added in the backend phase.</p><div class="actions"><a class="button button-primary" href="https://wa.me/923162753210?text=Hello%20Paver%20Blocks%2C%20I%20would%20like%20to%20discuss%20a%20project.">Start on WhatsApp</a><a class="button" href="tel:+923162753210">Call Us</a><a class="button" href="mailto:hellopaverblocks@gmail.com">Email Us</a></div></div></section>
+<SiteLayout title="Request a Paving & Construction Quote | Paver Blocks" description="Discuss your paving or civil construction project with Paver Blocks. Share the location, work type and approximate area to begin a quotation enquiry." canonical="https://paverblocks.com.pk/get-a-quote/">
+  <section class="page-hero"><p class="eyebrow">Request a Quote</p><h1>Tell us about your project.</h1><p>Share a few basic details so we can understand the location, type of work and approximate scope.</p></section>
+  <section class="content-section">
+    <div class="quote-grid">
+      <article class="info-card"><p class="eyebrow">Recommended</p><h2>Start on WhatsApp</h2><p>Use the prepared message to tell us about your project. You can edit it before sending and attach site photographs or drawings if available.</p><a class="button button-primary" href={`https://wa.me/923162753210?text=${whatsappMessage}`} target="_blank" rel="noopener noreferrer">Prepare WhatsApp Enquiry</a></article>
+      <article class="info-card"><p class="eyebrow">Prefer another way?</p><h2>Call or email</h2><p>Contact us directly if you would rather explain the project by phone or send details by email.</p><div class="actions"><a class="button" href="tel:+923162753210">Call +92 316 2753210</a><a class="button" href="mailto:hellopaverblocks@gmail.com?subject=Project%20Quotation%20Enquiry">Email Us</a></div></article>
+    </div>
+    <div class="quote-note"><h2>Helpful details to include</h2><ul><li>Your name and project location</li><li>Type of work required</li><li>Approximate area or dimensions</li><li>Intended use and existing site condition</li><li>Any drawings, specifications or site photographs you can share</li></ul></div>
+    <p class="notice">The secure website quotation form and private enquiry tracking will be introduced with the admin and database system. This page currently starts enquiries through WhatsApp, phone or email; it does not claim to save submissions on the website.</p>
+  </section>
 </SiteLayout>
+<style>
+.quote-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.quote-grid .info-card{padding:30px}.quote-grid h2,.quote-note h2{font-size:25px}.quote-note{margin-top:28px;padding:26px;border-radius:10px;background:#f4f6f8}.quote-note ul{padding-left:22px;color:#667386}.quote-note li{padding:4px 0}.notice{margin-top:24px;padding:14px 18px;border-left:3px solid #F5C542;background:#fbf8ee;font-size:14px}
+@media(max-width:700px){.quote-grid{grid-template-columns:1fr}}
+</style>

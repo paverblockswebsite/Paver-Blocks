@@ -1,0 +1,10 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+const { title, description, canonical, intro, approach, uses } = Astro.props;
+---
+<SiteLayout title={title + " | Paver Blocks Pakistan"} description={description} canonical={canonical}>
+  <section class="page-hero"><p class="eyebrow">Paver Blocks / Services</p><h1>{title}.</h1><p>{description}</p></section>
+  <section class="content-section"><p class="eyebrow">Service overview</p><h2>Work planned around your site and requirements.</h2><p>{intro}</p><p>{approach}</p></section>
+  <section class="content-section soft-section"><p class="eyebrow">Typical applications</p><div class="card-grid">{uses.map((use) => <article class="info-card"><h3>{use}</h3><p>Discuss the details and suitability of this work for your particular project.</p></article>)}</div></section>
+  <section class="content-section"><h2>Discuss your requirements</h2><p>Share the project location, intended use and approximate area to start a conversation.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Request a Quote</a><a class="button" href="https://wa.me/923162753210">WhatsApp Us</a></div></section>
+</SiteLayout>

@@ -1,0 +1,148 @@
+---
+const services = [
+  "Paver Block Installation",
+  "Road Construction & Paving",
+  "Footpath Construction",
+  "Parking Area Construction",
+  "Industrial Flooring",
+  "Government & Private Contracts"
+];
+
+const products = ["I-Shape", "Zigzag", "Rectangular", "Uni-Paver", "Other Designs"];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Paver Blocks provides professional paver block installation, road paving and civil construction services across Pakistan." />
+    <meta name="theme-color" content="#172B45" />
+    <title>Paver Blocks | Paving & Civil Construction in Pakistan</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Paver Blocks home">
+        <span class="brand-mark">PB</span>
+        <span class="brand-name">PAVER <strong>BLOCKS</strong></span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="#services">Services</a>
+        <a href="#products">Paver Designs</a>
+        <a href="#about">About</a>
+        <a href="#contact" class="nav-cta">Get a Quote</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="eyebrow">Mithal Shahan · Civil Contractor</p>
+        <h1>Building Strong Foundations.<br /><span>Creating Lasting Roads.</span></h1>
+        <p class="hero-copy">Professional paver block installation, road paving and civil construction services, serving projects across Pakistan from Hyderabad, Sindh.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="https://wa.me/923162753210">Discuss Your Project</a>
+          <a class="button button-outline" href="#services">Explore Services</a>
+        </div>
+        <p class="experience"><strong>40+ years</strong> of personal experience · Working since 1986</p>
+      </section>
+
+      <section class="intro section" id="about">
+        <p class="eyebrow">About Paver Blocks</p>
+        <h2>Practical paving experience. Work built to last.</h2>
+        <p>Paver Blocks is the public brand of Mithal Shahan, Civil Contractor. Our primary focus is professional paver installation and paving-related civil works. We can also help clients source suitable paver blocks from third-party manufacturers and suppliers.</p>
+      </section>
+
+      <section class="section section-muted" id="services">
+        <div class="section-heading">
+          <p class="eyebrow">What We Do</p>
+          <h2>Construction and paving services</h2>
+        </div>
+        <div class="card-grid">
+          {services.map((service) => <article class="info-card"><span class="card-number">PB / SERVICE</span><h3>{service}</h3><p>Talk to us about your project requirements, site conditions and scope of work.</p></article>)}
+        </div>
+      </section>
+
+      <section class="section" id="products">
+        <div class="section-heading">
+          <p class="eyebrow">Paver Options</p>
+          <h2>Explore paver designs</h2>
+          <p>We help clients identify suitable designs and connect with third-party suppliers when product sourcing is required.</p>
+        </div>
+        <div class="product-list">{products.map((product) => <span>{product}</span>)}</div>
+      </section>
+
+      <section class="section section-dark">
+        <p class="eyebrow">Experience Since 1986</p>
+        <h2>Personal experience you can build on.</h2>
+        <p>Every project has its own requirements. Share your location, intended use and approximate area so we can understand the work involved.</p>
+      </section>
+
+      <section class="section contact" id="contact">
+        <p class="eyebrow">Start a Conversation</p>
+        <h2>Tell us about your project.</h2>
+        <p>Based in Hyderabad, Sindh · Serving clients across Pakistan</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="https://wa.me/923162753210">WhatsApp: +92 316 2753210</a>
+          <a class="button button-outline" href="tel:+923162753210">Call Us</a>
+        </div>
+        <a class="email-link" href="mailto:hellopaverblocks@gmail.com">hellopaverblocks@gmail.com</a>
+      </section>
+    </main>
+
+    <footer>
+      <p><strong>Paver Blocks</strong> · By Mithal Shahan — Civil Contractor</p>
+      <p>Building Strong Foundations. Creating Lasting Roads.</p>
+    </footer>
+  </body>
+</html>
+
+<style>
+  :root { color-scheme: light; --navy: #172B45; --yellow: #F5C542; --ink: #172B45; --muted: #667386; --paper: #fff; --soft: #f4f6f8; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: var(--paper); line-height: 1.6; }
+  a { color: inherit; text-decoration: none; }
+  .site-header { min-height: 82px; padding: 16px max(5vw, 24px); display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid #e8ebef; }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 900; letter-spacing: -.04em; }
+  .brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; color: var(--yellow); background: var(--navy); font-size: 15px; }
+  .brand-name { font-size: 19px; line-height: 1; }
+  .brand-name strong { display: block; margin-top: 4px; padding: 3px 7px; color: var(--navy); background: var(--yellow); border-radius: 4px; }
+  nav { display: flex; align-items: center; gap: 26px; font-size: 14px; font-weight: 650; }
+  nav a:hover, .email-link:hover { color: #a87900; }
+  .nav-cta { padding: 10px 16px; color: var(--navy); background: var(--yellow); border-radius: 6px; }
+  .hero { padding: 112px max(8vw, 24px) 100px; color: white; background: radial-gradient(ellipse at 80% 15%, #294969 0, transparent 42%), var(--navy); }
+  .eyebrow { margin: 0 0 14px; color: #b18408; font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+  .hero .eyebrow, .section-dark .eyebrow { color: var(--yellow); }
+  h1, h2, h3, p { margin-top: 0; }
+  h1 { max-width: 900px; margin-bottom: 22px; font-size: clamp(42px, 6vw, 76px); line-height: 1.06; letter-spacing: -.055em; }
+  h1 span { color: var(--yellow); }
+  .hero-copy { max-width: 660px; color: #dce4ed; font-size: 18px; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0; }
+  .button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 12px 19px; border: 1px solid transparent; border-radius: 6px; font-weight: 750; }
+  .button-primary { color: var(--navy); background: var(--yellow); }
+  .button-outline { color: white; border-color: #8a9aab; }
+  .experience { margin: 26px 0 0; color: #dce4ed; font-size: 14px; }
+  .experience strong { color: var(--yellow); }
+  .section { padding: 84px max(8vw, 24px); }
+  .section h2 { max-width: 760px; margin-bottom: 18px; font-size: clamp(30px, 4vw, 48px); line-height: 1.12; letter-spacing: -.04em; }
+  .intro > p:last-child, .section-heading > p:last-child, .contact > p:not(.eyebrow) { max-width: 760px; color: var(--muted); font-size: 17px; }
+  .section-muted { background: var(--soft); }
+  .section-heading { margin-bottom: 32px; }
+  .card-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .info-card { padding: 25px; border: 1px solid #e0e5eb; border-radius: 9px; background: white; }
+  .card-number { color: #9b7410; font-size: 10px; font-weight: 800; letter-spacing: .13em; }
+  .info-card h3 { margin: 16px 0 8px; font-size: 20px; }
+  .info-card p { margin-bottom: 0; color: var(--muted); font-size: 14px; }
+  .product-list { display: flex; flex-wrap: wrap; gap: 12px; }
+  .product-list span { padding: 12px 18px; border: 1px solid #dfe5ec; border-radius: 6px; font-weight: 700; }
+  .section-dark { color: white; background: var(--navy); }
+  .section-dark p:not(.eyebrow) { max-width: 650px; color: #dce4ed; }
+  .contact { text-align: center; }
+  .contact h2, .contact > p { margin-left: auto; margin-right: auto; }
+  .contact .hero-actions { justify-content: center; }
+  .contact .button-outline { color: var(--navy); border-color: #9aa6b4; }
+  .email-link { display: inline-block; margin-top: 8px; font-weight: 700; }
+  footer { padding: 28px 24px; color: #dce4ed; background: #101e30; text-align: center; font-size: 13px; }
+  footer p { margin: 4px 0; }
+  @media (max-width: 760px) { .site-header { align-items: flex-start; flex-direction: column; } nav { width: 100%; flex-wrap: wrap; gap: 14px 18px; font-size: 13px; } .hero { padding-top: 78px; padding-bottom: 72px; } .section { padding-top: 64px; padding-bottom: 64px; } .card-grid { grid-template-columns: 1fr; } }
+</style>

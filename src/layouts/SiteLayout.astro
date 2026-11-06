@@ -1,0 +1,77 @@
+---
+const {
+  title = "Paver Blocks | Paving & Civil Construction in Pakistan",
+  description = "Professional paver block installation, road paving and civil construction services across Pakistan. Based in Hyderabad, Sindh.",
+  canonical = "https://paverblocks.com.pk/",
+  ogImage = "/images/og-default.svg"
+} = Astro.props;
+const nav = [
+  { label: "About", href: "/about/" },
+  { label: "Services", href: "/services/" },
+  { label: "Paver Designs", href: "/paver-designs/" },
+  { label: "Projects", href: "/projects/" },
+  { label: "Contact", href: "/contact/" }
+];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#172B45" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Paver Blocks" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={new URL(ogImage, Astro.site).toString()} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <slot name="head" />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "GeneralContractor",
+      "name": "Paver Blocks",
+      "description": "Paver block installation, road paving and related civil construction services.",
+      "url": "https://paverblocks.com.pk/",
+      "email": "hellopaverblocks@gmail.com",
+      "telephone": "+923162753210",
+      "founder": { "@type": "Person", "name": "Mithal Shahan" },
+      "areaServed": { "@type": "Country", "name": "Pakistan" },
+      "address": { "@type": "PostalAddress", "addressLocality": "Hyderabad", "addressRegion": "Sindh", "addressCountry": "PK" }
+    })} />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Paver Blocks home">
+        <span class="brand-mark">PB</span>
+        <span class="brand-name">PAVER <strong>BLOCKS</strong></span>
+      </a>
+      <nav aria-label="Main navigation">
+        {nav.map((item) => <a href={item.href}>{item.label}</a>)}
+        <a href="/get-a-quote/" class="nav-cta">Get a Quote</a>
+      </nav>
+    </header>
+    <main><slot /></main>
+    <footer class="site-footer">
+      <div><strong>Paver Blocks</strong><p>By Mithal Shahan — Civil Contractor</p><p>Building Strong Foundations. Creating Lasting Roads.</p></div>
+      <div><a href="/services/">Services</a><a href="/projects/">Projects</a><a href="/paver-designs/">Paver Designs</a><a href="/contact/">Contact</a></div>
+      <div><a href="tel:+923162753210">+92 316 2753210</a><a href="mailto:hellopaverblocks@gmail.com">hellopaverblocks@gmail.com</a><span>Hyderabad, Sindh · Serving Pakistan</span></div>
+    </footer>
+  </body>
+</html>
+<style is:global>
+  :root{color-scheme:light;--navy:#172B45;--yellow:#F5C542;--ink:#172B45;--muted:#667386;--soft:#F4F6F8}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:#fff;line-height:1.65}a{color:inherit;text-decoration:none}
+  .site-header{min-height:82px;padding:14px max(5vw,24px);display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:1px solid #e8ebef;background:#fff}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:-.04em}.brand-mark{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;color:var(--yellow);background:var(--navy);font-size:15px}.brand-name{font-size:19px;line-height:1}.brand-name strong{display:block;margin-top:4px;padding:3px 7px;color:var(--navy);background:var(--yellow);border-radius:4px}
+  nav{display:flex;align-items:center;gap:22px;font-size:14px;font-weight:700}nav a:hover,.site-footer a:hover{color:#b18408}.nav-cta,.button-primary{padding:10px 16px;color:var(--navy);background:var(--yellow);border-radius:6px}
+  .page-hero{padding:76px max(8vw,24px);color:#fff;background:radial-gradient(ellipse at 85% 10%,#294969 0,transparent 42%),var(--navy)}.eyebrow{margin:0 0 14px;color:#b18408;font-size:12px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}.page-hero .eyebrow{color:var(--yellow)}h1,h2,h3,p{margin-top:0}h1{max-width:900px;margin-bottom:18px;font-size:clamp(40px,5.6vw,68px);line-height:1.08;letter-spacing:-.05em}.page-hero p:last-child{max-width:760px;color:#dce4ed;font-size:18px}
+  .content-section{padding:72px max(8vw,24px)}.content-section h2{font-size:clamp(28px,3.5vw,44px);line-height:1.15;letter-spacing:-.04em}.content-section p{max-width:800px;color:var(--muted)}.soft-section{background:var(--soft)}.card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.info-card{padding:24px;border:1px solid #e0e5eb;border-radius:10px;background:#fff}.info-card h3{margin:12px 0 8px}.info-card p{margin:0;font-size:14px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:11px 18px;border:1px solid #aab5c1;border-radius:6px;font-weight:750}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+  .site-footer{display:grid;grid-template-columns:2fr 1fr 1.5fr;gap:30px;padding:36px max(5vw,24px);color:#dce4ed;background:#101e30;font-size:13px}.site-footer p{margin:4px 0}.site-footer>div{display:flex;flex-direction:column;gap:7px}
+  @media(max-width:760px){.site-header{align-items:flex-start;flex-direction:column}nav{width:100%;flex-wrap:wrap;gap:12px 16px;font-size:13px}.page-hero{padding-top:58px;padding-bottom:58px}.content-section{padding-top:54px;padding-bottom:54px}.card-grid{grid-template-columns:1fr}.site-footer{grid-template-columns:1fr}}
+</style>

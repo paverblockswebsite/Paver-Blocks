@@ -24,7 +24,7 @@ The exact hostname will be selected only after the development Worker endpoint i
 - POST /api/public/inquiries — validates fields, requires Turnstile, and inserts one inquiry.
 
 ### Admin (Cloudflare Access required)
-- GET /admin — private same-origin inquiry dashboard.
+- GET /admin — private same-origin dashboard for inquiries and projects.
 - GET /admin/assets/admin.css and /admin/assets/admin.js — private dashboard assets; each request also requires a verified Access JWT.
 - GET /api/admin/inquiries — optional status, limit (max 100), and offset.
 - PATCH /api/admin/inquiries/:id — may update only status and/or internal_notes; records an audit event.
@@ -32,7 +32,7 @@ The exact hostname will be selected only after the development Worker endpoint i
 - POST /api/admin/projects — creates a project as draft by default; supports explicit draft/published/archived status.
 - PATCH /api/admin/projects/:id — edits allowlisted project fields and records an audit event.
 
-Project deletion, project image uploads, and the admin content-management interface are not implemented. Other admin CRUD routes intentionally remain unavailable until their validation and authorization tests are implemented.
+The dashboard currently supports project listing, creation, and editing. Project deletion, project image uploads, and management screens for services, paver designs, testimonials, and site settings are not implemented. Other admin CRUD routes intentionally remain unavailable until their validation and authorization tests are implemented.
 
 ## Local smoke tests
 

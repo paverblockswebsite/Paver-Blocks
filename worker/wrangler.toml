@@ -2,6 +2,15 @@ name = "paver-blocks-api-dev"
 main = "src/index.js"
 compatibility_date = "2026-11-07"
 
+# Dedicated development inquiry limiter. No other Workers are present in this account.
+[[ratelimits]]
+name = "INQUIRY_RATE_LIMITER"
+namespace_id = "1001"
+
+[ratelimits.simple]
+limit = 5
+period = 60
+
 # Development-only connection. This points only to the empty paver-blocks-dev
 # database; never replace it with a production database ID in this file.
 [[d1_databases]]

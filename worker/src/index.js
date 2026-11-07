@@ -374,6 +374,43 @@ const ADMIN_HTML = `<!doctype html>
     </form>
     <section id="design-list" class="project-list" aria-label="Paver designs"></section>
 
+
+    <section class="content-heading">
+      <div><p class="eyebrow">CUSTOMER FEEDBACK</p><h2>Testimonials</h2><p class="muted">Only publish a testimonial after the customer has given permission.</p></div>
+      <button id="testimonial-new" type="button" class="button primary">Add testimonial</button>
+    </section>
+    <p id="testimonial-notice" class="notice" role="status" aria-live="polite">Loading testimonials…</p>
+    <form id="testimonial-form" class="content-form" hidden>
+      <h3 id="testimonial-form-title">Add testimonial</h3><input type="hidden" name="id">
+      <div class="content-fields">
+        <label>Customer display name<input name="customer_display_name" maxlength="120" required></label>
+        <label>Role or company (optional)<input name="customer_role_or_company" maxlength="160"></label>
+        <label class="wide">Testimonial text<textarea name="testimonial_text" maxlength="2000" rows="4" required></textarea></label>
+        <label>Status<select name="status"><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label>
+        <label>Display order<input name="sort_order" type="number" min="-100000" max="100000" step="1" value="0"></label>
+        <label class="consent wide"><input name="permission_confirmed" type="checkbox"> I confirm the customer has explicitly permitted this testimonial to be published.</label>
+      </div>
+      <div class="form-actions"><button type="submit" class="button primary">Save testimonial</button><button id="testimonial-cancel" type="button" class="button secondary">Cancel</button></div>
+    </form>
+    <section id="testimonial-list" class="project-list" aria-label="Testimonials"></section>
+
+    <section class="content-heading">
+      <div><p class="eyebrow">HOMEPAGE EDITOR</p><h2>Homepage content</h2><p class="muted">Update approved text fields. Save only accurate, verified business information.</p></div>
+    </section>
+    <p id="homepage-notice" class="notice" role="status" aria-live="polite">Loading homepage content…</p>
+    <form id="homepage-form" class="content-form">
+      <div class="content-fields">
+        <label>Hero heading<input name="hero_title" maxlength="120"></label>
+        <label>Hero button label<input name="hero_cta_label" maxlength="60"></label>
+        <label class="wide">Hero subtitle<textarea name="hero_subtitle" maxlength="300" rows="2"></textarea></label>
+        <label>About heading<input name="about_heading" maxlength="120"></label>
+        <label>Experience statement<input name="experience_statement" maxlength="180"></label>
+        <label class="wide">About text<textarea name="about_text" maxlength="2000" rows="4"></textarea></label>
+      </div>
+      <div class="form-actions"><button type="submit" class="button primary">Save homepage content</button></div>
+    </form>
+
+
     <p class="footnote">Private business information. Sign out of your Cloudflare Access session on shared devices.</p>
   </main>
 </body>
@@ -387,6 +424,7 @@ const ADMIN_CSS = `
 .shell{max-width:1100px;margin:0 auto;padding:42px 22px 64px}.intro{margin-bottom:28px}.eyebrow{font-size:.75rem;font-weight:800;letter-spacing:.14em;color:#8b6810}.intro h1{font-size:clamp(2rem,5vw,2.7rem);line-height:1.1;margin:8px 0;color:var(--navy)}.muted,.footnote{color:var(--muted)}
 .toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}.toolbar label{font-weight:650}.toolbar select,.editor select,.editor textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink)}.button{font:inherit;font-weight:700;border:0;border-radius:8px;padding:10px 16px;cursor:pointer}.primary{background:var(--navy);color:#fff}.secondary{background:#e9eef4;color:var(--navy)}button:focus-visible,a:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #d69e00;outline-offset:2px}
 .notice{min-height:26px;color:var(--muted)}.notice.error{color:#a12626}.inquiry-list,.project-list{display:grid;gap:14px}.inquiry,.project-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 2px 8px #172b4508}.inquiry-head,.project-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.inquiry h2,.project-card h3{font-size:1.12rem;color:var(--navy);margin:0 0 4px}.meta{color:var(--muted);font-size:.9rem}.pill{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;border-radius:30px;padding:5px 9px;background:#edf1f5;color:#43546a;white-space:nowrap}.details{white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0}.facts{display:flex;gap:10px 18px;flex-wrap:wrap;font-size:.9rem;color:#48576a}.editor{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;display:grid;grid-template-columns:minmax(140px,220px) 1fr auto;gap:10px;align-items:end}.editor label,.project-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.editor textarea,.project-fields input,.project-fields select,.project-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.editor textarea{min-height:42px;resize:vertical}.empty{background:#fff;border:1px dashed #bdc7d3;border-radius:14px;padding:30px;text-align:center;color:var(--muted)}.content-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:48px 0 12px}.content-heading h2{font-size:1.7rem;color:var(--navy);margin:4px 0}.project-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.project-form h3{margin:0 0 16px;color:var(--navy)}.project-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.project-fields .wide{grid-column:1/-1}.project-fields small{font-weight:400;color:var(--muted)}.form-actions{display:flex;gap:10px;margin-top:18px}.project-card p{margin:8px 0}.project-card .project-actions{display:flex;gap:8px;margin-top:14px}.footnote{font-size:.82rem;margin-top:34px}
+.content-fields .consent{display:flex;align-items:flex-start;gap:10px}.content-fields .consent input{width:auto;margin-top:4px}
 .content-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.content-form h3{margin:0 0 16px;color:var(--navy)}.content-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.content-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.content-fields input,.content-fields select,.content-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.content-fields .wide{grid-column:1/-1}.content-actions{display:flex;gap:8px;margin-top:14px}
 @media(max-width:650px){.shell{padding-top:28px}.editor{grid-template-columns:1fr}.inquiry-head,.project-head{align-items:flex-start}.topbar{padding:0 16px}.project-fields{grid-template-columns:1fr}.project-fields .wide{grid-column:auto}.content-heading{align-items:flex-start;flex-direction:column}}
 `;
@@ -614,6 +652,92 @@ setupContentManager({
   nameField:"name",requiredField:"name",summaryFields:["shape","dimensions","thickness","colour"],
   fields:["name","slug","shape","dimensions","thickness","colour","status","sort_order","supplier_note"],saveLabel:"Save design"
 });
+
+
+const testimonialList=document.querySelector("#testimonial-list");
+const testimonialNotice=document.querySelector("#testimonial-notice");
+const testimonialForm=document.querySelector("#testimonial-form");
+const testimonialFields=testimonialForm.elements;
+function showTestimonialForm(item) {
+  testimonialForm.reset();
+  testimonialFields.namedItem("id").value=item?.id || "";
+  for(const name of ["customer_display_name","customer_role_or_company","testimonial_text","status","sort_order"]) {
+    testimonialFields.namedItem(name).value=item?.[name] ?? (name==="status"?"draft":name==="sort_order"?0:"");
+  }
+  testimonialFields.namedItem("permission_confirmed").checked=Boolean(item?.permission_confirmed);
+  document.querySelector("#testimonial-form-title").textContent=item?"Edit testimonial":"Add testimonial";
+  testimonialForm.hidden=false;
+  testimonialFields.namedItem("customer_display_name").focus();
+}
+function makeTestimonial(item) {
+  const card=element("article","project-card");
+  const head=element("div","project-head");
+  const title=element("div");
+  title.append(element("h3","",item.customer_display_name || "Unnamed customer"));
+  if(item.customer_role_or_company)title.append(element("p","meta",item.customer_role_or_company));
+  head.append(title,element("span","pill",labelStatus(item.status || "draft")));
+  card.append(head,element("p","",item.testimonial_text || ""));
+  card.append(element("p","meta",item.permission_confirmed?"Permission confirmed":"Permission not confirmed"));
+  const edit=element("button","button secondary","Edit");edit.type="button";edit.addEventListener("click",()=>showTestimonialForm(item));
+  const actions=element("div","content-actions");actions.append(edit);card.append(actions);
+  return card;
+}
+async function loadTestimonials() {
+  testimonialList.replaceChildren();testimonialNotice.className="notice";testimonialNotice.textContent="Loading testimonials…";
+  try {
+    const payload=await api("/api/admin/testimonials");
+    const items=Array.isArray(payload.data)?payload.data:[];
+    if(!items.length)testimonialList.append(element("div","empty","No testimonials yet."));
+    else items.forEach(item=>testimonialList.append(makeTestimonial(item)));
+    testimonialNotice.textContent=items.length+" testimonial record"+(items.length===1?"":"s")+" loaded.";
+  } catch(error) {testimonialNotice.className="notice error";testimonialNotice.textContent=error.message;}
+}
+document.querySelector("#testimonial-new").addEventListener("click",()=>showTestimonialForm());
+document.querySelector("#testimonial-cancel").addEventListener("click",()=>{testimonialForm.hidden=true;testimonialForm.reset();});
+testimonialForm.addEventListener("submit",async event=>{
+  event.preventDefault();
+  const id=testimonialFields.namedItem("id").value;
+  const body={
+    customer_display_name:testimonialFields.namedItem("customer_display_name").value,
+    customer_role_or_company:testimonialFields.namedItem("customer_role_or_company").value,
+    testimonial_text:testimonialFields.namedItem("testimonial_text").value,
+    permission_confirmed:testimonialFields.namedItem("permission_confirmed").checked,
+    status:testimonialFields.namedItem("status").value,
+    sort_order:Number(testimonialFields.namedItem("sort_order").value)
+  };
+  const save=testimonialForm.querySelector('button[type="submit"]');save.disabled=true;save.textContent="Saving…";
+  try {
+    await api(id?"/api/admin/testimonials/"+encodeURIComponent(id):"/api/admin/testimonials",{
+      method:id?"PATCH":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)
+    });
+    testimonialForm.hidden=true;testimonialNotice.className="notice";testimonialNotice.textContent="Testimonial saved.";
+    await loadTestimonials();
+  } catch(error) {testimonialNotice.className="notice error";testimonialNotice.textContent=error.message;}
+  finally {save.disabled=false;save.textContent="Save testimonial";}
+});
+
+const homepageForm=document.querySelector("#homepage-form");
+const homepageNotice=document.querySelector("#homepage-notice");
+const homepageKeys=["hero_title","hero_subtitle","hero_cta_label","about_heading","about_text","experience_statement"];
+async function loadHomepageContent() {
+  try {
+    const payload=await api("/api/admin/homepage-content");
+    homepageKeys.forEach(key=>homepageForm.elements.namedItem(key).value=payload.data?.[key] || "");
+    homepageNotice.textContent="Homepage content loaded.";
+  } catch(error) {homepageNotice.className="notice error";homepageNotice.textContent=error.message;}
+}
+homepageForm.addEventListener("submit",async event=>{
+  event.preventDefault();
+  const body={};homepageKeys.forEach(key=>body[key]=homepageForm.elements.namedItem(key).value);
+  const save=homepageForm.querySelector('button[type="submit"]');save.disabled=true;save.textContent="Saving…";
+  try {
+    await api("/api/admin/homepage-content",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    homepageNotice.className="notice";homepageNotice.textContent="Homepage content saved.";
+  } catch(error) {homepageNotice.className="notice error";homepageNotice.textContent=error.message;}
+  finally {save.disabled=false;save.textContent="Save homepage content";}
+});
+loadTestimonials();
+loadHomepageContent();
 
 load();
 loadProjects();

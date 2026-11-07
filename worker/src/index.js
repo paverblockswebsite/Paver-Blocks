@@ -3,7 +3,7 @@ const MAX_BODY_BYTES = 16384;
 const VALID_INQUIRY_STATUSES = new Set(["new", "contacted", "quoted", "completed", "closed"]);
 const VALID_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-let jwksCache = { expiresAt: 0, keys: [] };
+let jwksCache = { teamDomain: "", expiresAt: 0, keys: [] };
 
 function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
@@ -91,15 +91,20 @@ function decodeJsonSegment(value) {
 
 async function getAccessKeys(teamDomain) {
   const now = Date.now();
-  if (jwksCache.expiresAt > now && jwksCache.keys.length) return jwksCache.keys;
+  if (jwksCache.teamDomain === teamDomain && jwksCache.expiresAt > now && jwksCache.keys.length) {
+    return jwksCache.keys;
+  }
 
   const url = "https://" + teamDomain + "/cdn-cgi/access/certs";
-  const result = await fetch(url, { headers: { accept: "application/json" } });
+  const result = await fetch(url, {
+    headers: { accept: "application/json" },
+    signal: AbortSignal.timeout(5000),
+  });
   if (!result.ok) throw new Error("Access signing keys could not be retrieved.");
   const body = await result.json();
   if (!Array.isArray(body.keys)) throw new Error("Access signing keys response was invalid.");
 
-  jwksCache = { keys: body.keys, expiresAt: now + 5 * 60 * 1000 };
+  jwksCache = { teamDomain, keys: body.keys, expiresAt: now + 5 * 60 * 1000 };
   return jwksCache.keys;
 }
 

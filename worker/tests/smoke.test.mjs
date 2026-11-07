@@ -78,3 +78,76 @@ test("inquiry submission rejects a non-JSON content type", async () => {
   );
   assert.equal(response.status, 400);
 });
+
+
+test("public inquiry endpoint rejects missing Turnstile configuration without writing to D1", async () => {
+  let writes = 0;
+  const env = makeEnv({
+    DB: {
+      prepare() {
+        return {
+          bind() {
+            return {
+              async run() { writes += 1; },
+            };
+          },
+        };
+      },
+    },
+  });
+  const response = await worker.fetch(
+    new Request("https://api.example/api/public/inquiries", {
+      method: "POST",
+      headers: {
+        Origin: "https://development-site.example",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        customer_name: "Test Customer",
+        phone: "+923000000000",
+        location: "Hyderabad",
+        work_type: "Paver block installation",
+        project_details: "Test enquiry",
+        turnstile_token: "test-token",
+      }),
+    }),
+    env,
+  );
+  assert.equal(response.status, 400);
+  assert.equal(writes, 0);
+});
+
+test("public API does not expose inquiry records through a read route", async () => {
+  const response = await worker.fetch(
+    new Request("https://api.example/api/public/inquiries", {
+      headers: { Origin: "https://development-site.example" },
+    }),
+    makeEnv(),
+  );
+  assert.equal(response.status, 404);
+});
+
+test("inquiry submission rejects unexpected fields before database access", async () => {
+  let databaseTouched = false;
+  const env = makeEnv({
+    DB: {
+      prepare() {
+        databaseTouched = true;
+        throw new Error("Database should not be queried for invalid input.");
+      },
+    },
+  });
+  const response = await worker.fetch(
+    new Request("https://api.example/api/public/inquiries", {
+      method: "POST",
+      headers: {
+        Origin: "https://development-site.example",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ customer_name: "Test", unexpected: "not allowed" }),
+    }),
+    env,
+  );
+  assert.equal(response.status, 400);
+  assert.equal(databaseTouched, false);
+});

@@ -334,7 +334,7 @@ test("admin dashboard HTML is not served without a verified Cloudflare Access id
     makeEnv(),
   );
   assert.equal(response.status, 401);
-  assert.match(response.headers.get("content-type") || "", /application\\/json/);
+  assert.ok((response.headers.get("content-type") || "").includes("application/json"));
 });
 
 test("admin JavaScript and CSS assets are also protected by Access verification", async () => {

@@ -19,6 +19,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install Worker tooling
+        working-directory: worker
+        run: npm install --no-audit --no-fund
       - name: Run Worker smoke tests
         working-directory: worker
         run: npm test
+      - name: Validate Wrangler configuration without deploying
+        working-directory: worker
+        run: npm run check:config

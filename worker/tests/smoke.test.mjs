@@ -387,6 +387,14 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.equal(invalidProject.status, 400, "unexpected fields and unsafe slugs are rejected");
     assert.equal(dbBatches.length, batchesBeforeInvalidProject, "invalid project input must not write to D1");
 
+    const invalidCalendarDate = await requestWithToken(validToken, "/api/admin/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Invalid date", slug: "invalid-date", completed_on: "2026-02-31" }),
+    });
+    assert.equal(invalidCalendarDate.status, 400, "impossible calendar dates are rejected");
+    assert.equal(dbBatches.length, batchesBeforeInvalidProject, "invalid dates must not write to D1");
+
     const wrongEmail = await requestWithToken(await makeToken({ email: "someone-else@example.com" }));
     assert.equal(wrongEmail.status, 401, "an email outside the allowlist must be rejected");
 

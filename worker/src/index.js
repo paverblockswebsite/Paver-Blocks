@@ -296,13 +296,14 @@ async function handleAdmin(request, env, url, identity) {
       return response(request, env, { error: "Invalid inquiry update." }, 400);
     }
 
-    await env.DB.prepare(
-      "UPDATE inquiries SET status = COALESCE(?, status), internal_notes = COALESCE(?, internal_notes), updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-    ).bind(status, notes, inquiryMatch[1]).run();
-
-    await env.DB.prepare(
-      "INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)",
-    ).bind(crypto.randomUUID(), identity.email, "update", "inquiry", inquiryMatch[1]).run();
+    await env.DB.batch([
+      env.DB.prepare(
+        "UPDATE inquiries SET status = COALESCE(?, status), internal_notes = COALESCE(?, internal_notes), updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      ).bind(status, notes, inquiryMatch[1]),
+      env.DB.prepare(
+        "INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)",
+      ).bind(crypto.randomUUID(), identity.email, "update", "inquiry", inquiryMatch[1]),
+    ]);
 
     return response(request, env, { success: true });
   }

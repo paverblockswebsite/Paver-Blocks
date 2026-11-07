@@ -178,7 +178,16 @@ async function verifyAccessIdentity(request, env) {
     if (header.alg !== "RS256" || typeof header.kid !== "string" ||
         header.kid.length === 0 || header.kid.length > 256) return null;
 
-    const teamDomain = env.ACCESS_TEAM_DOMAIN.trim().replace(/^https?:\\/\\//i, "").replace(/\\/$/, "").toLowerCase();
+    const configuredDomain = env.ACCESS_TEAM_DOMAIN.trim();
+    let parsedDomain;
+    try {
+      parsedDomain = new URL(configuredDomain.startsWith("https://") ? configuredDomain : "https://" + configuredDomain);
+    } catch {
+      return null;
+    }
+    if (parsedDomain.protocol !== "https:" || parsedDomain.username || parsedDomain.password ||
+        parsedDomain.port || parsedDomain.pathname !== "/" || parsedDomain.search || parsedDomain.hash) return null;
+    const teamDomain = parsedDomain.hostname.toLowerCase();
     if (!/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(teamDomain) || teamDomain.includes("..")) return null;
     const expectedIssuer = "https://" + teamDomain;
     if (claims.iss !== expectedIssuer) return null;

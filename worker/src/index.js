@@ -481,7 +481,18 @@ export default {
         if (request.method !== "GET") return response(request, env, { error: "Method not allowed." }, 405);
         const identity = await verifyAccessIdentity(request, env);
         if (!identity) return response(request, env, { error: "Unauthorized." }, 401);
-        return new Response(ADMIN_HTML, {
+        const publicSiteUrl = (() => {
+          try {
+            const configured = new URL(env.SITE_ORIGIN);
+            return configured.protocol === "https:" || configured.protocol === "http:" ? configured.origin : "";
+          } catch {
+            return "";
+          }
+        })();
+        const dashboardHtml = publicSiteUrl
+          ? ADMIN_HTML.replace('href="/" rel="noopener"', 'href="' + publicSiteUrl + '" rel="noopener noreferrer"')
+          : ADMIN_HTML.replace('<a class="public-link" href="/" rel="noopener">Public website ↗</a>', "");
+        return new Response(dashboardHtml, {
           headers: {
             "content-type": "text/html; charset=utf-8",
             "cache-control": "no-store",

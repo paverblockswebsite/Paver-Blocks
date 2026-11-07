@@ -117,6 +117,43 @@ test("public inquiry endpoint rejects missing Turnstile configuration without wr
   assert.equal(writes, 0);
 });
 
+test("inquiry submission stops reading oversized streamed bodies before database access", async () => {
+  let databaseTouched = false;
+  let cancelled = false;
+  const body = new ReadableStream({
+    pull(controller) {
+      controller.enqueue(new TextEncoder().encode("x".repeat(17000)));
+    },
+    cancel() {
+      cancelled = true;
+    },
+  });
+  const env = makeEnv({
+    DB: {
+      prepare() {
+        databaseTouched = true;
+        throw new Error("Database must not be touched for oversized input.");
+      },
+    },
+  });
+  const response = await worker.fetch(
+    new Request("https://api.example/api/public/inquiries", {
+      method: "POST",
+      headers: {
+        Origin: "https://development-site.example",
+        "Content-Type": "application/json",
+      },
+      body,
+      duplex: "half",
+    }),
+    env,
+  );
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), { error: "Request is too large." });
+  assert.equal(databaseTouched, false);
+  assert.equal(cancelled, true);
+});
+
 test("public API does not expose inquiry records through a read route", async () => {
   const response = await worker.fetch(
     new Request("https://api.example/api/public/inquiries", {

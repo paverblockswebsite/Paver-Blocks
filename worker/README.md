@@ -28,12 +28,15 @@ The exact hostname will be selected only after the development Worker endpoint i
 - GET /admin/assets/admin.css and /admin/assets/admin.js — private dashboard assets; each request also requires a verified Access JWT.
 - GET /api/admin/inquiries — optional status, limit (max 100), and offset.
 - PATCH /api/admin/inquiries/:id — may update only status and/or internal_notes; records an audit event.
+- GET /api/admin/projects — lists project records, including drafts and archived records.
+- POST /api/admin/projects — creates a project as draft by default; supports explicit draft/published/archived status.
+- PATCH /api/admin/projects/:id — edits allowlisted project fields and records an audit event.
 
-All other admin routes intentionally remain unavailable until their CRUD validation and authorization tests are implemented.
+Project deletion, project image uploads, and the admin content-management interface are not implemented. Other admin CRUD routes intentionally remain unavailable until their validation and authorization tests are implemented.
 
 ## Local smoke tests
 
-Run `npm test` from the worker directory with Node.js 22 or later. These tests cover health, public read routing, CORS rejection, missing admin identity, dashboard and asset access controls, and request content-type validation. They are smoke tests, not a substitute for live Cloudflare D1, Access, and Turnstile integration tests.
+Run `npm test` from the worker directory with Node.js 22 or later. These tests cover health, public read routing, CORS rejection, Access identity validation, dashboard and asset access controls, request validation, and authenticated project create/edit operations with audit logging. They are smoke tests, not a substitute for live Cloudflare D1, Access, and Turnstile integration tests.
 
 ## Required environment configuration
 

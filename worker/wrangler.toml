@@ -2,11 +2,18 @@ name = "paver-blocks-api-dev"
 main = "src/index.js"
 compatibility_date = "2026-11-07"
 
-# Deliberately no D1 binding here. Add the development-only database binding
-# after reviewing this config and explicitly approving the connection.
-# Never add production database IDs or secrets to this file.
+# Development-only connection. This points only to the empty paver-blocks-dev
+# database; never replace it with a production database ID in this file.
+[[d1_databases]]
+binding = "DB"
+database_name = "paver-blocks-dev"
+database_id = "642fbb24-2b16-41f6-b77e-e14de49eebe8"
 
 [vars]
-# Set SITE_ORIGIN, TURNSTILE_HOSTNAME, ACCESS_TEAM_DOMAIN,
-# ACCESS_AUD, and ADMIN_EMAILS in the Cloudflare dashboard.
-# Store TURNSTILE_SECRET_KEY as an encrypted Worker secret.
+# Exact branch-preview origin allowed to call public API routes.
+SITE_ORIGIN = "https://development-site-foundation.paver-blocks.pages.dev"
+TURNSTILE_HOSTNAME = "development-site-foundation.paver-blocks.pages.dev"
+
+# Configure ACCESS_TEAM_DOMAIN, ACCESS_AUD, ADMIN_EMAILS, and
+# TURNSTILE_SECRET_KEY in the Cloudflare dashboard only.
+# TURNSTILE_SECRET_KEY must be stored as an encrypted Worker secret.

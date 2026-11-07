@@ -273,9 +273,9 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     },
   });
 
-  async function requestWithToken(token) {
+  async function requestWithToken(token, path = "/api/admin/inquiries") {
     return worker.fetch(
-      new Request("https://api.example/api/admin/inquiries", {
+      new Request("https://api.example" + path, {
         headers: { "Cf-Access-Jwt-Assertion": token },
       }),
       env,
@@ -283,8 +283,32 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
   }
 
   try {
-    const validResponse = await requestWithToken(await makeToken());
+    const validToken = await makeToken();
+    const validResponse = await requestWithToken(validToken);
     assert.equal(validResponse.status, 200, "a valid, allowlisted Access identity should be accepted");
+    assert.deepEqual(await validResponse.json(), { data: [], limit: 50, offset: 0 });
+
+    const dashboardResponse = await requestWithToken(validToken, "/admin");
+    assert.equal(dashboardResponse.status, 200, "an allowlisted admin should receive the dashboard");
+    assert.match(dashboardResponse.headers.get("content-type") || "", /text\/html/);
+    assert.equal(dashboardResponse.headers.get("cache-control"), "no-store");
+    assert.match(dashboardResponse.headers.get("content-security-policy") || "", /default-src 'none'/);
+    const dashboardHtml = await dashboardResponse.text();
+    assert.match(dashboardHtml, /\/admin\/assets\/admin\.js/);
+    assert.match(dashboardHtml, /\/admin\/assets\/admin\.css/);
+    assert.match(dashboardHtml, /https:\/\/development-site\.example/);
+    assert.doesNotMatch(dashboardHtml, /href="\/" rel="noopener"/);
+
+    for (const [path, contentType] of [
+      ["/admin/assets/admin.js", /javascript/],
+      ["/admin/assets/admin.css", /text\/css/],
+    ]) {
+      const assetResponse = await requestWithToken(validToken, path);
+      assert.equal(assetResponse.status, 200, path + " should be available to an allowlisted admin");
+      assert.match(assetResponse.headers.get("content-type") || "", contentType);
+      assert.equal(assetResponse.headers.get("cache-control"), "no-store");
+      assert.ok((await assetResponse.text()).length > 0);
+    }
 
     const wrongEmail = await requestWithToken(await makeToken({ email: "someone-else@example.com" }));
     assert.equal(wrongEmail.status, 401, "an email outside the allowlist must be rejected");

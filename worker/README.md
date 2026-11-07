@@ -62,7 +62,7 @@ This config change does **not** deploy the Worker, run migrations, create an Acc
 
 The inquiry route checks `env.INQUIRY_RATE_LIMITER` before reading the request body or touching D1. If the binding is absent or errors, the route fails closed with HTTP 503; if the limit is exceeded, it returns HTTP 429. The planned initial setting is **5 attempts per 60 seconds per client IP key**, using the Cloudflare Workers Rate Limiting API. This is an approximate limit maintained separately in each Cloudflare location, not a strict global cap. IP-based counters can affect multiple legitimate visitors who share a mobile-carrier or office IP address, so the threshold must be reviewed against real development traffic before production use.
 
-The Wrangler binding is intentionally not configured yet. A unique positive-integer `namespace_id` must first be selected and checked against existing rate-limit namespaces in the Cloudflare account. Do not invent or reuse an ID. Until the binding is configured, inquiry submissions remain disabled (HTTP 503), while public read routes are unaffected. This is deliberate fail-closed behavior.
+The development Wrangler binding is configured with `namespace_id = "1001"`, after confirming that no other Worker exists in this Cloudflare account. The initial setting is 5 attempts per 60 seconds. Cloudflare requires each namespace ID to be a positive integer unique within the account; bindings that reuse an ID share counters. The ID is a developer-defined configuration value, not a secret. The binding is not active on Cloudflare until this Worker is separately deployed. Until deployment and the other required Turnstile setup are complete, public inquiry submission remains unavailable. The code fails closed with HTTP 503 whenever the binding is absent or errors. Cloudflare recommends avoiding IP keys where possible because many legitimate visitors can share one IP; IP is being used only as a temporary anonymous-form abuse key and must be reviewed before production.
 
 ## Local smoke tests
 
@@ -72,7 +72,7 @@ Run `npm test` from the worker directory with Node.js 22 or later. These tests c
 
 Configure these as Worker environment variables/secrets in the Cloudflare dashboard only. Never commit real values:
 
-- INQUIRY_RATE_LIMITER — required Workers Rate Limiting binding; use a unique namespace ID confirmed in the Cloudflare account and the reviewed limit of 5 per 60 seconds.
+- INQUIRY_RATE_LIMITER — development-only Workers Rate Limiting binding configured in `worker/wrangler.toml` with namespace ID `1001`, 5 per 60 seconds. Do not reuse this namespace ID for another independent limiter in the same account.
 - SITE_ORIGIN — exact allowed website origin, e.g. the approved development Pages preview origin.
 - TURNSTILE_SECRET_KEY — secret key for the Turnstile widget used by the inquiry form.
 - TURNSTILE_HOSTNAME — expected hostname returned by Turnstile verification.
@@ -84,7 +84,7 @@ The D1 binding must be named `DB`; the Wrangler file currently points only to th
 
 ## Security and deployment prerequisites
 
-1. Configure the `INQUIRY_RATE_LIMITER` Workers Rate Limiting binding for POST `/api/public/inquiries` (initial proposal: 5 per 60 seconds per client IP key) using a verified, unique namespace ID. The Worker fails closed until this binding exists. Turnstile is also required and is not a substitute for rate limiting.
+1. Review the development `INQUIRY_RATE_LIMITER` binding (namespace `1001`, 5 per 60 seconds) for POST `/api/public/inquiries`. The binding is defined in Wrangler config but will not become active until a separately approved Worker deployment. Do not reuse its namespace ID for another independent limiter. The IP key is temporary due to shared-IP false-positive risk. Turnstile is also required and is not a substitute for rate limiting.
 2. Create a Turnstile widget for the exact development hostname, set its action to inquiry, and store its secret as a Worker secret. The API requires a matching hostname and action in the Siteverify response.
 3. Create a Cloudflare Access self-hosted application for the Worker hostname and protect `/admin*` plus `/api/admin/*` paths. This must include the dashboard HTML and its assets. Restrict its policy to intended administrators.
 4. Set the Worker environment values and a narrowly scoped ADMIN_EMAILS allowlist.

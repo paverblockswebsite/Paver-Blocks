@@ -253,8 +253,9 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     return content + "." + replacement + signature.slice(1);
   }
 
-  globalThis.fetch = async (url) => {
+  globalThis.fetch = async (url, options) => {
     assert.equal(String(url), "https://" + teamDomain + "/cdn-cgi/access/certs");
+    assert.ok(options.signal instanceof AbortSignal, "Access signing-key fetch must have a timeout signal");
     return Response.json({ keys: [jwk] });
   };
 

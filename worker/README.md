@@ -31,8 +31,14 @@ The exact hostname will be selected only after the development Worker endpoint i
 - GET /api/admin/projects — lists project records, including drafts and archived records.
 - POST /api/admin/projects — creates a project as draft by default; supports explicit draft/published/archived status.
 - PATCH /api/admin/projects/:id — edits allowlisted project fields and records an audit event.
+- GET /api/admin/services — lists all service records.
+- POST /api/admin/services — creates a service as draft by default.
+- PATCH /api/admin/services/:id — edits allowlisted service fields and records an audit event.
+- GET /api/admin/paver-designs — lists all paver design records.
+- POST /api/admin/paver-designs — creates a paver design as draft by default.
+- PATCH /api/admin/paver-designs/:id — edits allowlisted design fields and records an audit event.
 
-The dashboard currently supports project listing, creation, and editing. Project deletion, project image uploads, and management screens for services, paver designs, testimonials, and site settings are not implemented. Other admin CRUD routes intentionally remain unavailable until their validation and authorization tests are implemented.
+The dashboard currently supports inquiry review/status updates, plus listing, creation, and editing for projects, services, and paver designs. New service and paver-design records default to draft; only publish a record after checking its wording and supplier-provided specifications. Project deletion, project image uploads, testimonials, and site settings are not implemented. Other admin CRUD routes intentionally remain unavailable until their validation and authorization tests are implemented.
 
 ## Local smoke tests
 

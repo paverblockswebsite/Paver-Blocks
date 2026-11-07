@@ -42,7 +42,8 @@ function cleanString(value, max, required = false) {
 
 async function readJson(request) {
   const contentType = request.headers.get("content-type") || "";
-  if (!contentType.toLowerCase().startsWith("application/json")) return { error: "Content-Type must be application/json." };
+  const mediaType = contentType.split(";")[0].trim().toLowerCase();
+  if (mediaType !== "application/json") return { error: "Content-Type must be application/json." };
   const declaredLength = Number(request.headers.get("content-length") || 0);
   if (declaredLength > MAX_BODY_BYTES) return { error: "Request is too large." };
   const raw = await request.text();
@@ -411,16 +412,16 @@ async function handleAdmin(request, env, url, identity) {
       return response(request, env, { error: "Only status and internal_notes may be updated." }, 400);
     }
 
-    const current = await env.DB.prepare("SELECT id FROM inquiries WHERE id = ? LIMIT 1")
-      .bind(inquiryMatch[1]).first();
-    if (!current) return response(request, env, { error: "Inquiry not found." }, 404);
-
     const status = input.status === undefined ? null : cleanString(input.status, 20, true);
     const notes = input.internal_notes === undefined ? null : cleanString(input.internal_notes, 4000);
     if ((input.status !== undefined && (!status || !VALID_INQUIRY_STATUSES.has(status))) ||
         (input.internal_notes !== undefined && notes === null)) {
       return response(request, env, { error: "Invalid inquiry update." }, 400);
     }
+
+    const current = await env.DB.prepare("SELECT id FROM inquiries WHERE id = ? LIMIT 1")
+      .bind(inquiryMatch[1]).first();
+    if (!current) return response(request, env, { error: "Inquiry not found." }, 404);
 
     await env.DB.batch([
       env.DB.prepare(

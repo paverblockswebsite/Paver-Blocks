@@ -1,0 +1,8 @@
+{
+  "name": "paver-blocks-api-dev",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}

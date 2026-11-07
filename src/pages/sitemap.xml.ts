@@ -4,7 +4,7 @@ const routes = [
   "/", "/about/", "/services/", "/services/paver-block-installation/",
   "/services/road-construction/", "/services/footpath-construction/",
   "/services/parking-area-construction/", "/services/industrial-flooring/",
-  "/services/contracts/", "/paver-designs/", "/projects/", "/get-a-quote/", "/contact/"
+  "/services/contracts/", "/paver-designs/", "/projects/", "/faqs/", "/get-a-quote/", "/contact/"
 ];
 
 export const GET: APIRoute = () => {

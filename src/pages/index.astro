@@ -1,5 +1,6 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
+const publicApiBase = import.meta.env.VITE_PUBLIC_API_BASE_URL || "";
 const services = [
   ["Paver Block Installation","Professional paver installation for suitable outdoor surfaces.","/services/paver-block-installation/"],
   ["Road Construction & Paving","Road paving and related civil construction work.","/services/road-construction/"],
@@ -10,19 +11,19 @@ const services = [
 ];
 ---
 <SiteLayout title="Paver Blocks | Paving & Civil Construction in Pakistan" description="Paver Blocks provides paver block installation, road paving, footpath, parking area and related civil construction services across Pakistan. Based in Hyderabad, Sindh." canonical="https://paverblocks.com.pk/">
-  <section class="hero">
+  <section class="hero" data-public-api-base={publicApiBase}>
     <div class="hero-content">
       <p class="eyebrow">Mithal Shahan · Civil Contractor</p>
-      <h1>Building Strong Foundations.<br /><span>Creating Lasting Roads.</span></h1>
-      <p class="hero-copy">Professional paver block installation, road paving and civil construction services, serving projects across Pakistan from Hyderabad, Sindh.</p>
-      <div class="actions"><a class="button button-primary" href="/get-a-quote/">Discuss Your Project</a><a class="button button-light" href="/services/">Explore Services</a></div>
-      <p class="experience"><strong>40+ years</strong> of personal experience · Working since 1986</p>
+      <h1 id="homepage-hero-title">Building Strong Foundations.<br /><span>Creating Lasting Roads.</span></h1>
+      <p class="hero-copy" id="homepage-hero-subtitle">Professional paver block installation, road paving and civil construction services, serving projects across Pakistan from Hyderabad, Sindh.</p>
+      <div class="actions"><a class="button button-primary" id="homepage-hero-cta" href="/get-a-quote/">Discuss Your Project</a><a class="button button-light" href="/services/">Explore Services</a></div>
+      <p class="experience" id="homepage-experience"><strong>40+ years</strong> of personal experience · Working since 1986</p>
     </div>
     <div class="hero-art" aria-hidden="true"><div class="paver-grid"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><div class="road-line"></div></div>
   </section>
   <section class="content-section intro">
-    <p class="eyebrow">About Paver Blocks</p><h2>Practical paving experience. Work built to last.</h2>
-    <p>Paver Blocks is the public brand of Mithal Shahan, Civil Contractor. Our primary focus is professional paver installation and paving-related civil works. We can also help clients source suitable paver blocks from third-party manufacturers and suppliers.</p>
+    <p class="eyebrow">About Paver Blocks</p><h2 id="homepage-about-heading">Practical paving experience. Work built to last.</h2>
+    <p id="homepage-about-text">Paver Blocks is the public brand of Mithal Shahan, Civil Contractor. Our primary focus is professional paver installation and paving-related civil works. We can also help clients source suitable paver blocks from third-party manufacturers and suppliers.</p>
     <a class="text-link" href="/about/">Learn more about us →</a>
   </section>
   <section class="content-section soft-section">
@@ -38,6 +39,51 @@ const services = [
   <section class="content-section portfolio"><p class="eyebrow">Our Work</p><h2>Project portfolio</h2><p>Explore verified project details and real photographs as they are added.</p><a class="button" href="/projects/">View project portfolio</a></section>
   <section class="content-section contact"><p class="eyebrow">Start a Conversation</p><h2>Tell us about your project.</h2><p>Based in Hyderabad, Sindh · Serving clients across Pakistan</p><div class="actions"><a class="button button-primary" href="https://wa.me/923162753210">WhatsApp: +92 316 2753210</a><a class="button" href="tel:+923162753210">Call Us</a></div><a class="email-link" href="mailto:hellopaverblocks@gmail.com">hellopaverblocks@gmail.com</a></section>
 </SiteLayout>
+
+<script>
+  const hero = document.querySelector("[data-public-api-base]");
+  const configuredApiBase = hero?.dataset.publicApiBase?.trim();
+
+  if (configuredApiBase) {
+    try {
+      const apiOrigin = new URL(configuredApiBase);
+      const isLocalDevelopment = ["localhost", "127.0.0.1"].includes(apiOrigin.hostname);
+      if ((apiOrigin.protocol === "https:" || (isLocalDevelopment && apiOrigin.protocol === "http:")) &&
+          apiOrigin.pathname === "/" && !apiOrigin.search && !apiOrigin.hash && !apiOrigin.username && !apiOrigin.password) {
+        const endpoint = new URL("/api/public/site-settings", apiOrigin.origin);
+        const response = await fetch(endpoint, {
+          method: "GET",
+          mode: "cors",
+          credentials: "omit",
+          headers: { Accept: "application/json" },
+          signal: AbortSignal.timeout(5000)
+        });
+        if (response.ok) {
+          const result = await response.json();
+          const data = result && typeof result.data === "object" && result.data !== null ? result.data : {};
+          const targets = {
+            hero_title: ["homepage-hero-title", 120],
+            hero_subtitle: ["homepage-hero-subtitle", 300],
+            hero_cta_label: ["homepage-hero-cta", 60],
+            about_heading: ["homepage-about-heading", 120],
+            about_text: ["homepage-about-text", 2000],
+            experience_statement: ["homepage-experience", 180]
+          };
+          for (const [key, [id, maxLength]] of Object.entries(targets)) {
+            const value = data[key];
+            const target = document.getElementById(id);
+            if (target && typeof value === "string" && value.trim() && value.length <= maxLength) {
+              target.textContent = value.trim();
+            }
+          }
+        }
+      }
+    } catch {
+      // Keep the approved static homepage copy if the public API is unavailable.
+    }
+  }
+</script>
+
 <style>
 .hero{position:relative;overflow:hidden;display:grid;grid-template-columns:1.35fr .65fr;align-items:center;min-height:570px;padding:88px max(8vw,24px);color:white;background:radial-gradient(ellipse at 78% 20%,#294969 0,transparent 42%),#172B45}.hero-content{position:relative;z-index:1}.hero h1{max-width:850px;margin:0 0 22px;font-size:clamp(42px,6vw,76px);line-height:1.06;letter-spacing:-.055em}.hero h1 span{color:#F5C542}.hero-copy{max-width:660px;color:#dce4ed;font-size:18px}.hero .eyebrow,.dark-band .eyebrow{color:#F5C542}.experience{margin:24px 0 0;color:#dce4ed;font-size:14px}.experience strong{color:#F5C542}.button-light{color:white;border-color:#8a9aab}.content-section{padding:76px max(8vw,24px)}.content-section h2{max-width:760px;margin-bottom:18px;font-size:clamp(30px,4vw,46px);line-height:1.12;letter-spacing:-.04em}.content-section>p:not(.eyebrow){max-width:760px;color:#667386;font-size:17px}.intro{max-width:1100px}.text-link{display:inline-block;margin-top:12px;color:#8a6500;font-weight:800}.soft-section{background:#f4f6f8}.card-grid{margin:30px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.info-card{padding:24px;border:1px solid #e0e5eb;border-radius:10px;background:#fff}.service-index{color:#9b7410;font-size:10px;font-weight:850;letter-spacing:.13em}.info-card h3{margin:14px 0 8px;font-size:19px}.info-card p{color:#667386;font-size:14px}.designs{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}.design-pattern{min-height:260px;padding:25px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:center;background:linear-gradient(135deg,#172B45,#294969);border-radius:12px;transform:skewY(-2deg)}.design-pattern span{padding:22px 10px;color:#172B45;background:#F5C542;text-align:center;font-weight:850;border-radius:5px;transform:skewY(2deg)}.dark-band{color:#fff;background:#172B45}.dark-band h2{color:#fff}.dark-band>p:not(.eyebrow){color:#dce4ed}.portfolio{background:#fff}.contact{text-align:center}.contact h2,.contact>p{margin-left:auto;margin-right:auto}.contact .actions{justify-content:center}.email-link{display:inline-block;margin-top:10px;font-weight:800}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:11px 18px;border:1px solid #aab5c1;border-radius:6px;font-weight:750}.button-primary{border-color:transparent;color:#172B45;background:#F5C542}
 @media(max-width:760px){.hero{grid-template-columns:1fr;min-height:auto;padding-top:66px;padding-bottom:66px}.hero-art{display:none}.content-section{padding-top:56px;padding-bottom:56px}.card-grid,.designs{grid-template-columns:1fr}}

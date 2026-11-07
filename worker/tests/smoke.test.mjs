@@ -272,7 +272,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
           values: [],
           bind(...values) { statement.values = values; return statement; },
           async all() { return { results: [] }; },
-          async first() { return { id: "123e4567-e89b-12d3-a456-426614174000" }; },
+          async first() { return sql.includes("permission_confirmed, status FROM testimonials") ? { permission_confirmed: 0, status: "draft" } : { id: "123e4567-e89b-12d3-a456-426614174000" }; },
           async run() { return { success: true }; },
         };
         preparedStatements.push(statement);
@@ -312,6 +312,9 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.match(dashboardHtml, /name="completed_on"/);
     assert.match(dashboardHtml, /id="service-form"/);
     assert.match(dashboardHtml, /id="design-form"/);
+    assert.match(dashboardHtml, /id="testimonial-form"/);
+    assert.match(dashboardHtml, /id="homepage-form"/);
+    assert.match(dashboardHtml, /permission_confirmed/);
     assert.match(dashboardHtml, /https:\/\/development-site\.example/);
     assert.doesNotMatch(dashboardHtml, /href="\/" rel="noopener"/);
 
@@ -329,6 +332,8 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
         assert.match(assetText, /api\/admin\/projects/);
         assert.match(assetText, /api\/admin\/services/);
         assert.match(assetText, /api\/admin\/paver-designs/);
+        assert.match(assetText, /api\/admin\/testimonials/);
+        assert.match(assetText, /api\/admin\/homepage-content/);
         assert.match(assetText, /method:id\?"PATCH":"POST"/);
       }
     }
@@ -481,6 +486,78 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     }
     assert.equal(dbBatches.length, beforeInvalidContent, "invalid content must not write to D1");
     assert.ok(dbBatches.length > servicesBefore);
+
+
+    const unauthTestimonials = await worker.fetch(new Request("https://api.example/api/admin/testimonials"), env);
+    assert.equal(unauthTestimonials.status, 401);
+    const testimonialList = await requestWithToken(validToken, "/api/admin/testimonials");
+    assert.equal(testimonialList.status, 200);
+    assert.deepEqual((await testimonialList.json()).data, []);
+    const batchesBeforeTestimonialValidation = dbBatches.length;
+    const noConsent = await requestWithToken(validToken, "/api/admin/testimonials", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customer_display_name: "Customer",
+        testimonial_text: "Great paving work.",
+        permission_confirmed: false,
+        status: "published",
+      }),
+    });
+    assert.equal(noConsent.status, 400, "publishing without explicit permission is rejected");
+    assert.equal(dbBatches.length, batchesBeforeTestimonialValidation, "invalid testimonial must not write");
+    const testimonialCreate = await requestWithToken(validToken, "/api/admin/testimonials", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customer_display_name: "Customer",
+        customer_role_or_company: "Private client",
+        testimonial_text: "The work was completed as agreed.",
+        permission_confirmed: true,
+        status: "draft",
+        sort_order: 1,
+      }),
+    });
+    assert.equal(testimonialCreate.status, 201);
+    assert.equal(dbBatches.at(-1).length, 2, "testimonial create and audit are atomic");
+    assert.match(dbBatches.at(-1)[0].sql, /^INSERT INTO testimonials/);
+    assert.equal(dbBatches.at(-1)[0].values[4], 1);
+    assert.match(dbBatches.at(-1)[1].sql, /^INSERT INTO admin_audit_log/);
+    const invalidPublish = await requestWithToken(validToken, "/api/admin/testimonials/123e4567-e89b-12d3-a456-426614174000", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "published" }),
+    });
+    assert.equal(invalidPublish.status, 400, "existing testimonial without permission cannot be published");
+    const testimonialUpdate = await requestWithToken(validToken, "/api/admin/testimonials/123e4567-e89b-12d3-a456-426614174000", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ permission_confirmed: true, status: "published" }),
+    });
+    assert.equal(testimonialUpdate.status, 200);
+    assert.match(dbBatches.at(-1)[0].sql, /^UPDATE testimonials SET/);
+    assert.match(dbBatches.at(-1)[1].sql, /^INSERT INTO admin_audit_log/);
+
+    const homepageRead = await requestWithToken(validToken, "/api/admin/homepage-content");
+    assert.equal(homepageRead.status, 200);
+    assert.deepEqual((await homepageRead.json()).data.hero_title, "");
+    const homepageBeforeInvalid = dbBatches.length;
+    const invalidHomepage = await requestWithToken(validToken, "/api/admin/homepage-content", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ hero_title: "A title", arbitrary_setting: "must not be accepted" }),
+    });
+    assert.equal(invalidHomepage.status, 400);
+    assert.equal(dbBatches.length, homepageBeforeInvalid, "unapproved setting keys must not write");
+    const homepageSave = await requestWithToken(validToken, "/api/admin/homepage-content", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ hero_title: "Paving and civil works", hero_subtitle: "Accurate approved text" }),
+    });
+    assert.equal(homepageSave.status, 200);
+    assert.equal(dbBatches.at(-1).length, 3, "two settings and audit event are atomic");
+    assert.match(dbBatches.at(-1)[0].sql, /^INSERT INTO site_settings/);
+    assert.match(dbBatches.at(-1)[2].sql, /^INSERT INTO admin_audit_log/);
 
     const wrongEmail = await requestWithToken(await makeToken({ email: "someone-else@example.com" }));
     assert.equal(wrongEmail.status, 401, "an email outside the allowlist must be rejected");

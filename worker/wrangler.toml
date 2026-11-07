@@ -1,0 +1,12 @@
+name = "paver-blocks-api-dev"
+main = "src/index.js"
+compatibility_date = "2026-11-07"
+
+# Deliberately no D1 binding here. Add the development-only database binding
+# after reviewing this config and explicitly approving the connection.
+# Never add production database IDs or secrets to this file.
+
+[vars]
+# Set SITE_ORIGIN, TURNSTILE_HOSTNAME, ACCESS_TEAM_DOMAIN,
+# ACCESS_AUD, and ADMIN_EMAILS in the Cloudflare dashboard.
+# Store TURNSTILE_SECRET_KEY as an encrypted Worker secret.

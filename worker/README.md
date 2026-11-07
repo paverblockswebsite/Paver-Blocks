@@ -21,6 +21,10 @@ This Worker is a separate API service intended to sit beside the Astro Pages web
 
 All other admin routes intentionally remain unavailable until their CRUD validation and authorization tests are implemented.
 
+## Local smoke tests
+
+Run `npm test` from the worker directory with Node.js 22 or later. These tests cover health, public read routing, CORS rejection, missing admin identity, and request content-type validation. They are smoke tests, not a substitute for live Cloudflare D1, Access, and Turnstile integration tests.
+
 ## Required environment configuration
 
 Configure these as Worker environment variables/secrets in the Cloudflare dashboard only. Never commit real values:

@@ -385,6 +385,100 @@ load();
 async function handleAdmin(request, env, url, identity) {
   const path = url.pathname;
 
+  if (request.method === "GET" && path === "/api/admin/projects") {
+    const result = await env.DB.prepare(
+      "SELECT id, title, slug, location, completed_on, summary, description, status, sort_order, created_at, updated_at FROM projects ORDER BY sort_order ASC, created_at DESC",
+    ).all();
+    return response(request, env, { data: result.results || [] });
+  }
+
+  if (request.method === "POST" && path === "/api/admin/projects") {
+    const parsed = await readJson(request);
+    if (parsed.error) return response(request, env, { error: parsed.error }, 400);
+    const input = parsed.value;
+    const allowed = ["title", "slug", "location", "completed_on", "summary", "description", "status", "sort_order"];
+    if (Object.keys(input).length === 0 || Object.keys(input).some((key) => !allowed.includes(key))) {
+      return response(request, env, { error: "Unexpected or missing project fields." }, 400);
+    }
+
+    const title = cleanString(input.title, 160, true);
+    const slug = cleanString(input.slug, 180, true);
+    const location = cleanString(input.location, 180);
+    const completedOn = cleanString(input.completed_on, 10);
+    const summary = cleanString(input.summary, 2000);
+    const description = cleanString(input.description, 10000);
+    const status = input.status === undefined ? "draft" : cleanString(input.status, 20, true);
+    const sortOrder = input.sort_order === undefined ? 0 : input.sort_order;
+    const validSlug = slug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+    const validDate = !completedOn || /^\\d{4}-\\d{2}-\\d{2}$/.test(completedOn);
+    if (!title || !validSlug || location === null || completedOn === null || !validDate ||
+        summary === null || description === null ||
+        !["draft", "published", "archived"].includes(status) ||
+        !Number.isInteger(sortOrder) || sortOrder < -100000 || sortOrder > 100000) {
+      return response(request, env, { error: "Please check the project fields and try again." }, 400);
+    }
+
+    const id = crypto.randomUUID();
+    await env.DB.batch([
+      env.DB.prepare(
+        "INSERT INTO projects (id, title, slug, location, completed_on, summary, description, status, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      ).bind(id, title, slug, location || null, completedOn || null, summary, description, status, sortOrder),
+      env.DB.prepare(
+        "INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)",
+      ).bind(crypto.randomUUID(), identity.email, "create", "project", id),
+    ]);
+    return response(request, env, { success: true, id }, 201);
+  }
+
+  const projectMatch = path.match(/^\\/api\\/admin\\/projects\\/([0-9a-f-]{36})$/i);
+  if (request.method === "PATCH" && projectMatch) {
+    const parsed = await readJson(request);
+    if (parsed.error) return response(request, env, { error: parsed.error }, 400);
+    const input = parsed.value;
+    const allowed = ["title", "slug", "location", "completed_on", "summary", "description", "status", "sort_order"];
+    const keys = Object.keys(input);
+    if (keys.length === 0 || keys.some((key) => !allowed.includes(key))) {
+      return response(request, env, { error: "Unexpected or missing project fields." }, 400);
+    }
+
+    const values = {};
+    for (const key of keys) {
+      if (key === "sort_order") {
+        if (!Number.isInteger(input[key]) || input[key] < -100000 || input[key] > 100000) {
+          return response(request, env, { error: "Invalid project sort order." }, 400);
+        }
+        values[key] = input[key];
+        continue;
+      }
+      const limits = { title: 160, slug: 180, location: 180, completed_on: 10, summary: 2000, description: 10000, status: 20 };
+      const value = cleanString(input[key], limits[key], key === "title" || key === "slug" || key === "status");
+      if (value === null ||
+          (key === "slug" && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) ||
+          (key === "status" && !["draft", "published", "archived"].includes(value)) ||
+          (key === "completed_on" && value && !/^\\d{4}-\\d{2}-\\d{2}$/.test(value))) {
+        return response(request, env, { error: "Invalid project field: " + key }, 400);
+      }
+      values[key] = value;
+    }
+
+    const current = await env.DB.prepare("SELECT id FROM projects WHERE id = ? LIMIT 1")
+      .bind(projectMatch[1]).first();
+    if (!current) return response(request, env, { error: "Project not found." }, 404);
+
+    const columns = Object.keys(values);
+    const assignments = columns.map((column) => column + " = ?").join(", ");
+    const bindings = columns.map((column) => values[column] === "" ? null : values[column]);
+    await env.DB.batch([
+      env.DB.prepare(
+        "UPDATE projects SET " + assignments + ", updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      ).bind(...bindings, projectMatch[1]),
+      env.DB.prepare(
+        "INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)",
+      ).bind(crypto.randomUUID(), identity.email, "update", "project", projectMatch[1]),
+    ]);
+    return response(request, env, { success: true });
+  }
+
   if (request.method === "GET" && path === "/api/admin/inquiries") {
     const status = url.searchParams.get("status");
     if (status && !VALID_INQUIRY_STATUSES.has(status)) {

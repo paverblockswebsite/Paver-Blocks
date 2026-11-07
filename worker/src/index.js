@@ -54,7 +54,7 @@ async function readJson(request) {
 }
 
 async function verifyTurnstile(token, request, env) {
-  if (!env.TURNSTILE_SECRET_KEY || !token) return false;
+  if (!env.TURNSTILE_SECRET_KEY || !env.TURNSTILE_HOSTNAME || !token) return false;
   const form = new FormData();
   form.set("secret", env.TURNSTILE_SECRET_KEY);
   form.set("response", token);
@@ -68,8 +68,8 @@ async function verifyTurnstile(token, request, env) {
     });
     if (!verifyResponse.ok) return false;
     const result = await verifyResponse.json();
-    if (!result.success) return false;
-    if (env.TURNSTILE_HOSTNAME && result.hostname !== env.TURNSTILE_HOSTNAME) return false;
+    if (!result.success || result.hostname !== env.TURNSTILE_HOSTNAME) return false;
+    if (result.action !== "inquiry") return false;
     return true;
   } catch {
     return false;

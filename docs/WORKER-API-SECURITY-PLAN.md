@@ -1,6 +1,6 @@
 # Paver Blocks — Worker API and Admin Security Plan
 
-**Status:** Initial Worker API code now exists on the development branch and is not deployed. The development D1 database and its schema have been created and verified separately, but no Worker D1 binding is configured. No Access application, Turnstile widget/secrets, R2 bucket, admin login, or production binding is active.
+**Status:** Initial Worker API code exists on the development branch and is not deployed. The development D1 database and schema are created and verified, and Wrangler config points only to that development database. The inquiry rate-limit binding is not yet configured, so the inquiry route fails closed. No Access application, Turnstile widget/secrets, R2 bucket, or production binding is active.
 
 ## 1. Security boundary
 

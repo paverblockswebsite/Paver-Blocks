@@ -1,6 +1,6 @@
 # Paver Blocks — Worker API and Admin Security Plan
 
-**Status:** Initial Worker API code exists on the development branch and is not deployed. The development D1 database and schema are created and verified, and Wrangler config points only to that development database. The inquiry rate-limit binding is not yet configured, so the inquiry route fails closed. No Access application, Turnstile widget/secrets, R2 bucket, or production binding is active.
+**Status:** Initial Worker API code exists on the development branch and is not deployed. The development D1 database and schema are created and verified, and Wrangler config points only to that development database. The development inquiry rate-limit binding is configured in Wrangler (`namespace_id = "1001"`, 5 attempts per 60 seconds) but is not active on Cloudflare because the Worker is not deployed. The inquiry route fails closed when the binding is absent or unavailable. No Access application, Turnstile widget/secrets, R2 bucket, or production binding is active.
 
 ## 1. Security boundary
 
@@ -58,7 +58,7 @@ The final route contract may change during implementation. Do not expose an endp
 - Validate and normalize every field on the server; browser validation is only a convenience.
 - Enforce the database field limits and reject unexpected fields.
 - Add Turnstile verification and a mandatory Cloudflare Workers Rate Limiting binding before accepting public submissions. The route must fail closed when the binding is missing or unavailable.
-- Initial development proposal: 5 attempts per 60 seconds per client IP key. This is approximate and local to each Cloudflare location; shared mobile-carrier/office IPs may cause false positives. Review traffic before production and do not treat it as a strict global cap.
+- Development setting: 5 attempts per 60 seconds per client IP key, using namespace `1001`. The account owner confirmed no other Worker exists in this Cloudflare account when this namespace was selected. The namespace ID must remain unique within the account. This is approximate and local to each Cloudflare location; Cloudflare recommends avoiding IP keys where possible because shared mobile-carrier/office IPs may cause false positives. Review traffic and consider a better abuse key before production; do not treat this as a strict global cap.
 - Use parameterized SQL statements only.
 - Return a generic success response; never include internal notes or other customer records.
 - Do not log full inquiry bodies, phone numbers, email addresses, or project details.
@@ -80,7 +80,7 @@ The final route contract may change during implementation. Do not expose an endp
 1. Review and approve this API/security design.
 2. Create a separate development-only D1 database, after explicit approval. **Completed:** paver-blocks-dev exists.
 3. Apply the reviewed migration to development D1 and verify table/constraint behavior. **Completed:** 8 application tables and 7 custom indexes were verified in the D1 Console; this is not yet a full live API integration test.
-4. Initial public read routes, Turnstile-protected inquiry submission, Access JWT verification, and limited inquiry-admin routes are coded on the development branch. The inquiry route now requires a rate-limit binding and fails closed with HTTP 503 if it is missing; the binding is deliberately not configured until a unique account namespace ID is confirmed. Complete integration, negative-case, and security tests before deployment.
+4. Initial public read routes, Turnstile-protected inquiry submission, Access JWT verification, and limited inquiry-admin routes are coded on the development branch. The inquiry route now requires a rate-limit binding and fails closed with HTTP 503 if it is missing; the development binding is configured with namespace `1001`; the Worker remains undeployed, so the binding is not live. Complete integration, negative-case, and security tests before deployment.
 5. Configure Cloudflare Access and verify admin identity restrictions before enabling any admin route.
 6. Implement admin operations with authorization, validation, and audit tests.
 7. Add development-only R2 uploads with file validation.

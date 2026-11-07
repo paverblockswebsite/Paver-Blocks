@@ -40,6 +40,13 @@ function cleanString(value, max, required = false) {
   return cleaned;
 }
 
+function isValidDateOnly(value) {
+  if (!value) return true;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(value + "T00:00:00.000Z");
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
 async function readJson(request) {
   const contentType = request.headers.get("content-type") || "";
   const mediaType = contentType.split(";")[0].trim().toLowerCase();
@@ -410,7 +417,7 @@ async function handleAdmin(request, env, url, identity) {
     const status = input.status === undefined ? "draft" : cleanString(input.status, 20, true);
     const sortOrder = input.sort_order === undefined ? 0 : input.sort_order;
     const validSlug = slug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
-    const validDate = !completedOn || /^\d{4}-\d{2}-\d{2}$/.test(completedOn);
+    const validDate = isValidDateOnly(completedOn);
     if (!title || !validSlug || location === null || completedOn === null || !validDate ||
         summary === null || description === null ||
         !["draft", "published", "archived"].includes(status) ||
@@ -455,7 +462,7 @@ async function handleAdmin(request, env, url, identity) {
       if (value === null ||
           (key === "slug" && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) ||
           (key === "status" && !["draft", "published", "archived"].includes(value)) ||
-          (key === "completed_on" && value && !/^\d{4}-\d{2}-\d{2}$/.test(value))) {
+          (key === "completed_on" && !isValidDateOnly(value))) {
         return response(request, env, { error: "Invalid project field: " + key }, 400);
       }
       values[key] = value;

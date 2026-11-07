@@ -151,3 +151,69 @@ test("inquiry submission rejects unexpected fields before database access", asyn
   assert.equal(response.status, 400);
   assert.equal(databaseTouched, false);
 });
+
+
+test("inquiry submission rejects malformed JSON without database access", async () => {
+  let databaseTouched = false;
+  const env = makeEnv({
+    DB: {
+      prepare() {
+        databaseTouched = true;
+        throw new Error("Database must not be touched for malformed JSON.");
+      },
+    },
+  });
+  const response = await worker.fetch(
+    new Request("https://api.example/api/public/inquiries", {
+      method: "POST",
+      headers: {
+        Origin: "https://development-site.example",
+        "Content-Type": "application/json",
+      },
+      body: "{invalid-json",
+    }),
+    env,
+  );
+  assert.equal(response.status, 400);
+  assert.equal(databaseTouched, false);
+});
+
+test("inquiry submission rejects oversized bodies without database access", async () => {
+  let databaseTouched = false;
+  const env = makeEnv({
+    DB: {
+      prepare() {
+        databaseTouched = true;
+        throw new Error("Database must not be touched for oversized input.");
+      },
+    },
+  });
+  const response = await worker.fetch(
+    new Request("https://api.example/api/public/inquiries", {
+      method: "POST",
+      headers: {
+        Origin: "https://development-site.example",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ project_details: "x".repeat(17000) }),
+    }),
+    env,
+  );
+  assert.equal(response.status, 400);
+  assert.equal(databaseTouched, false);
+});
+
+test("admin inquiry updates reject requests without a verified Access identity", async () => {
+  const response = await worker.fetch(
+    new Request("https://api.example/api/admin/inquiries/123e4567-e89b-12d3-a456-426614174000", {
+      method: "PATCH",
+      headers: {
+        Origin: "https://development-site.example",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: "quoted" }),
+    }),
+    makeEnv(),
+  );
+  assert.equal(response.status, 401);
+});

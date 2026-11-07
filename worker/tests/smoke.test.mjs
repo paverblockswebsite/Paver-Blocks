@@ -122,6 +122,7 @@ test("inquiry submission rejects a non-JSON content type", async () => {
       method: "POST",
       headers: {
         Origin: "https://development-site.example",
+        "CF-Connecting-IP": "203.0.113.20",
         "Content-Type": "text/plain",
       },
       body: "not-json",
@@ -152,6 +153,7 @@ test("public inquiry endpoint rejects missing Turnstile configuration without wr
       method: "POST",
       headers: {
         Origin: "https://development-site.example",
+        "CF-Connecting-IP": "203.0.113.20",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -193,6 +195,7 @@ test("inquiry submission stops reading oversized streamed bodies before database
       method: "POST",
       headers: {
         Origin: "https://development-site.example",
+        "CF-Connecting-IP": "203.0.113.20",
         "Content-Type": "application/json",
       },
       body,
@@ -231,6 +234,7 @@ test("inquiry submission rejects unexpected fields before database access", asyn
       method: "POST",
       headers: {
         Origin: "https://development-site.example",
+        "CF-Connecting-IP": "203.0.113.20",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ customer_name: "Test", unexpected: "not allowed" }),
@@ -257,6 +261,7 @@ test("inquiry submission rejects malformed JSON without database access", async 
       method: "POST",
       headers: {
         Origin: "https://development-site.example",
+        "CF-Connecting-IP": "203.0.113.20",
         "Content-Type": "application/json",
       },
       body: "{invalid-json",
@@ -282,6 +287,7 @@ test("inquiry submission rejects oversized bodies without database access", asyn
       method: "POST",
       headers: {
         Origin: "https://development-site.example",
+        "CF-Connecting-IP": "203.0.113.20",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ project_details: "x".repeat(17000) }),
@@ -298,6 +304,7 @@ test("admin inquiry updates reject requests without a verified Access identity",
       method: "PATCH",
       headers: {
         Origin: "https://development-site.example",
+        "CF-Connecting-IP": "203.0.113.20",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ status: "quoted" }),

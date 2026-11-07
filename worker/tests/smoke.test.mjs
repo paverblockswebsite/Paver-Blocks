@@ -667,6 +667,22 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     const wrongIssuer = await requestWithToken(await makeToken({ iss: "https://attacker.example" }));
     assert.equal(wrongIssuer.status, 401, "a token from another issuer must be rejected");
 
+    const malformedNbf = await requestWithToken(await makeToken({ nbf: "not-a-number" }));
+    assert.equal(malformedNbf.status, 401, "a malformed not-before claim must be rejected");
+    const malformedAudience = await requestWithToken(await makeToken({ aud: ["test-access-audience", {}] }));
+    assert.equal(malformedAudience.status, 401, "audience claims must contain only strings");
+    const blankSubject = await requestWithToken(await makeToken({ sub: "   " }));
+    assert.equal(blankSubject.status, 401, "a whitespace-only subject must be rejected");
+    const unknownKeyToken = await makeToken();
+    const unknownKeyHeader = encode({ alg: "RS256", kid: "unknown-key-id" });
+    assert.equal((await requestWithToken(unknownKeyHeader + "." + unknownKeyToken.split(".").slice(1).join("."))).status, 401,
+      "a token with an unknown key ID must be rejected");
+    const validParts = (await makeToken()).split(".");
+    const wrongAlgorithm = encode({ alg: "HS256", kid: jwk.kid }) + "." + validParts[1] + "." + validParts[2];
+    assert.equal((await requestWithToken(wrongAlgorithm)).status, 401, "non-RS256 algorithms must be rejected");
+    assert.equal((await requestWithToken("!!!!.e30.AA")).status, 401, "invalid base64url segments must be rejected");
+    assert.equal((await requestWithToken("A".repeat(8193))).status, 401, "oversized Access tokens must be rejected");
+
     const invalidSignature = await requestWithToken(await makeToken({}, true));
     assert.equal(invalidSignature.status, 401, "a token with an invalid signature must be rejected");
   } finally {
@@ -696,6 +712,36 @@ test("admin requests from an unrelated origin are rejected", async () => {
   assert.equal(response.status, 403);
 });
 
+
+test("every admin API family rejects unauthenticated requests before touching the database", async () => {
+  let databaseTouched = false;
+  const env = makeEnv({
+    DB: { prepare() { databaseTouched = true; throw new Error("Unauthenticated request must not query D1."); } },
+  });
+  const requests = [
+    ["GET", "/api/admin/inquiries"],
+    ["PATCH", "/api/admin/inquiries/123e4567-e89b-12d3-a456-426614174000"],
+    ["GET", "/api/admin/projects"],
+    ["POST", "/api/admin/projects"],
+    ["PATCH", "/api/admin/projects/123e4567-e89b-12d3-a456-426614174000"],
+    ["GET", "/api/admin/services"],
+    ["POST", "/api/admin/services"],
+    ["PATCH", "/api/admin/services/123e4567-e89b-12d3-a456-426614174000"],
+    ["GET", "/api/admin/paver-designs"],
+    ["POST", "/api/admin/paver-designs"],
+    ["PATCH", "/api/admin/paver-designs/123e4567-e89b-12d3-a456-426614174000"],
+    ["GET", "/api/admin/testimonials"],
+    ["POST", "/api/admin/testimonials"],
+    ["PATCH", "/api/admin/testimonials/123e4567-e89b-12d3-a456-426614174000"],
+    ["GET", "/api/admin/homepage-content"],
+    ["PATCH", "/api/admin/homepage-content"],
+  ];
+  for (const [method, path] of requests) {
+    const response = await worker.fetch(new Request("https://api.example" + path, { method }), env);
+    assert.equal(response.status, 401, method + " " + path + " must require Access authentication");
+  }
+  assert.equal(databaseTouched, false, "unauthenticated admin requests must not touch D1");
+});
 
 test("admin dashboard HTML is not served without a verified Cloudflare Access identity", async () => {
   const response = await worker.fetch(

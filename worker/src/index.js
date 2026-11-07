@@ -131,13 +131,18 @@ async function verifyTurnstile(token, request, env) {
 }
 
 function decodeBase64Url(value) {
+  if (typeof value !== "string" || !/^[A-Za-z0-9_-]+$/.test(value) || value.length % 4 === 1) {
+    throw new Error("Invalid base64url value.");
+  }
   const padded = value.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (value.length % 4)) % 4);
   const binary = atob(padded);
   return Uint8Array.from(binary, (character) => character.charCodeAt(0));
 }
 
 function decodeJsonSegment(value) {
-  return JSON.parse(new TextDecoder().decode(decodeBase64Url(value)));
+  const decoded = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(decodeBase64Url(value)));
+  if (!isPlainObject(decoded)) throw new Error("JWT segment must contain an object.");
+  return decoded;
 }
 
 async function getAccessKeys(teamDomain) {
@@ -162,34 +167,44 @@ async function getAccessKeys(teamDomain) {
 async function verifyAccessIdentity(request, env) {
   if (!env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD || !env.ADMIN_EMAILS) return null;
   const token = request.headers.get("Cf-Access-Jwt-Assertion");
-  if (!token) return null;
+  if (typeof token !== "string" || token.length > 8192) return null;
 
   try {
     const parts = token.split(".");
-    if (parts.length !== 3) return null;
+    if (parts.length !== 3 || parts.some((part) => !/^[A-Za-z0-9_-]+$/.test(part))) return null;
 
     const header = decodeJsonSegment(parts[0]);
     const claims = decodeJsonSegment(parts[1]);
-    if (header.alg !== "RS256" || typeof header.kid !== "string") return null;
+    if (header.alg !== "RS256" || typeof header.kid !== "string" ||
+        header.kid.length === 0 || header.kid.length > 256) return null;
 
-    const teamDomain = env.ACCESS_TEAM_DOMAIN.replace(/^https?:\/\//, "").replace(/\/$/, "");
+    const teamDomain = env.ACCESS_TEAM_DOMAIN.trim().replace(/^https?:\\/\\//i, "").replace(/\\/$/, "").toLowerCase();
+    if (!/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(teamDomain) || teamDomain.includes("..")) return null;
     const expectedIssuer = "https://" + teamDomain;
     if (claims.iss !== expectedIssuer) return null;
 
     const nowSeconds = Math.floor(Date.now() / 1000);
-    if (typeof claims.exp !== "number" || claims.exp <= nowSeconds) return null;
-    if (typeof claims.nbf === "number" && claims.nbf > nowSeconds + 60) return null;
-    if (typeof claims.sub !== "string" || claims.sub.length === 0) return null;
+    if (typeof claims.exp !== "number" || !Number.isFinite(claims.exp) || claims.exp <= nowSeconds) return null;
+    if (claims.nbf !== undefined &&
+        (typeof claims.nbf !== "number" || !Number.isFinite(claims.nbf) || claims.nbf > nowSeconds + 60)) return null;
+    if (typeof claims.sub !== "string" || claims.sub.trim().length === 0) return null;
 
-    const audiences = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
-    if (!audiences.includes(env.ACCESS_AUD)) return null;
+    const audiences = Array.isArray(claims.aud) ? claims.aud :
+      (typeof claims.aud === "string" ? [claims.aud] : []);
+    if (!audiences.length || audiences.some((audience) => typeof audience !== "string") ||
+        !audiences.includes(env.ACCESS_AUD)) return null;
 
     const email = typeof claims.email === "string" ? claims.email.trim().toLowerCase() : "";
     const allowedEmails = env.ADMIN_EMAILS.split(",").map((item) => item.trim().toLowerCase()).filter(Boolean);
     if (!email || !allowedEmails.includes(email)) return null;
 
     const keys = await getAccessKeys(teamDomain);
-    const jwk = keys.find((key) => key.kid === header.kid && key.kty === "RSA");
+    const jwk = keys.find((key) =>
+      key && key.kid === header.kid && key.kty === "RSA" &&
+      (key.use === undefined || key.use === "sig") &&
+      (key.alg === undefined || key.alg === "RS256") &&
+      (key.key_ops === undefined || (Array.isArray(key.key_ops) && key.key_ops.includes("verify")))
+    );
     if (!jwk) return null;
 
     const publicKey = await crypto.subtle.importKey(

@@ -629,7 +629,7 @@ export default {
       if (url.pathname.startsWith("/api/admin/")) {
         const identity = await verifyAccessIdentity(request, env);
         if (!identity) return response(request, env, { error: "Unauthorized." }, 401);
-        if (request.method !== "GET" && request.method !== "PATCH") {
+        if (request.method !== "GET" && request.method !== "POST" && request.method !== "PATCH") {
           return response(request, env, { error: "Method not allowed." }, 405);
         }
         return await handleAdmin(request, env, url, identity);

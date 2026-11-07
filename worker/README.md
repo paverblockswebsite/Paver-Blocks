@@ -23,7 +23,9 @@ The exact hostname will be selected only after the development Worker endpoint i
 - GET /api/public/testimonials — published records with permission confirmed only.
 - POST /api/public/inquiries — validates fields, requires Turnstile, and inserts one inquiry.
 
-### Admin
+### Admin (Cloudflare Access required)
+- GET /admin — private same-origin inquiry dashboard.
+- GET /admin/assets/admin.css and /admin/assets/admin.js — private dashboard assets; each request also requires a verified Access JWT.
 - GET /api/admin/inquiries — optional status, limit (max 100), and offset.
 - PATCH /api/admin/inquiries/:id — may update only status and/or internal_notes; records an audit event.
 
@@ -31,7 +33,7 @@ All other admin routes intentionally remain unavailable until their CRUD validat
 
 ## Local smoke tests
 
-Run `npm test` from the worker directory with Node.js 22 or later. These tests cover health, public read routing, CORS rejection, missing admin identity, and request content-type validation. They are smoke tests, not a substitute for live Cloudflare D1, Access, and Turnstile integration tests.
+Run `npm test` from the worker directory with Node.js 22 or later. These tests cover health, public read routing, CORS rejection, missing admin identity, dashboard and asset access controls, and request content-type validation. They are smoke tests, not a substitute for live Cloudflare D1, Access, and Turnstile integration tests.
 
 ## Required environment configuration
 
@@ -50,7 +52,7 @@ The D1 binding must be named DB. It is deliberately not configured here. Bind on
 
 1. Add a Cloudflare rate-limiting rule for POST /api/public/inquiries before enabling public submissions. Turnstile is required in the code but is not a substitute for rate limiting.
 2. Create a Turnstile widget for the exact development hostname, set its action to inquiry, and store its secret as a Worker secret. The API requires a matching hostname and action in the Siteverify response.
-3. Create a Cloudflare Access self-hosted application for the admin API hostname/path. Restrict its policy to intended administrators.
+3. Create a Cloudflare Access self-hosted application for the Worker hostname and protect `/admin*` plus `/api/admin/*` paths. This must include the dashboard HTML and its assets. Restrict its policy to intended administrators.
 4. Set the Worker environment values and a narrowly scoped ADMIN_EMAILS allowlist.
 5. Bind only the development D1 database as DB; never bind production D1 in this development Worker.
 6. Test unauthorized requests, invalid JWTs, wrong origins, missing/invalid Turnstile tokens, invalid fields, and private inquiry access before any public launch.

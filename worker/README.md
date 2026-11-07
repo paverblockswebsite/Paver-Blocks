@@ -46,6 +46,12 @@ The exact hostname will be selected only after the development Worker endpoint i
 
 The dashboard currently supports inquiry review/status updates, plus listing, creation, and editing for projects, services, paver designs, and testimonials, along with a small homepage text editor. Testimonials must have explicit customer permission before publication. Homepage settings expose only approved public text keys; internal settings and customer data are not exposed. Project deletion, project image uploads, testimonial deletion, and broader site settings are not implemented. Other admin CRUD routes intentionally remain unavailable until their validation and authorization tests are implemented.
 
+## Public homepage content connection
+
+The Astro homepage can read the allowlisted public text settings from `GET /api/public/site-settings`. Configure the Pages build-time variable `VITE_PUBLIC_API_BASE_URL` to the HTTPS origin of the development Worker only after that Worker has been deployed and its public route has been verified. This is a public origin value, not a secret. Do not put API secrets or Access credentials in Pages variables with a `VITE_` prefix.
+
+If this variable is unset, the homepage keeps its static approved copy. If the API is unavailable, returns an error, or contains invalid/empty values, the same static copy remains visible. The browser requests only the public settings route, omits credentials, and writes returned strings through `textContent`; it does not call admin routes. Set the Worker `SITE_ORIGIN` to the exact Pages preview origin to permit the browser request through CORS. Do not configure a production API origin until separately reviewed and approved.
+
 ## Local smoke tests
 
 Run `npm test` from the worker directory with Node.js 22 or later. These tests cover health, public read routing, CORS rejection, Access identity validation, dashboard and asset access controls, request validation, and authenticated project create/edit operations with audit logging. They are smoke tests, not a substitute for live Cloudflare D1, Access, and Turnstile integration tests.

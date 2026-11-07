@@ -299,6 +299,28 @@ const ADMIN_HTML = `<!doctype html>
     </section>
     <p id="notice" class="notice" role="status" aria-live="polite">Loading inquiries…</p>
     <section id="inquiry-list" class="inquiry-list" aria-label="Inquiry list"></section>
+
+    <section class="content-heading">
+      <div><p class="eyebrow">PORTFOLIO CONTENT</p><h2>Projects</h2><p class="muted">Create projects and update their public visibility.</p></div>
+      <button id="project-new" type="button" class="button primary">Add project</button>
+    </section>
+    <p id="project-notice" class="notice" role="status" aria-live="polite">Loading projects…</p>
+    <form id="project-form" class="project-form" hidden>
+      <h3 id="project-form-title">Add project</h3>
+      <input type="hidden" name="id">
+      <div class="project-fields">
+        <label>Project title<input name="title" maxlength="160" required></label>
+        <label>URL slug<input name="slug" maxlength="180" pattern="[a-z0-9]+(-[a-z0-9]+)*" required><small>Lowercase letters, numbers and hyphens only.</small></label>
+        <label>Location<input name="location" maxlength="180"></label>
+        <label>Completion date<input name="completed_on" type="date"></label>
+        <label>Status<select name="status"><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label>
+        <label>Display order<input name="sort_order" type="number" min="-100000" max="100000" step="1" value="0"></label>
+        <label class="wide">Short summary<textarea name="summary" maxlength="2000" rows="3"></textarea></label>
+        <label class="wide">Project description<textarea name="description" maxlength="10000" rows="5"></textarea></label>
+      </div>
+      <div class="form-actions"><button type="submit" class="button primary">Save project</button><button id="project-cancel" type="button" class="button secondary">Cancel</button></div>
+    </form>
+    <section id="project-list" class="project-list" aria-label="Projects"></section>
     <p class="footnote">Private business information. Sign out of your Cloudflare Access session on shared devices.</p>
   </main>
 </body>
@@ -311,8 +333,8 @@ const ADMIN_CSS = `
 .brand{color:#fff;text-decoration:none;font-weight:800;letter-spacing:.06em}.brand span{color:var(--yellow);font-size:.75rem;margin-left:8px}.public-link{color:#fff;text-decoration:none;font-size:.9rem}
 .shell{max-width:1100px;margin:0 auto;padding:42px 22px 64px}.intro{margin-bottom:28px}.eyebrow{font-size:.75rem;font-weight:800;letter-spacing:.14em;color:#8b6810}.intro h1{font-size:clamp(2rem,5vw,2.7rem);line-height:1.1;margin:8px 0;color:var(--navy)}.muted,.footnote{color:var(--muted)}
 .toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}.toolbar label{font-weight:650}.toolbar select,.editor select,.editor textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink)}.button{font:inherit;font-weight:700;border:0;border-radius:8px;padding:10px 16px;cursor:pointer}.primary{background:var(--navy);color:#fff}.secondary{background:#e9eef4;color:var(--navy)}button:focus-visible,a:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #d69e00;outline-offset:2px}
-.notice{min-height:26px;color:var(--muted)}.notice.error{color:#a12626}.inquiry-list{display:grid;gap:14px}.inquiry{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 2px 8px #172b4508}.inquiry-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.inquiry h2{font-size:1.12rem;color:var(--navy);margin:0 0 4px}.meta{color:var(--muted);font-size:.9rem}.pill{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;border-radius:30px;padding:5px 9px;background:#edf1f5;color:#43546a;white-space:nowrap}.details{white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0}.facts{display:flex;gap:10px 18px;flex-wrap:wrap;font-size:.9rem;color:#48576a}.editor{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;display:grid;grid-template-columns:minmax(140px,220px) 1fr auto;gap:10px;align-items:end}.editor label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.editor textarea{min-height:42px;resize:vertical}.empty{background:#fff;border:1px dashed #bdc7d3;border-radius:14px;padding:30px;text-align:center;color:var(--muted)}.footnote{font-size:.82rem;margin-top:34px}
-@media(max-width:650px){.shell{padding-top:28px}.editor{grid-template-columns:1fr}.inquiry-head{align-items:flex-start}.topbar{padding:0 16px}}
+.notice{min-height:26px;color:var(--muted)}.notice.error{color:#a12626}.inquiry-list,.project-list{display:grid;gap:14px}.inquiry,.project-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 2px 8px #172b4508}.inquiry-head,.project-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.inquiry h2,.project-card h3{font-size:1.12rem;color:var(--navy);margin:0 0 4px}.meta{color:var(--muted);font-size:.9rem}.pill{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;border-radius:30px;padding:5px 9px;background:#edf1f5;color:#43546a;white-space:nowrap}.details{white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0}.facts{display:flex;gap:10px 18px;flex-wrap:wrap;font-size:.9rem;color:#48576a}.editor{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;display:grid;grid-template-columns:minmax(140px,220px) 1fr auto;gap:10px;align-items:end}.editor label,.project-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.editor textarea,.project-fields input,.project-fields select,.project-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.editor textarea{min-height:42px;resize:vertical}.empty{background:#fff;border:1px dashed #bdc7d3;border-radius:14px;padding:30px;text-align:center;color:var(--muted)}.content-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:48px 0 12px}.content-heading h2{font-size:1.7rem;color:var(--navy);margin:4px 0}.project-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.project-form h3{margin:0 0 16px;color:var(--navy)}.project-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.project-fields .wide{grid-column:1/-1}.project-fields small{font-weight:400;color:var(--muted)}.form-actions{display:flex;gap:10px;margin-top:18px}.project-card p{margin:8px 0}.project-card .project-actions{display:flex;gap:8px;margin-top:14px}.footnote{font-size:.82rem;margin-top:34px}
+@media(max-width:650px){.shell{padding-top:28px}.editor{grid-template-columns:1fr}.inquiry-head,.project-head{align-items:flex-start}.topbar{padding:0 16px}.project-fields{grid-template-columns:1fr}.project-fields .wide{grid-column:auto}.content-heading{align-items:flex-start;flex-direction:column}}
 `;
 
 const ADMIN_JS = `
@@ -386,7 +408,80 @@ async function load() {
 }
 document.querySelector("#refresh").addEventListener("click",load);
 filter.addEventListener("change",load);
+
+const projectList = document.querySelector("#project-list");
+const projectNotice = document.querySelector("#project-notice");
+const projectForm = document.querySelector("#project-form");
+const projectFields = projectForm.elements;
+function showProjectForm(item) {
+  projectForm.reset();
+  projectFields.namedItem("id").value = item?.id || "";
+  projectFields.namedItem("title").value = item?.title || "";
+  projectFields.namedItem("slug").value = item?.slug || "";
+  projectFields.namedItem("location").value = item?.location || "";
+  projectFields.namedItem("completed_on").value = item?.completed_on || "";
+  projectFields.namedItem("status").value = item?.status || "draft";
+  projectFields.namedItem("sort_order").value = Number.isInteger(item?.sort_order) ? item.sort_order : 0;
+  projectFields.namedItem("summary").value = item?.summary || "";
+  projectFields.namedItem("description").value = item?.description || "";
+  document.querySelector("#project-form-title").textContent = item ? "Edit project" : "Add project";
+  projectForm.hidden = false;
+  projectFields.namedItem("title").focus();
+}
+function makeProject(item) {
+  const card=element("article","project-card");
+  const head=element("div","project-head");
+  const title=element("div");
+  title.append(element("h3","",item.title || "Untitled project"));
+  title.append(element("p","meta",item.slug || ""));
+  head.append(title,element("span","pill",labelStatus(item.status || "draft")));
+  card.append(head);
+  if(item.location) card.append(element("p","meta",item.location));
+  if(item.summary) card.append(element("p","",item.summary));
+  const actions=element("div","project-actions");
+  const edit=element("button","button secondary","Edit");
+  edit.type="button";edit.addEventListener("click",()=>showProjectForm(item));
+  actions.append(edit);card.append(actions);
+  return card;
+}
+async function loadProjects() {
+  projectList.replaceChildren();projectNotice.className="notice";projectNotice.textContent="Loading projects…";
+  try {
+    const payload=await api("/api/admin/projects");
+    const items=Array.isArray(payload.data)?payload.data:[];
+    if(!items.length) projectList.append(element("div","empty","No projects yet. Add a project when you are ready."));
+    else items.forEach(item=>projectList.append(makeProject(item)));
+    projectNotice.textContent=items.length+" project record"+(items.length===1?"":"s")+" loaded.";
+  } catch(error) { projectNotice.className="notice error";projectNotice.textContent=error.message; }
+}
+document.querySelector("#project-new").addEventListener("click",()=>showProjectForm());
+document.querySelector("#project-cancel").addEventListener("click",()=>{projectForm.hidden=true;projectForm.reset();});
+projectForm.addEventListener("submit",async event=>{
+  event.preventDefault();
+  const id=projectFields.namedItem("id").value;
+  const body={
+    title:projectFields.namedItem("title").value,
+    slug:projectFields.namedItem("slug").value,
+    location:projectFields.namedItem("location").value,
+    completed_on:projectFields.namedItem("completed_on").value,
+    status:projectFields.namedItem("status").value,
+    sort_order:Number(projectFields.namedItem("sort_order").value),
+    summary:projectFields.namedItem("summary").value,
+    description:projectFields.namedItem("description").value
+  };
+  const save=projectForm.querySelector('button[type="submit"]');
+  save.disabled=true;save.textContent="Saving…";
+  try {
+    await api(id?"/api/admin/projects/"+encodeURIComponent(id):"/api/admin/projects",{
+      method:id?"PATCH":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)
+    });
+    projectNotice.className="notice";projectNotice.textContent="Project saved.";
+    projectForm.hidden=true;await loadProjects();
+  } catch(error) { projectNotice.className="notice error";projectNotice.textContent=error.message; }
+  finally { save.disabled=false;save.textContent="Save project"; }
+});
 load();
+loadProjects();
 `;
 
 async function handleAdmin(request, env, url, identity) {

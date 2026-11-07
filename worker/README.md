@@ -34,7 +34,7 @@ Configure these as Worker environment variables/secrets in the Cloudflare dashbo
 - TURNSTILE_HOSTNAME — expected hostname returned by Turnstile verification.
 - ACCESS_TEAM_DOMAIN — Access team hostname, e.g. your-team.cloudflareaccess.com (hostname only or full HTTPS URL).
 - ACCESS_AUD — audience tag for the protected Access application.
-- ADMIN_EMAILS — comma-separated allowlist of administrator email addresses.
+- ADMIN_EMAILS — comma-separated allowlist of administrator email addresses. For the initial administrator, set this dashboard variable to `hellopaverblocks@gmail.com`; do not add it to source code or `wrangler.toml`.
 
 The D1 binding must be named DB. It is deliberately not configured here. Bind only the development database after a separate review and approval.
 

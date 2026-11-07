@@ -12,6 +12,14 @@
 - Never store passwords in this application database. Cloudflare Access is the planned identity gate.
 - Never put API tokens, database credentials, or customer records in Git.
 
+## 2.1 Admin origin and Access boundary
+
+The admin interface should be served by the Worker on the same origin as its admin API. This avoids depending on cross-origin Access cookies, CORS credential configuration, and browser third-party-cookie behavior. The public Astro Pages site should link to the Worker-hosted admin URL rather than embedding or proxying the private admin interface.
+
+Use a hostname/path-based Cloudflare Access application for the Worker hostname and protect only the admin UI path (for example, `/admin*`) and admin API path (`/api/admin/*`). Do not protect the entire mixed-purpose Worker, because its public API routes must remain reachable. Continue verifying the Access JWT and administrator email allowlist inside the Worker; edge protection is an additional boundary, not a replacement.
+
+Cloudflare documents hostname/path Access protection for Workers, including `workers.dev` hostnames, and documents that browser CORS requests to Access-protected origins require an Access authorization cookie. This is why the same-origin admin design is preferred over a cross-origin admin dashboard. The final hostname and exact Access path patterns must be reviewed in the dashboard before enabling anything.
+
 ## 2. Proposed public API
 
 | Method and route | Purpose | Access |

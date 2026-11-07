@@ -21,6 +21,7 @@ The exact hostname will be selected only after the development Worker endpoint i
 - GET /api/public/services
 - GET /api/public/paver-designs
 - GET /api/public/testimonials — published records with permission confirmed only.
+- GET /api/public/site-settings — a strict allowlist of public homepage text settings only.
 - POST /api/public/inquiries — validates fields, requires Turnstile, and inserts one inquiry.
 
 ### Admin (Cloudflare Access required)
@@ -37,8 +38,13 @@ The exact hostname will be selected only after the development Worker endpoint i
 - GET /api/admin/paver-designs — lists all paver design records.
 - POST /api/admin/paver-designs — creates a paver design as draft by default.
 - PATCH /api/admin/paver-designs/:id — edits allowlisted design fields and records an audit event.
+- GET /api/admin/testimonials — lists testimonials, including drafts and permission state.
+- POST /api/admin/testimonials — creates a testimonial; publishing requires explicit permission confirmation.
+- PATCH /api/admin/testimonials/:id — edits a testimonial and enforces permission before publication.
+- GET /api/admin/homepage-content — reads approved homepage text fields.
+- PATCH /api/admin/homepage-content — updates only allowlisted homepage text fields and records an audit event.
 
-The dashboard currently supports inquiry review/status updates, plus listing, creation, and editing for projects, services, and paver designs. New service and paver-design records default to draft; only publish a record after checking its wording and supplier-provided specifications. Project deletion, project image uploads, testimonials, and site settings are not implemented. Other admin CRUD routes intentionally remain unavailable until their validation and authorization tests are implemented.
+The dashboard currently supports inquiry review/status updates, plus listing, creation, and editing for projects, services, paver designs, and testimonials, along with a small homepage text editor. Testimonials must have explicit customer permission before publication. Homepage settings expose only approved public text keys; internal settings and customer data are not exposed. Project deletion, project image uploads, testimonial deletion, and broader site settings are not implemented. Other admin CRUD routes intentionally remain unavailable until their validation and authorization tests are implemented.
 
 ## Local smoke tests
 

@@ -51,11 +51,41 @@ async function readJson(request) {
   const contentType = request.headers.get("content-type") || "";
   const mediaType = contentType.split(";")[0].trim().toLowerCase();
   if (mediaType !== "application/json") return { error: "Content-Type must be application/json." };
-  const declaredLength = Number(request.headers.get("content-length") || 0);
-  if (declaredLength > MAX_BODY_BYTES) return { error: "Request is too large." };
-  const raw = await request.text();
-  if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) return { error: "Request is too large." };
+
+  const lengthHeader = request.headers.get("content-length");
+  if (lengthHeader !== null) {
+    if (!/^\\d+$/.test(lengthHeader)) return { error: "Invalid Content-Length." };
+    if (Number(lengthHeader) > MAX_BODY_BYTES) return { error: "Request is too large." };
+  }
+
+  if (!request.body) return { error: "Invalid JSON." };
+  const reader = request.body.getReader();
+  const chunks = [];
+  let totalBytes = 0;
   try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_BODY_BYTES) {
+        await reader.cancel();
+        return { error: "Request is too large." };
+      }
+      chunks.push(value);
+    }
+  } catch {
+    return { error: "Request body could not be read." };
+  }
+
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  try {
+    const raw = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
     const value = JSON.parse(raw);
     return isPlainObject(value) ? { value } : { error: "A JSON object is required." };
   } catch {

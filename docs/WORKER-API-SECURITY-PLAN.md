@@ -1,6 +1,6 @@
 # Paver Blocks — Worker API and Admin Security Plan
 
-**Status:** Design only. No Worker, D1 database, R2 bucket, Access application, admin login, or production binding has been created.
+**Status:** Initial Worker API code now exists on the development branch and is not deployed. The development D1 database and its schema have been created and verified separately, but no Worker D1 binding is configured. No Access application, Turnstile widget/secrets, R2 bucket, admin login, or production binding is active.
 
 ## 1. Security boundary
 
@@ -69,10 +69,10 @@ The final route contract may change during implementation. Do not expose an endp
 ## 6. Safe implementation sequence
 
 1. Review and approve this API/security design.
-2. Create a separate development-only D1 database, after explicit approval.
-3. Apply the reviewed migration to development D1 and verify table/constraint behavior.
-4. Implement public read and inquiry-submit endpoints first, with tests.
-5. Configure Cloudflare Access and verify admin identity restrictions before adding admin endpoints.
+2. Create a separate development-only D1 database, after explicit approval. **Completed:** paver-blocks-dev exists.
+3. Apply the reviewed migration to development D1 and verify table/constraint behavior. **Completed:** 8 application tables and 7 custom indexes were verified in the D1 Console; this is not yet a full live API integration test.
+4. Initial public read routes, Turnstile-protected inquiry submission, Access JWT verification, and limited inquiry-admin routes are coded on the development branch. Complete integration, negative-case, and security tests before deployment.
+5. Configure Cloudflare Access and verify admin identity restrictions before enabling any admin route.
 6. Implement admin operations with authorization, validation, and audit tests.
 7. Add development-only R2 uploads with file validation.
 8. Connect the development website and test end-to-end using dummy data only.

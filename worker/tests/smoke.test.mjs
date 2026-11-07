@@ -310,6 +310,8 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.match(dashboardHtml, /\/admin\/assets\/admin\.css/);
     assert.match(dashboardHtml, /id="project-form"/);
     assert.match(dashboardHtml, /name="completed_on"/);
+    assert.match(dashboardHtml, /id="service-form"/);
+    assert.match(dashboardHtml, /id="design-form"/);
     assert.match(dashboardHtml, /https:\/\/development-site\.example/);
     assert.doesNotMatch(dashboardHtml, /href="\/" rel="noopener"/);
 
@@ -325,6 +327,8 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
       assert.ok(assetText.length > 0);
       if (path.endsWith(".js")) {
         assert.match(assetText, /api\/admin\/projects/);
+        assert.match(assetText, /api\/admin\/services/);
+        assert.match(assetText, /api\/admin\/paver-designs/);
         assert.match(assetText, /method:id\?"PATCH":"POST"/);
       }
     }
@@ -401,6 +405,82 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     });
     assert.equal(invalidCalendarDate.status, 400, "impossible calendar dates are rejected");
     assert.equal(dbBatches.length, batchesBeforeInvalidProject, "invalid dates must not write to D1");
+
+
+    const servicesBefore = dbBatches.length;
+    const serviceList = await requestWithToken(validToken, "/api/admin/services");
+    assert.equal(serviceList.status, 200);
+    assert.deepEqual((await serviceList.json()).data, []);
+    const serviceCreate = await requestWithToken(validToken, "/api/admin/services", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: "Road construction",
+        slug: "road-construction",
+        short_description: "Road construction services",
+        description: "Construction and related paving work.",
+        status: "draft",
+        sort_order: 5,
+      }),
+    });
+    assert.equal(serviceCreate.status, 201);
+    assert.equal(dbBatches.at(-1).length, 2, "service create and audit are atomic");
+    assert.match(dbBatches.at(-1)[0].sql, /^INSERT INTO services/);
+    assert.match(dbBatches.at(-1)[1].sql, /^INSERT INTO admin_audit_log/);
+    const serviceUpdate = await requestWithToken(validToken, "/api/admin/services/123e4567-e89b-12d3-a456-426614174000", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "published", short_description: "Updated description" }),
+    });
+    assert.equal(serviceUpdate.status, 200);
+    assert.match(dbBatches.at(-1)[0].sql, /^UPDATE services SET/);
+    assert.match(dbBatches.at(-1)[1].sql, /^INSERT INTO admin_audit_log/);
+
+    const designList = await requestWithToken(validToken, "/api/admin/paver-designs");
+    assert.equal(designList.status, 200);
+    assert.deepEqual((await designList.json()).data, []);
+    const designCreate = await requestWithToken(validToken, "/api/admin/paver-designs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "I-shape paver",
+        slug: "i-shape-paver",
+        shape: "I-shape",
+        dimensions: "Supplier to confirm",
+        thickness: "Supplier to confirm",
+        colour: "Grey",
+        supplier_note: "Confirm stock before quoting.",
+      }),
+    });
+    assert.equal(designCreate.status, 201, "paver design defaults to draft");
+    assert.equal(dbBatches.at(-1).length, 2, "design create and audit are atomic");
+    assert.match(dbBatches.at(-1)[0].sql, /^INSERT INTO paver_designs/);
+    assert.match(dbBatches.at(-1)[1].sql, /^INSERT INTO admin_audit_log/);
+    const designUpdate = await requestWithToken(validToken, "/api/admin/paver-designs/123e4567-e89b-12d3-a456-426614174000", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ colour: "Red", status: "published" }),
+    });
+    assert.equal(designUpdate.status, 200);
+    assert.match(dbBatches.at(-1)[0].sql, /^UPDATE paver_designs SET/);
+    assert.match(dbBatches.at(-1)[1].sql, /^INSERT INTO admin_audit_log/);
+
+    const beforeInvalidContent = dbBatches.length;
+    for (const [path, body] of [
+      ["/api/admin/services", { title: "Unsafe", slug: "../unsafe" }],
+      ["/api/admin/services", { title: "Unknown", slug: "unknown", extra: "nope" }],
+      ["/api/admin/paver-designs", { name: "Bad shape", slug: "bad-shape", sort_order: 100001 }],
+      ["/api/admin/paver-designs", { name: "Bad slug", slug: "Bad Slug" }],
+    ]) {
+      const invalid = await requestWithToken(validToken, path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      assert.equal(invalid.status, 400, "invalid content input must be rejected");
+    }
+    assert.equal(dbBatches.length, beforeInvalidContent, "invalid content must not write to D1");
+    assert.ok(dbBatches.length > servicesBefore);
 
     const wrongEmail = await requestWithToken(await makeToken({ email: "someone-else@example.com" }));
     assert.equal(wrongEmail.status, 401, "an email outside the allowlist must be rejected");

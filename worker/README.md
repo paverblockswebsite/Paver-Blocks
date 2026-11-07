@@ -4,6 +4,14 @@
 
 This Worker is a separate API service intended to sit beside the Astro Pages website.
 
+## Admin origin and Access boundary
+
+The admin interface is planned to be served by this Worker on the same origin as its admin API. This avoids relying on cross-origin Access cookies and browser third-party-cookie behavior. The public Astro website will link to the Worker-hosted admin sign-in URL; it will not host or proxy the private admin interface.
+
+When configuring Cloudflare Access, use a hostname/path-based self-hosted application for the Worker hostname and protect only the admin interface path (for example, `/admin*`) and admin API path (`/api/admin/*`). Do not apply a Worker-wide Access rule to this mixed public/private Worker, because that would also block the public API routes. Keep the Worker-side JWT verification and email allowlist even when the Access edge policy is enabled.
+
+The exact hostname will be selected only after the development Worker endpoint is confirmed. No Access application or deployment is active yet.
+
 ## Implemented routes
 
 ### Public

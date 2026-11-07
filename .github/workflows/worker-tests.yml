@@ -5,12 +5,6 @@ on:
     paths:
       - 'worker/**'
       - '.github/workflows/worker-tests.yml'
-  push:
-    branches:
-      - 'development/**'
-    paths:
-      - 'worker/**'
-      - '.github/workflows/worker-tests.yml'
 
 permissions:
   contents: read

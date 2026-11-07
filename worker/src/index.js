@@ -206,6 +206,17 @@ async function handlePublic(request, env, url) {
     return publicList(request, env, "paver_designs", "id, name, slug, shape, dimensions, thickness, colour");
   }
 
+
+  if (request.method === "GET" && path === "/api/public/site-settings") {
+    const keys = ["hero_title", "hero_subtitle", "hero_cta_label", "about_heading", "about_text", "experience_statement"];
+    const result = await env.DB.prepare(
+      "SELECT setting_key, setting_value FROM site_settings WHERE setting_key IN (" + keys.map(() => "?").join(", ") + ")",
+    ).bind(...keys).all();
+    const data = {};
+    for (const row of result.results || []) data[row.setting_key] = row.setting_value;
+    return response(request, env, { data });
+  }
+
   if (request.method === "GET" && path === "/api/public/testimonials") {
     return publicList(
       request,
@@ -673,6 +684,150 @@ function validateAdminContentInput(input, config, partial = false) {
   return values;
 }
 
+
+const HOMEPAGE_SETTING_KEYS = {
+  hero_title: 120,
+  hero_subtitle: 300,
+  hero_cta_label: 60,
+  about_heading: 120,
+  about_text: 2000,
+  experience_statement: 180,
+};
+
+async function handleAdminEditorial(request, env, url, identity) {
+  if (url.pathname === "/api/admin/testimonials") {
+    if (request.method === "GET") {
+      const result = await env.DB.prepare(
+        "SELECT id, customer_display_name, customer_role_or_company, testimonial_text, permission_confirmed, status, sort_order, created_at, updated_at FROM testimonials ORDER BY sort_order ASC, created_at DESC",
+      ).all();
+      return response(request, env, { data: result.results || [] });
+    }
+    if (request.method === "POST") {
+      const parsed = await readJson(request);
+      if (parsed.error) return response(request, env, { error: parsed.error }, 400);
+      const input = parsed.value;
+      const allowed = ["customer_display_name", "customer_role_or_company", "testimonial_text", "permission_confirmed", "status", "sort_order"];
+      if (!Object.keys(input).length || Object.keys(input).some((key) => !allowed.includes(key))) {
+        return response(request, env, { error: "Unexpected or missing testimonial fields." }, 400);
+      }
+      const name = cleanString(input.customer_display_name, 120, true);
+      const role = cleanString(input.customer_role_or_company, 160);
+      const quote = cleanString(input.testimonial_text, 2000, true);
+      const permission = input.permission_confirmed;
+      const status = input.status === undefined ? "draft" : cleanString(input.status, 20, true);
+      const sortOrder = input.sort_order === undefined ? 0 : input.sort_order;
+      if (!name || role === null || !quote || typeof permission !== "boolean" ||
+          !["draft", "published", "archived"].includes(status) ||
+          !Number.isInteger(sortOrder) || sortOrder < -100000 || sortOrder > 100000 ||
+          (status === "published" && permission !== true)) {
+        return response(request, env, { error: "Please confirm permission and check the testimonial fields." }, 400);
+      }
+      const id = crypto.randomUUID();
+      await env.DB.batch([
+        env.DB.prepare(
+          "INSERT INTO testimonials (id, customer_display_name, customer_role_or_company, testimonial_text, permission_confirmed, status, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ).bind(id, name, role || null, quote, permission ? 1 : 0, status, sortOrder),
+        env.DB.prepare(
+          "INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)",
+        ).bind(crypto.randomUUID(), identity.email, "create", "testimonial", id),
+      ]);
+      return response(request, env, { success: true, id }, 201);
+    }
+    return response(request, env, { error: "Not found." }, 404);
+  }
+
+  const testimonialMatch = url.pathname.match(/^\/api\/admin\/testimonials\/([0-9a-f-]{36})$/i);
+  if (testimonialMatch && request.method === "PATCH") {
+    const parsed = await readJson(request);
+    if (parsed.error) return response(request, env, { error: parsed.error }, 400);
+    const input = parsed.value;
+    const allowed = ["customer_display_name", "customer_role_or_company", "testimonial_text", "permission_confirmed", "status", "sort_order"];
+    const keys = Object.keys(input);
+    if (!keys.length || keys.some((key) => !allowed.includes(key))) {
+      return response(request, env, { error: "Unexpected or missing testimonial fields." }, 400);
+    }
+    const values = {};
+    for (const key of keys) {
+      const value = input[key];
+      if (key === "permission_confirmed") {
+        if (typeof value !== "boolean") return response(request, env, { error: "Permission confirmation must be true or false." }, 400);
+        values[key] = value ? 1 : 0;
+      } else if (key === "sort_order") {
+        if (!Number.isInteger(value) || value < -100000 || value > 100000) return response(request, env, { error: "Invalid display order." }, 400);
+        values[key] = value;
+      } else {
+        const limits = { customer_display_name: 120, customer_role_or_company: 160, testimonial_text: 2000, status: 20 };
+        const cleaned = cleanString(value, limits[key], key === "customer_display_name" || key === "testimonial_text" || key === "status");
+        if (cleaned === null || (key === "status" && !["draft", "published", "archived"].includes(cleaned))) {
+          return response(request, env, { error: "Invalid testimonial field: " + key }, 400);
+        }
+        values[key] = cleaned;
+      }
+    }
+    const id = testimonialMatch[1];
+    const current = await env.DB.prepare(
+      "SELECT permission_confirmed, status FROM testimonials WHERE id = ? LIMIT 1",
+    ).bind(id).first();
+    if (!current) return response(request, env, { error: "Testimonial not found." }, 404);
+    const resultingPermission = values.permission_confirmed === undefined ? current.permission_confirmed : values.permission_confirmed;
+    const resultingStatus = values.status === undefined ? current.status : values.status;
+    if (resultingStatus === "published" && resultingPermission !== 1) {
+      return response(request, env, { error: "A testimonial cannot be published without confirmed customer permission." }, 400);
+    }
+    const columns = Object.keys(values);
+    const assignments = columns.map((column) => column + " = ?").join(", ");
+    const bindings = columns.map((column) => column === "customer_role_or_company" && values[column] === "" ? null : values[column]);
+    await env.DB.batch([
+      env.DB.prepare("UPDATE testimonials SET " + assignments + ", updated_at = CURRENT_TIMESTAMP WHERE id = ?").bind(...bindings, id),
+      env.DB.prepare(
+        "INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)",
+      ).bind(crypto.randomUUID(), identity.email, "update", "testimonial", id),
+    ]);
+    return response(request, env, { success: true });
+  }
+
+  if (url.pathname === "/api/admin/homepage-content") {
+    if (request.method === "GET") {
+      const keys = Object.keys(HOMEPAGE_SETTING_KEYS);
+      const result = await env.DB.prepare(
+        "SELECT setting_key, setting_value FROM site_settings WHERE setting_key IN (" + keys.map(() => "?").join(", ") + ")",
+      ).bind(...keys).all();
+      const data = {};
+      for (const key of keys) data[key] = "";
+      for (const row of result.results || []) data[row.setting_key] = row.setting_value;
+      return response(request, env, { data });
+    }
+    if (request.method === "PATCH") {
+      const parsed = await readJson(request);
+      if (parsed.error) return response(request, env, { error: parsed.error }, 400);
+      const input = parsed.value;
+      const keys = Object.keys(input);
+      if (!keys.length || keys.some((key) => !Object.hasOwn(HOMEPAGE_SETTING_KEYS, key))) {
+        return response(request, env, { error: "Only approved homepage content fields may be updated." }, 400);
+      }
+      const values = {};
+      for (const key of keys) {
+        const value = cleanString(input[key], HOMEPAGE_SETTING_KEYS[key]);
+        if (value === null) return response(request, env, { error: "Invalid homepage content field: " + key }, 400);
+        values[key] = value;
+      }
+      const statements = [];
+      for (const [key, value] of Object.entries(values)) {
+        statements.push(env.DB.prepare(
+          "INSERT INTO site_settings (setting_key, setting_value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(setting_key) DO UPDATE SET setting_value = excluded.setting_value, updated_at = CURRENT_TIMESTAMP",
+        ).bind(key, value));
+      }
+      statements.push(env.DB.prepare(
+        "INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)",
+      ).bind(crypto.randomUUID(), identity.email, "update", "homepage_content", null));
+      await env.DB.batch(statements);
+      return response(request, env, { success: true });
+    }
+    return response(request, env, { error: "Not found." }, 404);
+  }
+  return null;
+}
+
 async function handleAdminContent(request, env, url, identity) {
   const match = url.pathname.match(/^\/api\/admin\/(services|paver-designs)(?:\/([0-9a-f-]{36}))?$/i);
   if (!match) return null;
@@ -739,6 +894,8 @@ async function handleAdmin(request, env, url, identity) {
   const path = url.pathname;
   const contentResponse = await handleAdminContent(request, env, url, identity);
   if (contentResponse) return contentResponse;
+  const editorialResponse = await handleAdminEditorial(request, env, url, identity);
+  if (editorialResponse) return editorialResponse;
 
   if (request.method === "GET" && path === "/api/admin/projects") {
     const result = await env.DB.prepare(

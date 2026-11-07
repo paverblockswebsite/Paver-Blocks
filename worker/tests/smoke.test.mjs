@@ -326,3 +326,31 @@ test("admin requests from an unrelated origin are rejected", async () => {
   );
   assert.equal(response.status, 403);
 });
+
+
+test("admin dashboard HTML is not served without a verified Cloudflare Access identity", async () => {
+  const response = await worker.fetch(
+    new Request("https://api.example/admin"),
+    makeEnv(),
+  );
+  assert.equal(response.status, 401);
+  assert.match(response.headers.get("content-type") || "", /application\\/json/);
+});
+
+test("admin JavaScript and CSS assets are also protected by Access verification", async () => {
+  for (const path of ["/admin/assets/admin.js", "/admin/assets/admin.css"]) {
+    const response = await worker.fetch(
+      new Request("https://api.example" + path),
+      makeEnv(),
+    );
+    assert.equal(response.status, 401, path + " must not be publicly readable");
+  }
+});
+
+test("admin dashboard rejects non-GET methods", async () => {
+  const response = await worker.fetch(
+    new Request("https://api.example/admin", { method: "POST" }),
+    makeEnv(),
+  );
+  assert.equal(response.status, 405);
+});

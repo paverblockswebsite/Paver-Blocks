@@ -410,7 +410,7 @@ async function handleAdmin(request, env, url, identity) {
     const status = input.status === undefined ? "draft" : cleanString(input.status, 20, true);
     const sortOrder = input.sort_order === undefined ? 0 : input.sort_order;
     const validSlug = slug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
-    const validDate = !completedOn || /^\\d{4}-\\d{2}-\\d{2}$/.test(completedOn);
+    const validDate = !completedOn || /^\d{4}-\d{2}-\d{2}$/.test(completedOn);
     if (!title || !validSlug || location === null || completedOn === null || !validDate ||
         summary === null || description === null ||
         !["draft", "published", "archived"].includes(status) ||
@@ -430,7 +430,7 @@ async function handleAdmin(request, env, url, identity) {
     return response(request, env, { success: true, id }, 201);
   }
 
-  const projectMatch = path.match(/^\\/api\\/admin\\/projects\\/([0-9a-f-]{36})$/i);
+  const projectMatch = path.match(/^\/api\/admin\/projects\/([0-9a-f-]{36})$/i);
   if (request.method === "PATCH" && projectMatch) {
     const parsed = await readJson(request);
     if (parsed.error) return response(request, env, { error: parsed.error }, 400);
@@ -455,7 +455,7 @@ async function handleAdmin(request, env, url, identity) {
       if (value === null ||
           (key === "slug" && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) ||
           (key === "status" && !["draft", "published", "archived"].includes(value)) ||
-          (key === "completed_on" && value && !/^\\d{4}-\\d{2}-\\d{2}$/.test(value))) {
+          (key === "completed_on" && value && !/^\d{4}-\d{2}-\d{2}$/.test(value))) {
         return response(request, env, { error: "Invalid project field: " + key }, 400);
       }
       values[key] = value;
@@ -467,7 +467,8 @@ async function handleAdmin(request, env, url, identity) {
 
     const columns = Object.keys(values);
     const assignments = columns.map((column) => column + " = ?").join(", ");
-    const bindings = columns.map((column) => values[column] === "" ? null : values[column]);
+    const nullableColumns = new Set(["location", "completed_on"]);
+    const bindings = columns.map((column) => nullableColumns.has(column) && values[column] === "" ? null : values[column]);
     await env.DB.batch([
       env.DB.prepare(
         "UPDATE projects SET " + assignments + ", updated_at = CURRENT_TIMESTAMP WHERE id = ?",

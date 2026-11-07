@@ -305,3 +305,24 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
   }
 });
 
+
+
+test("same-origin admin requests reach Access authentication instead of being rejected by the public-site CORS rule", async () => {
+  const response = await worker.fetch(
+    new Request("https://api.example/api/admin/inquiries", {
+      headers: { Origin: "https://api.example" },
+    }),
+    makeEnv({ SITE_ORIGIN: "https://public-site.example" }),
+  );
+  assert.equal(response.status, 401);
+});
+
+test("admin requests from an unrelated origin are rejected", async () => {
+  const response = await worker.fetch(
+    new Request("https://api.example/api/admin/inquiries", {
+      headers: { Origin: "https://untrusted.example" },
+    }),
+    makeEnv({ SITE_ORIGIN: "https://public-site.example" }),
+  );
+  assert.equal(response.status, 403);
+});

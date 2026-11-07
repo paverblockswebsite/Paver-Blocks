@@ -80,7 +80,7 @@ Configure these as Worker environment variables/secrets in the Cloudflare dashbo
 - ACCESS_AUD — audience tag for the protected Access application.
 - ADMIN_EMAILS — comma-separated allowlist of administrator email addresses. For the initial administrator, set this dashboard variable to `hellopaverblocks@gmail.com`; do not add it to source code or `wrangler.toml`.
 
-The D1 binding must be named DB. It is deliberately not configured here. Bind only the development database after a separate review and approval.
+The D1 binding must be named `DB`; the Wrangler file currently points only to the development database. Do not add or switch to a production database.
 
 ## Security and deployment prerequisites
 

@@ -93,6 +93,20 @@ async function readJson(request) {
   }
 }
 
+async function checkInquiryRateLimit(request, env) {
+  const limiter = env.INQUIRY_RATE_LIMITER;
+  const clientIp = request.headers.get("CF-Connecting-IP");
+  if (!limiter || typeof limiter.limit !== "function" || !clientIp) {
+    return { allowed: false, unavailable: true };
+  }
+  try {
+    const result = await limiter.limit({ key: "public-inquiry:" + clientIp });
+    return { allowed: result?.success === true, unavailable: false };
+  } catch {
+    return { allowed: false, unavailable: true };
+  }
+}
+
 async function verifyTurnstile(token, request, env) {
   if (!env.TURNSTILE_SECRET_KEY || !env.TURNSTILE_HOSTNAME || !token) return false;
   const form = new FormData();
@@ -258,6 +272,13 @@ async function handlePublic(request, env, url) {
   }
 
   if (request.method === "POST" && path === "/api/public/inquiries") {
+    const rateLimit = await checkInquiryRateLimit(request, env);
+    if (rateLimit.unavailable) {
+      return response(request, env, { error: "Inquiry submission is temporarily unavailable. Please try again later." }, 503);
+    }
+    if (!rateLimit.allowed) {
+      return response(request, env, { error: "Too many inquiry attempts. Please wait before trying again." }, 429, { "retry-after": "60" });
+    }
     const parsed = await readJson(request);
     if (parsed.error) return response(request, env, { error: parsed.error }, 400);
 

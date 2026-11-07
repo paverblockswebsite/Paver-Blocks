@@ -57,7 +57,8 @@ The final route contract may change during implementation. Do not expose an endp
 
 - Validate and normalize every field on the server; browser validation is only a convenience.
 - Enforce the database field limits and reject unexpected fields.
-- Add Turnstile verification and rate limiting before accepting public submissions.
+- Add Turnstile verification and a mandatory Cloudflare Workers Rate Limiting binding before accepting public submissions. The route must fail closed when the binding is missing or unavailable.
+- Initial development proposal: 5 attempts per 60 seconds per client IP key. This is approximate and local to each Cloudflare location; shared mobile-carrier/office IPs may cause false positives. Review traffic before production and do not treat it as a strict global cap.
 - Use parameterized SQL statements only.
 - Return a generic success response; never include internal notes or other customer records.
 - Do not log full inquiry bodies, phone numbers, email addresses, or project details.
@@ -79,7 +80,7 @@ The final route contract may change during implementation. Do not expose an endp
 1. Review and approve this API/security design.
 2. Create a separate development-only D1 database, after explicit approval. **Completed:** paver-blocks-dev exists.
 3. Apply the reviewed migration to development D1 and verify table/constraint behavior. **Completed:** 8 application tables and 7 custom indexes were verified in the D1 Console; this is not yet a full live API integration test.
-4. Initial public read routes, Turnstile-protected inquiry submission, Access JWT verification, and limited inquiry-admin routes are coded on the development branch. Complete integration, negative-case, and security tests before deployment.
+4. Initial public read routes, Turnstile-protected inquiry submission, Access JWT verification, and limited inquiry-admin routes are coded on the development branch. The inquiry route now requires a rate-limit binding and fails closed with HTTP 503 if it is missing; the binding is deliberately not configured until a unique account namespace ID is confirmed. Complete integration, negative-case, and security tests before deployment.
 5. Configure Cloudflare Access and verify admin identity restrictions before enabling any admin route.
 6. Implement admin operations with authorization, validation, and audit tests.
 7. Add development-only R2 uploads with file validation.

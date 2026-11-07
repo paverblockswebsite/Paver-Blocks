@@ -5,6 +5,7 @@ import worker from "../src/index.js";
 function makeEnv(overrides = {}) {
   return {
     SITE_ORIGIN: "https://development-site.example",
+    INQUIRY_RATE_LIMITER: { async limit() { return { success: true }; } },
     DB: {
       prepare(sql) {
         return {
@@ -62,6 +63,57 @@ test("admin inquiry endpoint denies requests without a verified Access identity"
     makeEnv(),
   );
   assert.equal(response.status, 401);
+});
+
+test("inquiry submission is blocked when the rate limit is exceeded before parsing or database access", async () => {
+  let databaseTouched = false;
+  let rateLimitKey = "";
+  const env = makeEnv({
+    INQUIRY_RATE_LIMITER: {
+      async limit({ key }) { rateLimitKey = key; return { success: false }; },
+    },
+    DB: {
+      prepare() { databaseTouched = true; throw new Error("Database must not be touched."); },
+    },
+  });
+  const response = await worker.fetch(
+    new Request("https://api.example/api/public/inquiries", {
+      method: "POST",
+      headers: {
+        Origin: "https://development-site.example",
+        "CF-Connecting-IP": "203.0.113.10",
+        "Content-Type": "text/plain",
+      },
+      body: "invalid body",
+    }),
+    env,
+  );
+  assert.equal(response.status, 429);
+  assert.equal(response.headers.get("retry-after"), "60");
+  assert.equal(rateLimitKey, "public-inquiry:203.0.113.10");
+  assert.equal(databaseTouched, false);
+});
+
+test("inquiry submission fails closed when the rate limiter binding is unavailable", async () => {
+  let databaseTouched = false;
+  const env = makeEnv({
+    INQUIRY_RATE_LIMITER: undefined,
+    DB: { prepare() { databaseTouched = true; throw new Error("Database must not be touched."); } },
+  });
+  const response = await worker.fetch(
+    new Request("https://api.example/api/public/inquiries", {
+      method: "POST",
+      headers: {
+        Origin: "https://development-site.example",
+        "CF-Connecting-IP": "203.0.113.11",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ customer_name: "Test" }),
+    }),
+    env,
+  );
+  assert.equal(response.status, 503);
+  assert.equal(databaseTouched, false);
 });
 
 test("inquiry submission rejects a non-JSON content type", async () => {

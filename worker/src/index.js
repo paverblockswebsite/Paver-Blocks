@@ -41,6 +41,8 @@ function cleanString(value, max, required = false) {
 }
 
 async function readJson(request) {
+  const contentType = request.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().startsWith("application/json")) return { error: "Content-Type must be application/json." };
   const declaredLength = Number(request.headers.get("content-length") || 0);
   if (declaredLength > MAX_BODY_BYTES) return { error: "Request is too large." };
   const raw = await request.text();

@@ -1,6 +1,6 @@
 # Paver Blocks Worker API
 
-**Status: development code only. Not deployed. No D1 binding, Access application, Turnstile secret, or production configuration is active.**
+**Status: development code only. Not deployed. A development-only D1 binding is present in Wrangler config; the inquiry rate-limit binding, Access application, Turnstile secret, and production configuration are not active.**
 
 This Worker is a separate API service intended to sit beside the Astro Pages website.
 
@@ -22,7 +22,7 @@ The exact hostname will be selected only after the development Worker endpoint i
 - GET /api/public/paver-designs
 - GET /api/public/testimonials — published records with permission confirmed only.
 - GET /api/public/site-settings — a strict allowlist of public homepage text settings only.
-- POST /api/public/inquiries — validates fields, requires Turnstile, and inserts one inquiry.
+- POST /api/public/inquiries — requires the development rate-limit binding, validates fields, requires Turnstile, and inserts one inquiry.
 
 ### Admin (Cloudflare Access required)
 - GET /admin — private same-origin dashboard for inquiries and projects.
@@ -58,6 +58,12 @@ The checked-in `worker/wrangler.toml` now binds only the development D1 database
 
 This config change does **not** deploy the Worker, run migrations, create an Access application, configure an Access audience, or set any secret. The D1 schema was already created manually in the development database and should be checked against `migrations/0001_initial.sql` before any future migration command. Do not run migration commands or deploy until the separate development setup review is complete. Production resources remain out of scope.
 
+## Inquiry rate limiting
+
+The inquiry route checks `env.INQUIRY_RATE_LIMITER` before reading the request body or touching D1. If the binding is absent or errors, the route fails closed with HTTP 503; if the limit is exceeded, it returns HTTP 429. The planned initial setting is **5 attempts per 60 seconds per client IP key**, using the Cloudflare Workers Rate Limiting API. This is an approximate limit maintained separately in each Cloudflare location, not a strict global cap. IP-based counters can affect multiple legitimate visitors who share a mobile-carrier or office IP address, so the threshold must be reviewed against real development traffic before production use.
+
+The Wrangler binding is intentionally not configured yet. A unique positive-integer `namespace_id` must first be selected and checked against existing rate-limit namespaces in the Cloudflare account. Do not invent or reuse an ID. Until the binding is configured, inquiry submissions remain disabled (HTTP 503), while public read routes are unaffected. This is deliberate fail-closed behavior.
+
 ## Local smoke tests
 
 Run `npm test` from the worker directory with Node.js 22 or later. These tests cover health, public read routing, CORS rejection, Access identity validation, dashboard and asset access controls, request validation, and authenticated project create/edit operations with audit logging. They are smoke tests, not a substitute for live Cloudflare D1, Access, and Turnstile integration tests.
@@ -66,6 +72,7 @@ Run `npm test` from the worker directory with Node.js 22 or later. These tests c
 
 Configure these as Worker environment variables/secrets in the Cloudflare dashboard only. Never commit real values:
 
+- INQUIRY_RATE_LIMITER — required Workers Rate Limiting binding; use a unique namespace ID confirmed in the Cloudflare account and the reviewed limit of 5 per 60 seconds.
 - SITE_ORIGIN — exact allowed website origin, e.g. the approved development Pages preview origin.
 - TURNSTILE_SECRET_KEY — secret key for the Turnstile widget used by the inquiry form.
 - TURNSTILE_HOSTNAME — expected hostname returned by Turnstile verification.
@@ -77,7 +84,7 @@ The D1 binding must be named DB. It is deliberately not configured here. Bind on
 
 ## Security and deployment prerequisites
 
-1. Add a Cloudflare rate-limiting rule for POST /api/public/inquiries before enabling public submissions. Turnstile is required in the code but is not a substitute for rate limiting.
+1. Configure the `INQUIRY_RATE_LIMITER` Workers Rate Limiting binding for POST `/api/public/inquiries` (initial proposal: 5 per 60 seconds per client IP key) using a verified, unique namespace ID. The Worker fails closed until this binding exists. Turnstile is also required and is not a substitute for rate limiting.
 2. Create a Turnstile widget for the exact development hostname, set its action to inquiry, and store its secret as a Worker secret. The API requires a matching hostname and action in the Siteverify response.
 3. Create a Cloudflare Access self-hosted application for the Worker hostname and protect `/admin*` plus `/api/admin/*` paths. This must include the dashboard HTML and its assets. Restrict its policy to intended administrators.
 4. Set the Worker environment values and a narrowly scoped ADMIN_EMAILS allowlist.

@@ -273,6 +273,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
           bind(...values) { statement.values = values; return statement; },
           async all() { return { results: [] }; },
           async first() { return { id: "123e4567-e89b-12d3-a456-426614174000" }; },
+          async run() { return { success: true }; },
         };
         preparedStatements.push(statement);
         return statement;
@@ -284,11 +285,11 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     },
   });
 
-  async function requestWithToken(token, path = "/api/admin/inquiries") {
+  async function requestWithToken(token, path = "/api/admin/inquiries", init = {}) {
+    const headers = new Headers(init.headers || {});
+    headers.set("Cf-Access-Jwt-Assertion", token);
     return worker.fetch(
-      new Request("https://api.example" + path, {
-        headers: { "Cf-Access-Jwt-Assertion": token },
-      }),
+      new Request("https://api.example" + path, { ...init, headers }),
       env,
     );
   }
@@ -343,6 +344,48 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.deepEqual(dbBatches[0][0].values.slice(0, 2), ["quoted", "Called customer"]);
     assert.match(dbBatches[0][1].sql, /^INSERT INTO admin_audit_log/);
     assert.equal(dbBatches[0][1].values[1], "hellopaverblocks@gmail.com");
+
+    const projectList = await requestWithToken(validToken, "/api/admin/projects");
+    assert.equal(projectList.status, 200, "an authorized admin can list project drafts");
+    assert.deepEqual((await projectList.json()).data, []);
+
+    const projectCreate = await requestWithToken(validToken, "/api/admin/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: "Hyderabad Footpath Project",
+        slug: "hyderabad-footpath-project",
+        location: "Hyderabad, Sindh",
+        completed_on: "2026-10-15",
+        summary: "Footpath paving work",
+        description: "Installation of paving blocks.",
+        status: "draft",
+        sort_order: 10,
+      }),
+    });
+    assert.equal(projectCreate.status, 201, "a valid project is created as draft by default/explicit draft");
+    assert.equal(dbBatches.at(-1).length, 2, "project creation and audit event are atomic");
+    assert.match(dbBatches.at(-1)[0].sql, /^INSERT INTO projects/);
+    assert.match(dbBatches.at(-1)[1].sql, /^INSERT INTO admin_audit_log/);
+    assert.equal(dbBatches.at(-1)[1].values[1], "hellopaverblocks@gmail.com");
+
+    const projectUpdate = await requestWithToken(validToken, "/api/admin/projects/123e4567-e89b-12d3-a456-426614174000", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "published", summary: "Approved summary" }),
+    });
+    assert.equal(projectUpdate.status, 200, "an authorized admin can update a project");
+    assert.match(dbBatches.at(-1)[0].sql, /^UPDATE projects SET/);
+    assert.match(dbBatches.at(-1)[1].sql, /^INSERT INTO admin_audit_log/);
+
+    const batchesBeforeInvalidProject = dbBatches.length;
+    const invalidProject = await requestWithToken(validToken, "/api/admin/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Invalid project", slug: "../unsafe", unexpected: "field" }),
+    });
+    assert.equal(invalidProject.status, 400, "unexpected fields and unsafe slugs are rejected");
+    assert.equal(dbBatches.length, batchesBeforeInvalidProject, "invalid project input must not write to D1");
 
     const wrongEmail = await requestWithToken(await makeToken({ email: "someone-else@example.com" }));
     assert.equal(wrongEmail.status, 401, "an email outside the allowlist must be rejected");

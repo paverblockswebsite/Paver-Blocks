@@ -264,7 +264,11 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     ADMIN_EMAILS: "hellopaverblocks@gmail.com",
     DB: {
       prepare() {
-        return { async all() { return { results: [] }; } };
+        const statement = {
+          bind() { return statement; },
+          async all() { return { results: [] }; },
+        };
+        return statement;
       },
     },
   });

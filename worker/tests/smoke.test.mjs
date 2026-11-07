@@ -217,3 +217,87 @@ test("admin inquiry updates reject requests without a verified Access identity",
   );
   assert.equal(response.status, 401);
 });
+
+test("Cloudflare Access admin identity validates signature, issuer, audience, expiry, and email allowlist", async () => {
+  const originalFetch = globalThis.fetch;
+  const keyPair = await crypto.subtle.generateKey(
+    { name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
+    true,
+    ["sign", "verify"],
+  );
+  const jwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
+  jwk.kid = "test-access-key";
+  const teamDomain = "paverblocks.cloudflareaccess.com";
+  const now = Math.floor(Date.now() / 1000);
+
+  const encode = (value) => Buffer.from(JSON.stringify(value)).toString("base64url");
+  async function makeToken(overrides = {}, corruptSignature = false) {
+    const header = encode({ alg: "RS256", typ: "JWT", kid: jwk.kid });
+    const claims = encode({
+      iss: "https://" + teamDomain,
+      aud: ["test-access-audience"],
+      sub: "test-user-subject",
+      email: "hellopaverblocks@gmail.com",
+      exp: now + 300,
+      nbf: now - 10,
+      ...overrides,
+    });
+    const content = header + "." + claims;
+    const signature = Buffer.from(await crypto.subtle.sign(
+      "RSASSA-PKCS1-v1_5",
+      keyPair.privateKey,
+      new TextEncoder().encode(content),
+    )).toString("base64url");
+    if (!corruptSignature) return content + "." + signature;
+    const replacement = signature[0] === "A" ? "B" : "A";
+    return content + "." + replacement + signature.slice(1);
+  }
+
+  globalThis.fetch = async (url) => {
+    assert.equal(String(url), "https://" + teamDomain + "/cdn-cgi/access/certs");
+    return Response.json({ keys: [jwk] });
+  };
+
+  const env = makeEnv({
+    ACCESS_TEAM_DOMAIN: teamDomain,
+    ACCESS_AUD: "test-access-audience",
+    ADMIN_EMAILS: "hellopaverblocks@gmail.com",
+    DB: {
+      prepare() {
+        return { async all() { return { results: [] }; } };
+      },
+    },
+  });
+
+  async function requestWithToken(token) {
+    return worker.fetch(
+      new Request("https://api.example/api/admin/inquiries", {
+        headers: { "Cf-Access-Jwt-Assertion": token },
+      }),
+      env,
+    );
+  }
+
+  try {
+    const validResponse = await requestWithToken(await makeToken());
+    assert.equal(validResponse.status, 200, "a valid, allowlisted Access identity should be accepted");
+
+    const wrongEmail = await requestWithToken(await makeToken({ email: "someone-else@example.com" }));
+    assert.equal(wrongEmail.status, 401, "an email outside the allowlist must be rejected");
+
+    const wrongAudience = await requestWithToken(await makeToken({ aud: ["another-audience"] }));
+    assert.equal(wrongAudience.status, 401, "a token for another Access application must be rejected");
+
+    const expired = await requestWithToken(await makeToken({ exp: now - 1 }));
+    assert.equal(expired.status, 401, "an expired token must be rejected");
+
+    const wrongIssuer = await requestWithToken(await makeToken({ iss: "https://attacker.example" }));
+    assert.equal(wrongIssuer.status, 401, "a token from another issuer must be rejected");
+
+    const invalidSignature = await requestWithToken(await makeToken({}, true));
+    assert.equal(invalidSignature.status, 401, "a token with an invalid signature must be rejected");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+

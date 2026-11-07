@@ -308,6 +308,8 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     const dashboardHtml = await dashboardResponse.text();
     assert.match(dashboardHtml, /\/admin\/assets\/admin\.js/);
     assert.match(dashboardHtml, /\/admin\/assets\/admin\.css/);
+    assert.match(dashboardHtml, /id="project-form"/);
+    assert.match(dashboardHtml, /name="completed_on"/);
     assert.match(dashboardHtml, /https:\/\/development-site\.example/);
     assert.doesNotMatch(dashboardHtml, /href="\/" rel="noopener"/);
 
@@ -319,7 +321,12 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
       assert.equal(assetResponse.status, 200, path + " should be available to an allowlisted admin");
       assert.match(assetResponse.headers.get("content-type") || "", contentType);
       assert.equal(assetResponse.headers.get("cache-control"), "no-store");
-      assert.ok((await assetResponse.text()).length > 0);
+      const assetText = await assetResponse.text();
+      assert.ok(assetText.length > 0);
+      if (path.endsWith(".js")) {
+        assert.match(assetText, /api\/admin\/projects/);
+        assert.match(assetText, /method:id\?"PATCH":"POST"/);
+      }
     }
 
     const patchUrl = "/api/admin/inquiries/123e4567-e89b-12d3-a456-426614174000";

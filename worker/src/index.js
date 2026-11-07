@@ -54,7 +54,7 @@ async function readJson(request) {
 
   const lengthHeader = request.headers.get("content-length");
   if (lengthHeader !== null) {
-    if (!/^\\d+$/.test(lengthHeader)) return { error: "Invalid Content-Length." };
+    if (!/^\d+$/.test(lengthHeader)) return { error: "Invalid Content-Length." };
     if (Number(lengthHeader) > MAX_BODY_BYTES) return { error: "Request is too large." };
   }
 

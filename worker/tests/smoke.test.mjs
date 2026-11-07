@@ -258,17 +258,27 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     return Response.json({ keys: [jwk] });
   };
 
+  const dbBatches = [];
+  const preparedStatements = [];
   const env = makeEnv({
     ACCESS_TEAM_DOMAIN: teamDomain,
     ACCESS_AUD: "test-access-audience",
     ADMIN_EMAILS: "hellopaverblocks@gmail.com",
     DB: {
-      prepare() {
+      prepare(sql) {
         const statement = {
-          bind() { return statement; },
+          sql,
+          values: [],
+          bind(...values) { statement.values = values; return statement; },
           async all() { return { results: [] }; },
+          async first() { return { id: "123e4567-e89b-12d3-a456-426614174000" }; },
         };
+        preparedStatements.push(statement);
         return statement;
+      },
+      async batch(statements) {
+        dbBatches.push(statements.map((statement) => ({ sql: statement.sql, values: statement.values })));
+        return [];
       },
     },
   });
@@ -309,6 +319,29 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
       assert.equal(assetResponse.headers.get("cache-control"), "no-store");
       assert.ok((await assetResponse.text()).length > 0);
     }
+
+    const patchUrl = "/api/admin/inquiries/123e4567-e89b-12d3-a456-426614174000";
+    const invalidPatch = await worker.fetch(new Request("https://api.example" + patchUrl, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "Cf-Access-Jwt-Assertion": validToken },
+      body: JSON.stringify({ status: "invented", private_field: "not allowed" }),
+    }), env);
+    assert.equal(invalidPatch.status, 400);
+    assert.equal(dbBatches.length, 0, "invalid updates must not reach the database batch");
+
+    const successfulPatch = await worker.fetch(new Request("https://api.example" + patchUrl, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "Cf-Access-Jwt-Assertion": validToken },
+      body: JSON.stringify({ status: "quoted", internal_notes: "Called customer" }),
+    }), env);
+    assert.equal(successfulPatch.status, 200);
+    assert.deepEqual(await successfulPatch.json(), { success: true });
+    assert.equal(dbBatches.length, 1, "the inquiry update and audit event should be submitted together");
+    assert.equal(dbBatches[0].length, 2);
+    assert.match(dbBatches[0][0].sql, /^UPDATE inquiries SET/);
+    assert.deepEqual(dbBatches[0][0].values.slice(0, 2), ["quoted", "Called customer"]);
+    assert.match(dbBatches[0][1].sql, /^INSERT INTO admin_audit_log/);
+    assert.equal(dbBatches[0][1].values[1], "hellopaverblocks@gmail.com");
 
     const wrongEmail = await requestWithToken(await makeToken({ email: "someone-else@example.com" }));
     assert.equal(wrongEmail.status, 401, "an email outside the allowlist must be rejected");

@@ -52,6 +52,12 @@ The Astro homepage can read the allowlisted public text settings from `GET /api/
 
 If this variable is unset, the homepage keeps its static approved copy. If the API is unavailable, returns an error, or contains invalid/empty values, the same static copy remains visible. The browser requests only the public settings route, omits credentials, and writes returned strings through `textContent`; it does not call admin routes. Set the Worker `SITE_ORIGIN` to the exact Pages preview origin to permit the browser request through CORS. Do not configure a production API origin until separately reviewed and approved.
 
+## Development-only Cloudflare bindings
+
+The checked-in `worker/wrangler.toml` now binds only the development D1 database `paver-blocks-dev` (database ID `642fbb24-2b16-41f6-b77e-e14de49eebe8`) as `env.DB`. It also allows the exact stable Pages branch-preview origin `https://development-site-foundation.paver-blocks.pages.dev` through `SITE_ORIGIN`, and sets the matching Turnstile hostname for later inquiry-form setup. These are public development configuration values, not secrets.
+
+This config change does **not** deploy the Worker, run migrations, create an Access application, configure an Access audience, or set any secret. The D1 schema was already created manually in the development database and should be checked against `migrations/0001_initial.sql` before any future migration command. Do not run migration commands or deploy until the separate development setup review is complete. Production resources remain out of scope.
+
 ## Local smoke tests
 
 Run `npm test` from the worker directory with Node.js 22 or later. These tests cover health, public read routing, CORS rejection, Access identity validation, dashboard and asset access controls, request validation, and authenticated project create/edit operations with audit logging. They are smoke tests, not a substitute for live Cloudflare D1, Access, and Turnstile integration tests.

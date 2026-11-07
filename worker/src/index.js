@@ -250,6 +250,132 @@ async function handlePublic(request, env, url) {
   return response(request, env, { error: "Not found." }, 404);
 }
 
+
+const ADMIN_HTML = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Admin dashboard | Paver Blocks</title>
+  <link rel="stylesheet" href="/admin/assets/admin.css">
+  <script src="/admin/assets/admin.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/admin" aria-label="Paver Blocks admin home">PAVER BLOCKS <span>ADMIN</span></a>
+    <a class="public-link" href="/" rel="noopener">Public website ↗</a>
+  </header>
+  <main class="shell">
+    <section class="intro">
+      <p class="eyebrow">PRIVATE ADMINISTRATION</p>
+      <h1>Customer inquiries</h1>
+      <p class="muted">Review incoming quotation requests and keep their progress up to date.</p>
+    </section>
+    <section class="toolbar" aria-label="Inquiry filters">
+      <label for="status-filter">Filter by status</label>
+      <select id="status-filter">
+        <option value="">All inquiries</option>
+        <option value="new">New</option>
+        <option value="contacted">Contacted</option>
+        <option value="quoted">Quoted</option>
+        <option value="completed">Completed</option>
+        <option value="closed">Closed</option>
+      </select>
+      <button id="refresh" type="button" class="button secondary">Refresh</button>
+    </section>
+    <p id="notice" class="notice" role="status" aria-live="polite">Loading inquiries…</p>
+    <section id="inquiry-list" class="inquiry-list" aria-label="Inquiry list"></section>
+    <p class="footnote">Private business information. Sign out of your Cloudflare Access session on shared devices.</p>
+  </main>
+</body>
+</html>`;
+
+const ADMIN_CSS = `
+:root{color-scheme:light;--navy:#172b45;--yellow:#f5c542;--ink:#1d2938;--muted:#657386;--line:#dce2e9;--paper:#f5f7fa}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.topbar{height:68px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 max(22px,calc((100% - 1100px)/2))}
+.brand{color:#fff;text-decoration:none;font-weight:800;letter-spacing:.06em}.brand span{color:var(--yellow);font-size:.75rem;margin-left:8px}.public-link{color:#fff;text-decoration:none;font-size:.9rem}
+.shell{max-width:1100px;margin:0 auto;padding:42px 22px 64px}.intro{margin-bottom:28px}.eyebrow{font-size:.75rem;font-weight:800;letter-spacing:.14em;color:#8b6810}.intro h1{font-size:clamp(2rem,5vw,2.7rem);line-height:1.1;margin:8px 0;color:var(--navy)}.muted,.footnote{color:var(--muted)}
+.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}.toolbar label{font-weight:650}.toolbar select,.editor select,.editor textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink)}.button{font:inherit;font-weight:700;border:0;border-radius:8px;padding:10px 16px;cursor:pointer}.primary{background:var(--navy);color:#fff}.secondary{background:#e9eef4;color:var(--navy)}button:focus-visible,a:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #d69e00;outline-offset:2px}
+.notice{min-height:26px;color:var(--muted)}.notice.error{color:#a12626}.inquiry-list{display:grid;gap:14px}.inquiry{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 2px 8px #172b4508}.inquiry-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.inquiry h2{font-size:1.12rem;color:var(--navy);margin:0 0 4px}.meta{color:var(--muted);font-size:.9rem}.pill{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;border-radius:30px;padding:5px 9px;background:#edf1f5;color:#43546a;white-space:nowrap}.details{white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0}.facts{display:flex;gap:10px 18px;flex-wrap:wrap;font-size:.9rem;color:#48576a}.editor{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;display:grid;grid-template-columns:minmax(140px,220px) 1fr auto;gap:10px;align-items:end}.editor label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.editor textarea{min-height:42px;resize:vertical}.empty{background:#fff;border:1px dashed #bdc7d3;border-radius:14px;padding:30px;text-align:center;color:var(--muted)}.footnote{font-size:.82rem;margin-top:34px}
+@media(max-width:650px){.shell{padding-top:28px}.editor{grid-template-columns:1fr}.inquiry-head{align-items:flex-start}.topbar{padding:0 16px}}
+`;
+
+const ADMIN_JS = `
+const list = document.querySelector("#inquiry-list");
+const notice = document.querySelector("#notice");
+const filter = document.querySelector("#status-filter");
+const statuses = ["new","contacted","quoted","completed","closed"];
+const labelStatus = value => value.charAt(0).toUpperCase() + value.slice(1);
+const element = (tag, className, value) => {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (value !== undefined) node.textContent = value;
+  return node;
+};
+async function api(path, options = {}) {
+  const response = await fetch(path, { credentials: "same-origin", ...options });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || "The request could not be completed.");
+  return payload;
+}
+function makeInquiry(item) {
+  const card = element("article","inquiry");
+  const head = element("div","inquiry-head");
+  const heading = element("div");
+  heading.append(element("h2","",item.customer_name || "Unnamed customer"));
+  heading.append(element("p","meta",item.created_at ? new Date(item.created_at.replace(" ","T")+"Z").toLocaleString() : ""));
+  head.append(heading,element("span","pill",labelStatus(item.status || "new")));
+  card.append(head);
+  const facts = element("div","facts");
+  [item.phone,item.email,item.location,item.work_type,item.approximate_area ? "Area: "+item.approximate_area : "",item.budget ? "Budget: "+item.budget : ""]
+    .filter(Boolean).forEach(value => facts.append(element("span","",value)));
+  card.append(facts);
+  card.append(element("p","details",item.project_details || "No project details provided."));
+  const editor = element("form","editor");
+  const statusLabel = element("label","","Status");
+  const status = document.createElement("select");
+  statuses.forEach(value => { const option=document.createElement("option");option.value=value;option.textContent=labelStatus(value);status.append(option); });
+  status.value = statuses.includes(item.status) ? item.status : "new";
+  statusLabel.append(status);
+  const notesLabel = element("label","","Internal notes");
+  const notes = document.createElement("textarea");
+  notes.maxLength=4000;notes.value=item.internal_notes || "";notes.placeholder="Private notes for your team…";
+  notesLabel.append(notes);
+  const save = element("button","button primary","Save update");save.type="submit";
+  editor.append(statusLabel,notesLabel,save);
+  editor.addEventListener("submit",async event=>{
+    event.preventDefault();save.disabled=true;save.textContent="Saving…";
+    try {
+      await api("/api/admin/inquiries/"+encodeURIComponent(item.id),{
+        method:"PATCH",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({status:status.value,internal_notes:notes.value})
+      });
+      notice.className="notice";notice.textContent="Inquiry updated.";
+      await load();
+    } catch(error) { notice.className="notice error";notice.textContent=error.message; }
+    finally { save.disabled=false;save.textContent="Save update"; }
+  });
+  card.append(editor);
+  return card;
+}
+async function load() {
+  list.replaceChildren();notice.className="notice";notice.textContent="Loading inquiries…";
+  try {
+    const query=filter.value ? "?status="+encodeURIComponent(filter.value) : "";
+    const payload=await api("/api/admin/inquiries"+query);
+    const items=Array.isArray(payload.data)?payload.data:[];
+    if (!items.length) list.append(element("div","empty","No inquiries found for this filter."));
+    else items.forEach(item=>list.append(makeInquiry(item)));
+    notice.textContent=items.length+" inquiry record"+(items.length===1?"":"s")+" loaded.";
+  } catch(error) { notice.className="notice error";notice.textContent=error.message; }
+}
+document.querySelector("#refresh").addEventListener("click",load);
+filter.addEventListener("change",load);
+load();
+`;
+
 async function handleAdmin(request, env, url, identity) {
   const path = url.pathname;
 
@@ -349,6 +475,36 @@ export default {
           return response(request, env, { error: "Method not allowed." }, 405, { allow: "GET, POST" });
         }
         return await handlePublic(request, env, url);
+      }
+
+      if (url.pathname === "/admin" || url.pathname === "/admin/") {
+        if (request.method !== "GET") return response(request, env, { error: "Method not allowed." }, 405);
+        const identity = await verifyAccessIdentity(request, env);
+        if (!identity) return response(request, env, { error: "Unauthorized." }, 401);
+        return new Response(ADMIN_HTML, {
+          headers: {
+            "content-type": "text/html; charset=utf-8",
+            "cache-control": "no-store",
+            "x-content-type-options": "nosniff",
+            "referrer-policy": "no-referrer",
+            "content-security-policy": "default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+          },
+        });
+      }
+
+      if (url.pathname === "/admin/assets/admin.css" || url.pathname === "/admin/assets/admin.js") {
+        if (request.method !== "GET") return response(request, env, { error: "Method not allowed." }, 405);
+        const identity = await verifyAccessIdentity(request, env);
+        if (!identity) return response(request, env, { error: "Unauthorized." }, 401);
+        const isCss = url.pathname.endsWith(".css");
+        return new Response(isCss ? ADMIN_CSS : ADMIN_JS, {
+          headers: {
+            "content-type": isCss ? "text/css; charset=utf-8" : "text/javascript; charset=utf-8",
+            "cache-control": "no-store",
+            "x-content-type-options": "nosniff",
+            "content-security-policy": "default-src 'none'",
+          },
+        });
       }
 
       if (url.pathname.startsWith("/api/admin/")) {

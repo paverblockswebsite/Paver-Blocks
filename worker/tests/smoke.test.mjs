@@ -683,6 +683,12 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.equal((await requestWithToken("!!!!.e30.AA")).status, 401, "invalid base64url segments must be rejected");
     assert.equal((await requestWithToken("A".repeat(8193))).status, 401, "oversized Access tokens must be rejected");
 
+    const configuredTeamDomain = env.ACCESS_TEAM_DOMAIN;
+    env.ACCESS_TEAM_DOMAIN = "https://paverblocks.cloudflareaccess.com/unexpected-path";
+    assert.equal((await requestWithToken(await makeToken())).status, 401,
+      "Access team configuration must reject URL paths");
+    env.ACCESS_TEAM_DOMAIN = configuredTeamDomain;
+
     const invalidSignature = await requestWithToken(await makeToken({}, true));
     assert.equal(invalidSignature.status, 401, "a token with an invalid signature must be rejected");
   } finally {

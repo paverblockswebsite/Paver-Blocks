@@ -321,6 +321,48 @@ const ADMIN_HTML = `<!doctype html>
       <div class="form-actions"><button type="submit" class="button primary">Save project</button><button id="project-cancel" type="button" class="button secondary">Cancel</button></div>
     </form>
     <section id="project-list" class="project-list" aria-label="Projects"></section>
+
+    <section class="content-heading">
+      <div><p class="eyebrow">SERVICE CATALOGUE</p><h2>Services</h2><p class="muted">Manage the services shown on the public website.</p></div>
+      <button id="service-new" type="button" class="button primary">Add service</button>
+    </section>
+    <p id="service-notice" class="notice" role="status" aria-live="polite">Loading services…</p>
+    <form id="service-form" class="content-form" hidden>
+      <h3 id="service-form-title">Add service</h3><input type="hidden" name="id">
+      <div class="content-fields">
+        <label>Service title<input name="title" maxlength="160" required></label>
+        <label>URL slug<input name="slug" maxlength="180" pattern="[a-z0-9]+(-[a-z0-9]+)*" required></label>
+        <label>Status<select name="status"><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label>
+        <label>Display order<input name="sort_order" type="number" min="-100000" max="100000" step="1" value="0"></label>
+        <label class="wide">Short description<textarea name="short_description" maxlength="2000" rows="2"></textarea></label>
+        <label class="wide">Full description<textarea name="description" maxlength="10000" rows="4"></textarea></label>
+      </div>
+      <div class="form-actions"><button type="submit" class="button primary">Save service</button><button id="service-cancel" type="button" class="button secondary">Cancel</button></div>
+    </form>
+    <section id="service-list" class="project-list" aria-label="Services"></section>
+
+    <section class="content-heading">
+      <div><p class="eyebrow">PAVER CATALOGUE</p><h2>Paver designs</h2><p class="muted">Record available designs and supplier details. Do not imply in-house manufacturing.</p></div>
+      <button id="design-new" type="button" class="button primary">Add paver design</button>
+    </section>
+    <p id="design-notice" class="notice" role="status" aria-live="polite">Loading paver designs…</p>
+    <form id="design-form" class="content-form" hidden>
+      <h3 id="design-form-title">Add paver design</h3><input type="hidden" name="id">
+      <div class="content-fields">
+        <label>Design name<input name="name" maxlength="120" required></label>
+        <label>URL slug<input name="slug" maxlength="160" pattern="[a-z0-9]+(-[a-z0-9]+)*" required></label>
+        <label>Shape<input name="shape" maxlength="120" placeholder="e.g. I-shape, Zigzag"></label>
+        <label>Dimensions<input name="dimensions" maxlength="120" placeholder="Supplier-confirmed dimensions"></label>
+        <label>Thickness<input name="thickness" maxlength="80" placeholder="Supplier-confirmed thickness"></label>
+        <label>Colour<input name="colour" maxlength="80"></label>
+        <label>Status<select name="status"><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label>
+        <label>Display order<input name="sort_order" type="number" min="-100000" max="100000" step="1" value="0"></label>
+        <label class="wide">Supplier note (internal)<textarea name="supplier_note" maxlength="500" rows="2"></textarea></label>
+      </div>
+      <div class="form-actions"><button type="submit" class="button primary">Save design</button><button id="design-cancel" type="button" class="button secondary">Cancel</button></div>
+    </form>
+    <section id="design-list" class="project-list" aria-label="Paver designs"></section>
+
     <p class="footnote">Private business information. Sign out of your Cloudflare Access session on shared devices.</p>
   </main>
 </body>
@@ -334,6 +376,7 @@ const ADMIN_CSS = `
 .shell{max-width:1100px;margin:0 auto;padding:42px 22px 64px}.intro{margin-bottom:28px}.eyebrow{font-size:.75rem;font-weight:800;letter-spacing:.14em;color:#8b6810}.intro h1{font-size:clamp(2rem,5vw,2.7rem);line-height:1.1;margin:8px 0;color:var(--navy)}.muted,.footnote{color:var(--muted)}
 .toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}.toolbar label{font-weight:650}.toolbar select,.editor select,.editor textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink)}.button{font:inherit;font-weight:700;border:0;border-radius:8px;padding:10px 16px;cursor:pointer}.primary{background:var(--navy);color:#fff}.secondary{background:#e9eef4;color:var(--navy)}button:focus-visible,a:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #d69e00;outline-offset:2px}
 .notice{min-height:26px;color:var(--muted)}.notice.error{color:#a12626}.inquiry-list,.project-list{display:grid;gap:14px}.inquiry,.project-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 2px 8px #172b4508}.inquiry-head,.project-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.inquiry h2,.project-card h3{font-size:1.12rem;color:var(--navy);margin:0 0 4px}.meta{color:var(--muted);font-size:.9rem}.pill{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;border-radius:30px;padding:5px 9px;background:#edf1f5;color:#43546a;white-space:nowrap}.details{white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0}.facts{display:flex;gap:10px 18px;flex-wrap:wrap;font-size:.9rem;color:#48576a}.editor{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;display:grid;grid-template-columns:minmax(140px,220px) 1fr auto;gap:10px;align-items:end}.editor label,.project-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.editor textarea,.project-fields input,.project-fields select,.project-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.editor textarea{min-height:42px;resize:vertical}.empty{background:#fff;border:1px dashed #bdc7d3;border-radius:14px;padding:30px;text-align:center;color:var(--muted)}.content-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:48px 0 12px}.content-heading h2{font-size:1.7rem;color:var(--navy);margin:4px 0}.project-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.project-form h3{margin:0 0 16px;color:var(--navy)}.project-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.project-fields .wide{grid-column:1/-1}.project-fields small{font-weight:400;color:var(--muted)}.form-actions{display:flex;gap:10px;margin-top:18px}.project-card p{margin:8px 0}.project-card .project-actions{display:flex;gap:8px;margin-top:14px}.footnote{font-size:.82rem;margin-top:34px}
+.content-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.content-form h3{margin:0 0 16px;color:var(--navy)}.content-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.content-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.content-fields input,.content-fields select,.content-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.content-fields .wide{grid-column:1/-1}.content-actions{display:flex;gap:8px;margin-top:14px}
 @media(max-width:650px){.shell{padding-top:28px}.editor{grid-template-columns:1fr}.inquiry-head,.project-head{align-items:flex-start}.topbar{padding:0 16px}.project-fields{grid-template-columns:1fr}.project-fields .wide{grid-column:auto}.content-heading{align-items:flex-start;flex-direction:column}}
 `;
 
@@ -480,12 +523,222 @@ projectForm.addEventListener("submit",async event=>{
   } catch(error) { projectNotice.className="notice error";projectNotice.textContent=error.message; }
   finally { save.disabled=false;save.textContent="Save project"; }
 });
+
+function setupContentManager(config) {
+  const listNode=document.querySelector(config.list);
+  const noticeNode=document.querySelector(config.notice);
+  const form=document.querySelector(config.form);
+  const fields=form.elements;
+  const fieldNames=config.fields;
+  function showForm(item) {
+    form.reset();
+    fields.namedItem("id").value=item?.id || "";
+    for(const name of fieldNames) {
+      const field=fields.namedItem(name);
+      if(field) field.value=item?.[name] ?? "";
+    }
+    fields.namedItem("status").value=item?.status || "draft";
+    fields.namedItem("sort_order").value=Number.isInteger(item?.sort_order)?item.sort_order:0;
+    document.querySelector(config.title).textContent=(item?"Edit ":"Add ")+config.singular;
+    form.hidden=false;
+    fields.namedItem(config.requiredField).focus();
+  }
+  function makeCard(item) {
+    const card=element("article","project-card");
+    const head=element("div","project-head");
+    const title=element("div");
+    title.append(element("h3","",item[config.nameField] || "Untitled"));
+    title.append(element("p","meta",item.slug || ""));
+    head.append(title,element("span","pill",labelStatus(item.status || "draft")));
+    card.append(head);
+    config.summaryFields.forEach(key=>{if(item[key])card.append(element("p","",item[key]));});
+    const actions=element("div","content-actions");
+    const edit=element("button","button secondary","Edit");
+    edit.type="button";edit.addEventListener("click",()=>showForm(item));
+    actions.append(edit);card.append(actions);
+    return card;
+  }
+  async function loadItems() {
+    listNode.replaceChildren();noticeNode.className="notice";noticeNode.textContent="Loading "+config.plural.toLowerCase()+"…";
+    try {
+      const payload=await api(config.endpoint);
+      const items=Array.isArray(payload.data)?payload.data:[];
+      if(!items.length)listNode.append(element("div","empty","No "+config.plural.toLowerCase()+" yet."));
+      else items.forEach(item=>listNode.append(makeCard(item)));
+      noticeNode.textContent=items.length+" "+config.plural.toLowerCase()+" record"+(items.length===1?"":"s")+" loaded.";
+    } catch(error) {noticeNode.className="notice error";noticeNode.textContent=error.message;}
+  }
+  document.querySelector(config.add).addEventListener("click",()=>showForm());
+  document.querySelector(config.cancel).addEventListener("click",()=>{form.hidden=true;form.reset();});
+  form.addEventListener("submit",async event=>{
+    event.preventDefault();
+    const id=fields.namedItem("id").value;
+    const body={};
+    fieldNames.forEach(name=>{
+      const field=fields.namedItem(name);
+      body[name]=name==="sort_order"?Number(field.value):field.value;
+    });
+    const save=form.querySelector('button[type="submit"]');
+    save.disabled=true;save.textContent="Saving…";
+    try {
+      await api(id?config.endpoint+"/"+encodeURIComponent(id):config.endpoint,{
+        method:id?"PATCH":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)
+      });
+      noticeNode.className="notice";noticeNode.textContent=config.singular+" saved.";
+      form.hidden=true;await loadItems();
+    } catch(error) {noticeNode.className="notice error";noticeNode.textContent=error.message;}
+    finally {save.disabled=false;save.textContent=config.saveLabel;}
+  });
+  loadItems();
+}
+setupContentManager({
+  endpoint:"/api/admin/services",list:"#service-list",notice:"#service-notice",form:"#service-form",
+  title:"#service-form-title",add:"#service-new",cancel:"#service-cancel",singular:"service",plural:"Services",
+  nameField:"title",requiredField:"title",summaryFields:["short_description"],
+  fields:["title","slug","status","sort_order","short_description","description"],saveLabel:"Save service"
+});
+setupContentManager({
+  endpoint:"/api/admin/paver-designs",list:"#design-list",notice:"#design-notice",form:"#design-form",
+  title:"#design-form-title",add:"#design-new",cancel:"#design-cancel",singular:"paver design",plural:"Paver designs",
+  nameField:"name",requiredField:"name",summaryFields:["shape","dimensions","thickness","colour"],
+  fields:["name","slug","shape","dimensions","thickness","colour","status","sort_order","supplier_note"],saveLabel:"Save design"
+});
+
 load();
 loadProjects();
 `;
 
+
+const ADMIN_CONTENT_TYPES = {
+  services: {
+    table: "services",
+    entity: "service",
+    fields: {
+      title: { max: 160, required: true },
+      slug: { max: 180, required: true, slug: true },
+      short_description: { max: 2000, default: "" },
+      description: { max: 10000, default: "" },
+      status: { status: true, default: "draft" },
+      sort_order: { number: true, default: 0 },
+    },
+    columns: ["id", "title", "slug", "short_description", "description", "status", "sort_order", "created_at", "updated_at"],
+  },
+  "paver-designs": {
+    table: "paver_designs",
+    entity: "paver_design",
+    fields: {
+      name: { max: 120, required: true },
+      slug: { max: 160, required: true, slug: true },
+      shape: { max: 120, nullable: true },
+      dimensions: { max: 120, nullable: true },
+      thickness: { max: 80, nullable: true },
+      colour: { max: 80, nullable: true },
+      supplier_note: { max: 500, nullable: true },
+      status: { status: true, default: "draft" },
+      sort_order: { number: true, default: 0 },
+    },
+    columns: ["id", "name", "slug", "shape", "dimensions", "thickness", "colour", "supplier_note", "status", "sort_order", "created_at", "updated_at"],
+  },
+};
+
+function validateAdminContentInput(input, config, partial = false) {
+  const keys = Object.keys(input);
+  const allowed = Object.keys(config.fields);
+  if (!keys.length || keys.some((key) => !allowed.includes(key))) return null;
+  const values = {};
+  for (const key of keys) {
+    const rule = config.fields[key];
+    if (rule.number) {
+      if (!Number.isInteger(input[key]) || input[key] < -100000 || input[key] > 100000) return null;
+      values[key] = input[key];
+      continue;
+    }
+    if (rule.status) {
+      const value = cleanString(input[key], 20, true);
+      if (!value || !["draft", "published", "archived"].includes(value)) return null;
+      values[key] = value;
+      continue;
+    }
+    const value = cleanString(input[key], rule.max, Boolean(rule.required));
+    if (value === null || (rule.slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value))) return null;
+    values[key] = value;
+  }
+  if (!partial) {
+    for (const [key, rule] of Object.entries(config.fields)) {
+      if (values[key] !== undefined) continue;
+      if (rule.required) return null;
+      values[key] = rule.default !== undefined ? rule.default : "";
+    }
+  }
+  return values;
+}
+
+async function handleAdminContent(request, env, url, identity) {
+  const match = url.pathname.match(/^\/api\/admin\/(services|paver-designs)(?:\/([0-9a-f-]{36}))?$/i);
+  if (!match) return null;
+  const resource = match[1].toLowerCase();
+  const id = match[2];
+  const config = ADMIN_CONTENT_TYPES[resource];
+  if (request.method === "GET" && !id) {
+    const result = await env.DB.prepare(
+      "SELECT " + config.columns.join(", ") + " FROM " + config.table + " ORDER BY sort_order ASC, created_at DESC",
+    ).all();
+    return response(request, env, { data: result.results || [] });
+  }
+  if (request.method === "POST" && !id) {
+    const parsed = await readJson(request);
+    if (parsed.error) return response(request, env, { error: parsed.error }, 400);
+    const values = validateAdminContentInput(parsed.value, config, false);
+    if (!values) return response(request, env, { error: "Please check the content fields and try again." }, 400);
+    const recordId = crypto.randomUUID();
+    const columns = ["id", ...Object.keys(config.fields)];
+    const bindings = [recordId, ...Object.keys(config.fields).map((key) => {
+      const rule = config.fields[key];
+      return rule.nullable && values[key] === "" ? null : values[key];
+    })];
+    const placeholders = columns.map(() => "?").join(", ");
+    await env.DB.batch([
+      env.DB.prepare(
+        "INSERT INTO " + config.table + " (" + columns.join(", ") + ") VALUES (" + placeholders + ")",
+      ).bind(...bindings),
+      env.DB.prepare(
+        "INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)",
+      ).bind(crypto.randomUUID(), identity.email, "create", config.entity, recordId),
+    ]);
+    return response(request, env, { success: true, id: recordId }, 201);
+  }
+  if (request.method === "PATCH" && id) {
+    const parsed = await readJson(request);
+    if (parsed.error) return response(request, env, { error: parsed.error }, 400);
+    const values = validateAdminContentInput(parsed.value, config, true);
+    if (!values) return response(request, env, { error: "Please check the content fields and try again." }, 400);
+    const current = await env.DB.prepare(
+      "SELECT id FROM " + config.table + " WHERE id = ? LIMIT 1",
+    ).bind(id).first();
+    if (!current) return response(request, env, { error: "Content record not found." }, 404);
+    const columns = Object.keys(values);
+    const assignments = columns.map((column) => column + " = ?").join(", ");
+    const bindings = columns.map((column) => {
+      const rule = config.fields[column];
+      return rule.nullable && values[column] === "" ? null : values[column];
+    });
+    await env.DB.batch([
+      env.DB.prepare(
+        "UPDATE " + config.table + " SET " + assignments + ", updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      ).bind(...bindings, id),
+      env.DB.prepare(
+        "INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)",
+      ).bind(crypto.randomUUID(), identity.email, "update", config.entity, id),
+    ]);
+    return response(request, env, { success: true });
+  }
+  return response(request, env, { error: "Not found." }, 404);
+}
+
 async function handleAdmin(request, env, url, identity) {
   const path = url.pathname;
+  const contentResponse = await handleAdminContent(request, env, url, identity);
+  if (contentResponse) return contentResponse;
 
   if (request.method === "GET" && path === "/api/admin/projects") {
     const result = await env.DB.prepare(

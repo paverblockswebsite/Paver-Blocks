@@ -37,7 +37,7 @@ The D1 binding must be named DB. It is deliberately not configured here. Bind on
 ## Security and deployment prerequisites
 
 1. Add a Cloudflare rate-limiting rule for POST /api/public/inquiries before enabling public submissions. Turnstile is required in the code but is not a substitute for rate limiting.
-2. Create a Turnstile widget for the exact development hostname and store its secret as a Worker secret.
+2. Create a Turnstile widget for the exact development hostname, set its action to inquiry, and store its secret as a Worker secret. The API requires a matching hostname and action in the Siteverify response.
 3. Create a Cloudflare Access self-hosted application for the admin API hostname/path. Restrict its policy to intended administrators.
 4. Set the Worker environment values and a narrowly scoped ADMIN_EMAILS allowlist.
 5. Bind only the development D1 database as DB; never bind production D1 in this development Worker.

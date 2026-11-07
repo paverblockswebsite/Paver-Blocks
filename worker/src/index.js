@@ -316,6 +316,17 @@ export default {
     const url = new URL(request.url);
 
     if (request.method === "OPTIONS") {
+      const origin = request.headers.get("Origin");
+      if (origin === url.origin) {
+        return new Response(null, {
+          status: 204,
+          headers: {
+            "access-control-allow-methods": "GET, POST, PATCH, OPTIONS",
+            "access-control-allow-headers": "Content-Type",
+            "access-control-max-age": "600",
+          },
+        });
+      }
       const headers = corsHeaders(request, env);
       if (!headers["access-control-allow-origin"]) return new Response(null, { status: 403 });
       return new Response(null, { status: 204, headers });
@@ -325,8 +336,10 @@ export default {
       return response(request, env, { ok: true });
     }
 
+    const requestOrigin = request.headers.get("Origin");
     const allowedOrigin = corsHeaders(request, env);
-    if (request.headers.get("Origin") && !allowedOrigin["access-control-allow-origin"]) {
+    const isSameOrigin = requestOrigin === url.origin;
+    if (requestOrigin && !isSameOrigin && !allowedOrigin["access-control-allow-origin"]) {
       return json({ error: "Origin not allowed." }, 403);
     }
 

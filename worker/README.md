@@ -12,6 +12,15 @@ When configuring Cloudflare Access, use a hostname/path-based self-hosted applic
 
 The exact hostname will be selected only after the development Worker endpoint is confirmed. No Access application or deployment is active yet.
 
+## Browser security boundaries
+
+- CORS headers are issued only for `/api/public/*` and only to the exact configured `SITE_ORIGIN`. The public CORS method allowlist is GET, POST, and OPTIONS.
+- Admin pages, assets, and `/api/admin/*` never receive cross-origin CORS permission. The public website origin cannot use its public API CORS allowlist to reach private admin routes.
+- Admin POST/PATCH requests require an exact `Origin` match with the Worker origin. If `Sec-Fetch-Site` is present, it must be `same-origin`. Requests without Origin or marked cross-site are rejected before any admin handler or database operation.
+- Admin API JSON responses use `Cache-Control: no-store`, `Pragma: no-cache`, and `X-Content-Type-Options: nosniff`. The dashboard and its assets are also served with no-store caching.
+- The dashboard uses same-origin fetches and does not manage its own password or session cookie. Cloudflare Access is intended to provide the browser session at the edge; the Worker independently verifies the signed Access JWT and administrator email allowlist on every protected request.
+- The Access application is not configured yet. Before deployment, protect both `/admin*` and `/api/admin/*` on the exact Worker hostname. Do not apply Access to the whole mixed public/private Worker hostname.
+
 ## Implemented routes
 
 ### Public

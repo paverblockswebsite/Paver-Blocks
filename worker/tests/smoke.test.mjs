@@ -401,6 +401,16 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.equal(validResponse.headers.get("x-content-type-options"), "nosniff");
     assert.deepEqual(await validResponse.json(), { data: [], limit: 50, offset: 0 });
 
+    const pagedInquiryResponse = await requestWithToken(
+      validToken,
+      "/api/admin/inquiries?limit=20&offset=40",
+    );
+    assert.equal(pagedInquiryResponse.status, 200);
+    assert.deepEqual(await pagedInquiryResponse.json(), { data: [], limit: 20, offset: 40 });
+    const pagedQuery = preparedStatements.at(-1);
+    assert.match(pagedQuery.sql, /ORDER BY created_at DESC LIMIT \? OFFSET \?$/);
+    assert.deepEqual(pagedQuery.values, [20, 40]);
+
     const missingOriginMutation = await worker.fetch(new Request(
       "https://api.example/api/admin/projects",
       {
@@ -455,6 +465,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.match(dashboardHtml, /id="design-form"/);
     assert.match(dashboardHtml, /id="testimonial-form"/);
     assert.match(dashboardHtml, /id="homepage-form"/);
+    assert.match(dashboardHtml, /id="load-more-inquiries"/);
     assert.match(dashboardHtml, /permission_confirmed/);
     assert.match(dashboardHtml, /https:\/\/development-site\.example/);
     assert.doesNotMatch(dashboardHtml, /href="\/" rel="noopener"/);
@@ -476,6 +487,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
         assert.match(assetText, /api\/admin\/testimonials/);
         assert.match(assetText, /api\/admin\/homepage-content/);
         assert.match(assetText, /method:id\?"PATCH":"POST"/);
+        assert.match(assetText, /limit:String\(inquiryPageSize\),offset:String\(offset\)/);
       }
     }
 

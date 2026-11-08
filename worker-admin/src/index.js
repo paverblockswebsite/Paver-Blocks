@@ -76,6 +76,9 @@ export default {
       };
       if (request.method !== "GET" && request.method !== "HEAD") {
         init.body = request.body;
+        // Node's Fetch implementation requires duplex for streamed bodies.
+        // Cloudflare Workers accepts this RequestInit member as well.
+        init.duplex = "half";
       }
       upstream = await fetch(new Request(target, init));
     } catch {

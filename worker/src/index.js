@@ -509,7 +509,7 @@ const ADMIN_CSS = `
 .toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}.toolbar label{font-weight:650}.toolbar select,.editor select,.editor textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink)}.button{font:inherit;font-weight:700;border:0;border-radius:8px;padding:10px 16px;cursor:pointer}.primary{background:var(--navy);color:#fff}.secondary{background:#e9eef4;color:var(--navy)}button:focus-visible,a:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #d69e00;outline-offset:2px}
 .notice{min-height:26px;color:var(--muted)}.notice.error{color:#a12626}.inquiry-list,.project-list{display:grid;gap:14px}.inquiry,.project-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 2px 8px #172b4508}.inquiry-head,.project-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.inquiry h2,.project-card h3{font-size:1.12rem;color:var(--navy);margin:0 0 4px}.meta{color:var(--muted);font-size:.9rem}.pill{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;border-radius:30px;padding:5px 9px;background:#edf1f5;color:#43546a;white-space:nowrap}.details{white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0}.facts{display:flex;gap:10px 18px;flex-wrap:wrap;font-size:.9rem;color:#48576a}.editor{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;display:grid;grid-template-columns:minmax(140px,220px) 1fr auto;gap:10px;align-items:end}.editor label,.project-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.editor textarea,.project-fields input,.project-fields select,.project-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.editor textarea{min-height:42px;resize:vertical}.empty{background:#fff;border:1px dashed #bdc7d3;border-radius:14px;padding:30px;text-align:center;color:var(--muted)}.content-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:48px 0 12px}.content-heading h2{font-size:1.7rem;color:var(--navy);margin:4px 0}.project-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.project-form h3{margin:0 0 16px;color:var(--navy)}.project-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.project-fields .wide{grid-column:1/-1}.project-fields small{font-weight:400;color:var(--muted)}.form-actions{display:flex;gap:10px;margin-top:18px}.project-card p{margin:8px 0}.project-card .project-actions{display:flex;gap:8px;margin-top:14px}.footnote{font-size:.82rem;margin-top:34px}
 .content-fields .consent{display:flex;align-items:flex-start;gap:10px}.content-fields .consent input{width:auto;margin-top:4px}
-.content-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.content-form h3{margin:0 0 16px;color:var(--navy)}.content-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.content-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.content-fields input,.content-fields select,.content-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.content-fields .wide{grid-column:1/-1}.content-actions{display:flex;gap:8px;margin-top:14px}
+.content-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.content-form h3{margin:0 0 16px;color:var(--navy)}.content-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.content-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.content-fields input,.content-fields select,.content-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.content-fields .wide{grid-column:1/-1}.content-actions{display:flex;gap:8px;margin-top:14px}.image-upload-form{display:grid;gap:10px;border-top:1px solid var(--line);margin-top:16px;padding-top:14px}.image-upload-form label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.image-upload-form input{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:9px;max-width:100%}.image-upload-form .meta{margin:0}
 @media(max-width:650px){.shell{padding-top:28px}.editor{grid-template-columns:1fr}.inquiry-head,.project-head{align-items:flex-start}.topbar{padding:0 16px}.project-fields{grid-template-columns:1fr}.project-fields .wide{grid-column:auto}.content-heading{align-items:flex-start;flex-direction:column}}
 `;
 
@@ -635,6 +635,34 @@ function makeProject(item) {
   const edit=element("button","button secondary","Edit");
   edit.type="button";edit.addEventListener("click",()=>showProjectForm(item));
   actions.append(edit);card.append(actions);
+  const imageForm=element("form","image-upload-form");
+  const fileLabel=element("label","","Project photo (JPEG, PNG or WebP; max 5 MB)");
+  const file=document.createElement("input");file.type="file";file.name="file";file.accept="image/jpeg,image/png,image/webp";file.required=true;
+  fileLabel.append(file);
+  const altLabel=element("label","","Image description (required for accessibility)");
+  const alt=document.createElement("input");alt.name="alt_text";alt.maxLength=250;alt.required=true;alt.placeholder="Describe what this project photo shows";
+  altLabel.append(alt);
+  const captionLabel=element("label","","Caption (optional)");
+  const caption=document.createElement("input");caption.name="caption";caption.maxLength=300;
+  captionLabel.append(caption);
+  const upload=element("button","button secondary","Upload photo");upload.type="submit";
+  const status=element("p","meta","Photos are stored privately in the development R2 bucket and served through the Worker.");
+  imageForm.append(fileLabel,altLabel,captionLabel,upload,status);
+  imageForm.addEventListener("submit",async event=>{
+    event.preventDefault();
+    if(!file.files?.[0])return;
+    upload.disabled=true;upload.textContent="Uploading…";
+    const data=new FormData();data.set("file",file.files[0]);data.set("alt_text",alt.value);data.set("caption",caption.value);
+    try {
+      const result=await fetch("/api/admin/projects/"+encodeURIComponent(item.id)+"/images",{method:"POST",credentials:"same-origin",body:data});
+      const payload=await result.json().catch(()=>({}));
+      if(!result.ok)throw new Error(payload.error||"Image upload failed.");
+      status.textContent="Photo uploaded successfully. It will be available once R2 is configured and the Worker is deployed.";
+      imageForm.reset();
+    } catch(error){status.textContent=error.message;status.className="meta error";}
+    finally{upload.disabled=false;upload.textContent="Upload photo";}
+  });
+  card.append(imageForm);
   return card;
 }
 async function loadProjects() {
@@ -1356,7 +1384,7 @@ export default {
             "cache-control": "no-store",
             "x-content-type-options": "nosniff",
             "referrer-policy": "no-referrer",
-            "content-security-policy": "default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+            "content-security-policy": "default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
           },
         });
       }

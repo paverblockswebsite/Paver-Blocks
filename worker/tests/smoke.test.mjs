@@ -384,6 +384,9 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
   async function requestWithToken(token, path = "/api/admin/inquiries", init = {}) {
     const headers = new Headers(init.headers || {});
     headers.set("Cf-Access-Jwt-Assertion", token);
+    if ((init.method === "POST" || init.method === "PATCH") && !headers.has("Origin")) {
+      headers.set("Origin", "https://api.example");
+    }
     return worker.fetch(
       new Request("https://api.example" + path, { ...init, headers }),
       env,
@@ -394,7 +397,49 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     const validToken = await makeToken();
     const validResponse = await requestWithToken(validToken);
     assert.equal(validResponse.status, 200, "a valid, allowlisted Access identity should be accepted");
+    assert.equal(validResponse.headers.get("cache-control"), "no-store", "private inquiry responses must not be cached");
+    assert.equal(validResponse.headers.get("x-content-type-options"), "nosniff");
     assert.deepEqual(await validResponse.json(), { data: [], limit: 50, offset: 0 });
+
+    const missingOriginMutation = await worker.fetch(new Request(
+      "https://api.example/api/admin/projects",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Cf-Access-Jwt-Assertion": validToken, Origin: "https://api.example" },
+        body: JSON.stringify({ title: "CSRF probe", slug: "csrf-probe" }),
+      },
+    ), env);
+    assert.equal(missingOriginMutation.status, 403, "admin mutations without an Origin must be rejected");
+
+    const publicOriginMutation = await worker.fetch(new Request(
+      "https://api.example/api/admin/projects",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cf-Access-Jwt-Assertion": validToken,
+          Origin: "https://development-site.example",
+        },
+        body: JSON.stringify({ title: "CSRF probe", slug: "csrf-probe" }),
+      },
+    ), env);
+    assert.equal(publicOriginMutation.status, 403, "admin mutations from the public site origin must be rejected");
+
+    const crossSiteMetadataMutation = await worker.fetch(new Request(
+      "https://api.example/api/admin/projects",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cf-Access-Jwt-Assertion": validToken,
+          Origin: "https://api.example",
+          "Sec-Fetch-Site": "cross-site",
+        },
+        body: JSON.stringify({ title: "CSRF probe", slug: "csrf-probe" }),
+      },
+    ), env);
+    assert.equal(crossSiteMetadataMutation.status, 403, "cross-site Fetch Metadata must be rejected");
+    assert.equal(dbBatches.length, 0, "rejected CSRF probes must not write to D1");
 
     const dashboardResponse = await requestWithToken(validToken, "/admin");
     assert.equal(dashboardResponse.status, 200, "an allowlisted admin should receive the dashboard");
@@ -697,6 +742,47 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
 });
 
 
+
+test("the public-site CORS allowlist never applies to private admin routes", async () => {
+  const response = await worker.fetch(
+    new Request("https://api.example/api/admin/inquiries", {
+      headers: { Origin: "https://public-site.example" },
+    }),
+    makeEnv({ SITE_ORIGIN: "https://public-site.example" }),
+  );
+  assert.equal(response.status, 403, "the public website origin must not cross the admin origin boundary");
+  assert.equal(response.headers.get("access-control-allow-origin"), null);
+});
+
+test("admin preflight is rejected from the public website origin while public API preflight remains allowed", async () => {
+  const env = makeEnv({ SITE_ORIGIN: "https://public-site.example" });
+  const adminPreflight = await worker.fetch(
+    new Request("https://api.example/api/admin/projects", {
+      method: "OPTIONS",
+      headers: {
+        Origin: "https://public-site.example",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "content-type",
+      },
+    }),
+    env,
+  );
+  assert.equal(adminPreflight.status, 403);
+
+  const publicPreflight = await worker.fetch(
+    new Request("https://api.example/api/public/inquiries", {
+      method: "OPTIONS",
+      headers: {
+        Origin: "https://public-site.example",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "content-type",
+      },
+    }),
+    env,
+  );
+  assert.equal(publicPreflight.status, 204);
+  assert.equal(publicPreflight.headers.get("access-control-allow-origin"), "https://public-site.example");
+});
 
 test("same-origin admin requests reach Access authentication instead of being rejected by the public-site CORS rule", async () => {
   const response = await worker.fetch(

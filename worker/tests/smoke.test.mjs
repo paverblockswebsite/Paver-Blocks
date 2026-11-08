@@ -358,6 +358,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
 
   const dbBatches = [];
   const preparedStatements = [];
+  let projectImageCount = 0;
   const env = makeEnv({
     ACCESS_TEAM_DOMAIN: teamDomain,
     ACCESS_AUD: "test-access-audience",
@@ -369,7 +370,10 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
           values: [],
           bind(...values) { statement.values = values; return statement; },
           async all() { return { results: [] }; },
-          async first() { return sql.includes("permission_confirmed, status FROM testimonials") ? { permission_confirmed: 0, status: "draft" } : { id: "123e4567-e89b-12d3-a456-426614174000" }; },
+          async first() {
+            if (sql.includes("COUNT(*) AS image_count")) return { image_count: projectImageCount };
+            return sql.includes("permission_confirmed, status FROM testimonials") ? { permission_confirmed: 0, status: "draft" } : { id: "123e4567-e89b-12d3-a456-426614174000" };
+          },
           async run() { return { success: true }; },
         };
         preparedStatements.push(statement);
@@ -385,7 +389,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
   async function requestWithToken(token, path = "/api/admin/inquiries", init = {}) {
     const headers = new Headers(init.headers || {});
     headers.set("Cf-Access-Jwt-Assertion", token);
-    if ((init.method === "POST" || init.method === "PATCH") && !headers.has("Origin")) {
+    if (["POST", "PATCH", "DELETE"].includes(init.method) && !headers.has("Origin")) {
       headers.set("Origin", "https://api.example");
     }
     return worker.fetch(
@@ -467,6 +471,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.match(dashboardHtml, /id="testimonial-form"/);
     assert.match(dashboardHtml, /id="homepage-form"/);
     assert.match(dashboardHtml, /id="load-more-inquiries"/);
+    assert.match(dashboardHtml, /Delete project/);
     assert.match(dashboardHtml, /permission_confirmed/);
     assert.match(dashboardHtml, /https:\/\/development-site\.example/);
     assert.doesNotMatch(dashboardHtml, /href="\/" rel="noopener"/);
@@ -488,6 +493,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
         assert.match(assetText, /api\/admin\/testimonials/);
         assert.match(assetText, /api\/admin\/homepage-content/);
         assert.match(assetText, /method:id\?"PATCH":"POST"/);
+        assert.match(assetText, /method:"DELETE"/);
         assert.match(assetText, /limit:String\(inquiryPageSize\),offset:String\(offset\)/);
       }
     }
@@ -548,6 +554,18 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.match(dbBatches.at(-1)[0].sql, /^UPDATE projects SET/);
     assert.match(dbBatches.at(-1)[1].sql, /^INSERT INTO admin_audit_log/);
 
+    const beforeBlockedProjectDelete = dbBatches.length;
+    projectImageCount = 1;
+    const blockedProjectDelete = await requestWithToken(validToken, "/api/admin/projects/123e4567-e89b-12d3-a456-426614174000", { method: "DELETE" });
+    assert.equal(blockedProjectDelete.status, 409, "projects with stored photos cannot be deleted");
+    assert.equal(dbBatches.length, beforeBlockedProjectDelete, "blocked project deletion must not write to D1");
+    projectImageCount = 0;
+    const projectDelete = await requestWithToken(validToken, "/api/admin/projects/123e4567-e89b-12d3-a456-426614174000", { method: "DELETE" });
+    assert.equal(projectDelete.status, 200, "a project without photos can be deleted");
+    assert.match(dbBatches.at(-1)[0].sql, /^DELETE FROM projects/);
+    assert.match(dbBatches.at(-1)[1].sql, /^INSERT INTO admin_audit_log/);
+    assert.equal(dbBatches.at(-1)[1].values[2], "delete");
+
     const batchesBeforeInvalidProject = dbBatches.length;
     const invalidProject = await requestWithToken(validToken, "/api/admin/projects", {
       method: "POST",
@@ -594,6 +612,10 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.equal(serviceUpdate.status, 200);
     assert.match(dbBatches.at(-1)[0].sql, /^UPDATE services SET/);
     assert.match(dbBatches.at(-1)[1].sql, /^INSERT INTO admin_audit_log/);
+    const serviceDelete = await requestWithToken(validToken, "/api/admin/services/123e4567-e89b-12d3-a456-426614174000", { method: "DELETE" });
+    assert.equal(serviceDelete.status, 200);
+    assert.match(dbBatches.at(-1)[0].sql, /^DELETE FROM services/);
+    assert.equal(dbBatches.at(-1)[1].values[2], "delete");
 
     const designList = await requestWithToken(validToken, "/api/admin/paver-designs");
     assert.equal(designList.status, 200);
@@ -623,6 +645,10 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.equal(designUpdate.status, 200);
     assert.match(dbBatches.at(-1)[0].sql, /^UPDATE paver_designs SET/);
     assert.match(dbBatches.at(-1)[1].sql, /^INSERT INTO admin_audit_log/);
+    const designDelete = await requestWithToken(validToken, "/api/admin/paver-designs/123e4567-e89b-12d3-a456-426614174000", { method: "DELETE" });
+    assert.equal(designDelete.status, 200);
+    assert.match(dbBatches.at(-1)[0].sql, /^DELETE FROM paver_designs/);
+    assert.equal(dbBatches.at(-1)[1].values[2], "delete");
 
     const beforeInvalidContent = dbBatches.length;
     for (const [path, body] of [
@@ -691,6 +717,10 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.equal(testimonialUpdate.status, 200);
     assert.match(dbBatches.at(-1)[0].sql, /^UPDATE testimonials SET/);
     assert.match(dbBatches.at(-1)[1].sql, /^INSERT INTO admin_audit_log/);
+    const testimonialDelete = await requestWithToken(validToken, "/api/admin/testimonials/123e4567-e89b-12d3-a456-426614174000", { method: "DELETE" });
+    assert.equal(testimonialDelete.status, 200);
+    assert.match(dbBatches.at(-1)[0].sql, /^DELETE FROM testimonials/);
+    assert.equal(dbBatches.at(-1)[1].values[2], "delete");
 
     const homepageRead = await requestWithToken(validToken, "/api/admin/homepage-content");
     assert.equal(homepageRead.status, 200);
@@ -830,16 +860,20 @@ test("every admin API family rejects unauthenticated requests before touching th
     ["GET", "/api/admin/projects"],
     ["POST", "/api/admin/projects"],
     ["PATCH", "/api/admin/projects/123e4567-e89b-12d3-a456-426614174000"],
+    ["DELETE", "/api/admin/projects/123e4567-e89b-12d3-a456-426614174000"],
     ["DELETE", "/api/admin/projects/123e4567-e89b-12d3-a456-426614174000/images/123e4567-e89b-12d3-a456-426614174001"],
     ["GET", "/api/admin/services"],
     ["POST", "/api/admin/services"],
     ["PATCH", "/api/admin/services/123e4567-e89b-12d3-a456-426614174000"],
+    ["DELETE", "/api/admin/services/123e4567-e89b-12d3-a456-426614174000"],
     ["GET", "/api/admin/paver-designs"],
     ["POST", "/api/admin/paver-designs"],
     ["PATCH", "/api/admin/paver-designs/123e4567-e89b-12d3-a456-426614174000"],
+    ["DELETE", "/api/admin/paver-designs/123e4567-e89b-12d3-a456-426614174000"],
     ["GET", "/api/admin/testimonials"],
     ["POST", "/api/admin/testimonials"],
     ["PATCH", "/api/admin/testimonials/123e4567-e89b-12d3-a456-426614174000"],
+    ["DELETE", "/api/admin/testimonials/123e4567-e89b-12d3-a456-426614174000"],
     ["GET", "/api/admin/homepage-content"],
     ["PATCH", "/api/admin/homepage-content"],
   ];

@@ -1,0 +1,31 @@
+name = "paver-blocks-api"
+main = "src/index.js"
+compatibility_date = "2026-11-07"
+
+# Dedicated production inquiry limiter; separate from development namespace 1001.
+[[ratelimits]]
+name = "INQUIRY_RATE_LIMITER"
+namespace_id = "1002"
+
+[ratelimits.simple]
+limit = 5
+period = 60
+
+# Production-only object storage.
+[[r2_buckets]]
+binding = "PROJECT_IMAGES"
+bucket_name = "paver-blocks-project-images-production"
+
+# Production-only database.
+[[d1_databases]]
+binding = "DB"
+database_name = "paver-blocks-production"
+database_id = "76f0020d-9f13-4237-97e9-1c7824ad864d"
+
+[vars]
+SITE_ORIGIN = "https://paver-blocks.pages.dev"
+TURNSTILE_HOSTNAME = "paver-blocks.pages.dev"
+
+# Configure TURNSTILE_SECRET_KEY as an encrypted Worker secret in Cloudflare.
+# Configure ACCESS_TEAM_DOMAIN, ACCESS_AUD, and ADMIN_EMAILS after the
+# production Cloudflare Access application has been created.

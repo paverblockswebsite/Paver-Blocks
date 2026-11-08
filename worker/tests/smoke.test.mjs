@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import worker from "../src/index.js";
-import { uploadProjectImage, serveProjectImage } from "../src/project-images.js";
+import { uploadProjectImage, serveProjectImage, deleteProjectImage, reorderProjectImages } from "../src/project-images.js";
 
 function makeEnv(overrides = {}) {
   return {
@@ -971,4 +971,139 @@ test("public project media rejects arbitrary object keys", async () => {
   );
   assert.equal(response.status, 404);
   assert.equal(bucketTouched, false);
+});
+
+
+test("project photo deletion verifies project ownership before touching R2", async () => {
+  let bucketDeletes = 0;
+  let batches = 0;
+  const projectId = "123e4567-e89b-12d3-a456-426614174000";
+  const imageId = "123e4567-e89b-12d3-a456-426614174001";
+  const env = {
+    PROJECT_IMAGES: { async delete() { bucketDeletes++; } },
+    DB: {
+      prepare(sql) {
+        assert.match(sql, /WHERE id = \\? AND project_id = \\?/);
+        return { bind() { return { async first() { return { id: imageId, object_key: "projects/another-project/" + imageId + ".jpg" }; } }; } };
+      },
+      async batch() { batches++; },
+    },
+  };
+  const respond = (request, bindings, body, status=200) => new Response(JSON.stringify(body), { status });
+  const result = await deleteProjectImage(env, projectId, imageId, { email: "admin@example.com" }, respond, new Request("https://api.example"));
+  assert.equal(result.status, 404);
+  assert.equal(bucketDeletes, 0);
+  assert.equal(batches, 0);
+});
+
+test("project photo deletion removes the R2 object and records the D1 deletion and audit together", async () => {
+  const projectId = "123e4567-e89b-12d3-a456-426614174000";
+  const imageId = "123e4567-e89b-12d3-a456-426614174001";
+  const key = "projects/" + projectId + "/" + imageId + ".webp";
+  const events = [];
+  const env = {
+    PROJECT_IMAGES: { async delete(value) { events.push(["r2-delete", value]); } },
+    DB: {
+      prepare(sql) {
+        events.push(["prepare", sql]);
+        return { bind(...values) { return { sql, values }; } };
+      },
+      async batch(statements) { events.push(["batch", statements.map(s=>s.sql)]); },
+    },
+  };
+  const respond = (request, bindings, body, status=200) => new Response(JSON.stringify(body), { status });
+  const result = await deleteProjectImage(env, projectId, imageId, { email: "admin@example.com" }, respond, new Request("https://api.example"));
+  assert.equal(result.status, 200);
+  assert.deepEqual(JSON.parse(await result.text()), { success: true });
+  assert.deepEqual(events[0], ["prepare", "SELECT id, object_key FROM project_images WHERE id = ? AND project_id = ? LIMIT 1"]);
+  assert.deepEqual(events[1], ["r2-delete", key]);
+  assert.equal(events.at(-1)[0], "batch");
+  assert.match(events.at(-1)[1][0], /^DELETE FROM project_images/);
+  assert.match(events.at(-1)[1][1], /^INSERT INTO admin_audit_log/);
+});
+
+test("project photo deletion fails closed when R2 deletion fails", async () => {
+  let batches = 0;
+  const projectId = "123e4567-e89b-12d3-a456-426614174000";
+  const imageId = "123e4567-e89b-12d3-a456-426614174001";
+  const env = {
+    PROJECT_IMAGES: { async delete() { throw new Error("R2 unavailable"); } },
+    DB: {
+      prepare() { return { bind() { return { async first() { return { id: imageId, object_key: "projects/" + projectId + "/" + imageId + ".jpg" }; } }; } }; },
+      async batch() { batches++; },
+    },
+  };
+  const respond = (request, bindings, body, status=200) => new Response(JSON.stringify(body), { status });
+  const result = await deleteProjectImage(env, projectId, imageId, { email: "admin@example.com" }, respond, new Request("https://api.example"));
+  assert.equal(result.status, 503);
+  assert.equal(batches, 0);
+});
+
+test("gallery reorder rejects duplicate or stale/cross-project image IDs without writes", async () => {
+  const projectId = "123e4567-e89b-12d3-a456-426614174000";
+  const first = "123e4567-e89b-12d3-a456-426614174001";
+  const second = "123e4567-e89b-12d3-a456-426614174002";
+  let batches = 0;
+  const env = {
+    DB: {
+      prepare(sql) {
+        return {
+          bind() {
+            if (sql.startsWith("SELECT id FROM projects")) return { async first() { return { id: projectId }; } };
+            return { async all() { return { results: [{ id: first }, { id: second }] }; } };
+          },
+        };
+      },
+      async batch() { batches++; },
+    },
+  };
+  const respond = (request, bindings, body, status=200) => new Response(JSON.stringify(body), { status });
+  const duplicate = await reorderProjectImages(env, projectId, [first, first], { email: "admin@example.com" }, respond, new Request("https://api.example"));
+  assert.equal(duplicate.status, 400);
+  const stale = await reorderProjectImages(env, projectId, [first, "123e4567-e89b-12d3-a456-426614174099"], { email: "admin@example.com" }, respond, new Request("https://api.example"));
+  assert.equal(stale.status, 409);
+  assert.equal(batches, 0);
+});
+
+test("gallery reorder updates every image in the same project and records an audit event", async () => {
+  const projectId = "123e4567-e89b-12d3-a456-426614174000";
+  const first = "123e4567-e89b-12d3-a456-426614174001";
+  const second = "123e4567-e89b-12d3-a456-426614174002";
+  let batch = [];
+  const env = {
+    DB: {
+      prepare(sql) {
+        return {
+          bind(...values) { return { sql, values }; },
+          async first() { return { id: projectId }; },
+          async all() { return { results: [{ id: first }, { id: second }] }; },
+        };
+      },
+      async batch(statements) { batch = statements; },
+    },
+  };
+  const respond = (request, bindings, body, status=200) => new Response(JSON.stringify(body), { status });
+  const result = await reorderProjectImages(env, projectId, [second, first], { email: "admin@example.com" }, respond, new Request("https://api.example"));
+  assert.equal(result.status, 200);
+  assert.equal(batch.length, 3);
+  assert.match(batch[0].sql, /^UPDATE project_images SET sort_order = \\? WHERE id = \\? AND project_id = \\?/);
+  assert.deepEqual(batch[0].values, [0, second, projectId]);
+  assert.deepEqual(batch[1].values, [1, first, projectId]);
+  assert.match(batch[2].sql, /^INSERT INTO admin_audit_log/);
+});
+
+test("draft project image previews are private and never shared-cacheable", async () => {
+  const projectId = "123e4567-e89b-12d3-a456-426614174000";
+  const imageId = "123e4567-e89b-12d3-a456-426614174001";
+  const key = "projects/" + projectId + "/" + imageId + ".jpg";
+  const env = {
+    DB: { prepare() { return { bind() { return { async first() { return { object_key: key }; } }; } }; } },
+    PROJECT_IMAGES: { async get() { return { body: new Uint8Array([1]), httpMetadata: { contentType: "image/jpeg" }, httpEtag: '"etag"' }; } },
+  };
+  const respond = (request, bindings, body, status=200) => new Response(JSON.stringify(body), { status });
+  const preview = await serveProjectImage(
+    new Request("https://api.example/admin/media/" + key), env,
+    new URL("https://api.example/admin/media/" + key), respond, false, "/admin/media/",
+  );
+  assert.equal(preview.headers.get("cache-control"), "private, no-store");
 });

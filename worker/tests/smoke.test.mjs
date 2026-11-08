@@ -405,7 +405,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
       "https://api.example/api/admin/projects",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Cf-Access-Jwt-Assertion": validToken, Origin: "https://api.example" },
+        headers: { "Content-Type": "application/json", "Cf-Access-Jwt-Assertion": validToken },
         body: JSON.stringify({ title: "CSRF probe", slug: "csrf-probe" }),
       },
     ), env);

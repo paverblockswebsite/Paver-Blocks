@@ -59,7 +59,6 @@ const whatsappMessage = encodeURIComponent("Hello Paver Blocks, I would like to 
           <button id="quote-submit" class="button button-primary" type="submit">Submit project enquiry</button>
         </form>
       </div>
-      <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     ) : (
       <div class="quote-grid">
         <article class="info-card"><p class="eyebrow">Online form setup</p><h2>We are preparing secure online enquiries.</h2><p>The secure form will appear here after the development API and spam-protection keys are configured. You can contact us directly in the meantime.</p></article>
@@ -76,10 +75,16 @@ const whatsappMessage = encodeURIComponent("Hello Paver Blocks, I would like to 
   </section>
 </SiteLayout>
 
+<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
 <script>
-  const form = document.querySelector("#quote-form");
-  const status = document.querySelector("#quote-status");
-  const submit = document.querySelector("#quote-submit");
+  const form = document.querySelector<HTMLFormElement>("#quote-form");
+  const status = document.querySelector<HTMLParagraphElement>("#quote-status");
+  const submit = document.querySelector<HTMLButtonElement>("#quote-submit");
+  const resetTurnstile = () => {
+    const api = (window as Window & { turnstile?: { reset: () => void } }).turnstile;
+    api?.reset();
+  };
 
   if (form && status && submit) {
     form.addEventListener("submit", async (event) => {
@@ -113,7 +118,7 @@ const whatsappMessage = encodeURIComponent("Hello Paver Blocks, I would like to 
       status.textContent = "Sending your enquiry securely…";
 
       try {
-        const endpoint = new URL("/api/public/inquiries", form.dataset.apiBase);
+        const endpoint = new URL("/api/public/inquiries", form.dataset.apiBase || "");
         const response = await fetch(endpoint, {
           method: "POST",
           mode: "cors",
@@ -125,13 +130,13 @@ const whatsappMessage = encodeURIComponent("Hello Paver Blocks, I would like to 
         if (!response.ok) throw new Error(result.error || "Your enquiry could not be submitted. Please contact us directly.");
 
         form.reset();
-        if (window.turnstile) window.turnstile.reset();
+        resetTurnstile();
         status.className = "form-status success";
         status.textContent = "Thank you. Your enquiry has been received and saved. We will contact you using the details you provided.";
       } catch (error) {
         status.className = "form-status error";
         status.textContent = error instanceof Error ? error.message : "Your enquiry could not be submitted. Please contact us directly.";
-        if (window.turnstile) window.turnstile.reset();
+        resetTurnstile();
       } finally {
         submit.disabled = false;
         submit.textContent = "Submit project enquiry";

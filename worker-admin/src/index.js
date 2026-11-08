@@ -17,12 +17,15 @@ function isAllowedAdminPath(pathname) {
     pathname.startsWith("/api/admin/");
 }
 
+const DEVELOPMENT_API_ORIGIN = "https://paver-blocks-api-dev.hellopaverblocks.workers.dev";
+
 function getApiOrigin(value) {
   if (typeof value !== "string" || !value.trim()) return null;
   try {
     const url = new URL(value);
     if (url.protocol !== "https:" || url.username || url.password ||
-        url.pathname !== "/" || url.search || url.hash) return null;
+        url.pathname !== "/" || url.search || url.hash ||
+        url.origin !== DEVELOPMENT_API_ORIGIN) return null;
     return url.origin;
   } catch {
     return null;

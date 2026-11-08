@@ -1,0 +1,7 @@
+name = "paver-blocks-admin"
+main = "src/index.js"
+compatibility_date = "2026-11-07"
+
+[vars]
+# Production API only. Keep separate from worker-admin/wrangler.toml.
+API_ORIGIN = "https://paver-blocks-api.hellopaverblocks.workers.dev"

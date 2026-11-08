@@ -25,6 +25,9 @@ database_id = "76f0020d-9f13-4237-97e9-1c7824ad864d"
 [vars]
 SITE_ORIGIN = "https://paver-blocks.pages.dev"
 TURNSTILE_HOSTNAME = "paver-blocks.pages.dev"
+ADMIN_EMAILS = "hellopaverblocks@gmail.com"
+ACCESS_TEAM_DOMAIN = "withered-frost-198b.cloudflareaccess.com"
+ACCESS_AUD = "0889316d2a3735ffe107d6b6d0503c4bed6a1592fd4e1c861c19168736674776"
 
 # Configure TURNSTILE_SECRET_KEY as an encrypted Worker secret in Cloudflare.
 # Configure ACCESS_TEAM_DOMAIN, ACCESS_AUD, and ADMIN_EMAILS after the

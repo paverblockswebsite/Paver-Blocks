@@ -1,6 +1,6 @@
 # Paver Blocks Worker API
 
-**Status: development code only. Not deployed. The development D1 database and private R2 bucket have been created; Wrangler declares bindings for both. The Worker is not deployed, and the inquiry rate-limit binding, Access application, Turnstile secret, and production configuration are not active.**
+**Deployment status: GitHub Workers Builds is connected to the development/site-foundation branch with root directory /worker. The first build of the application Worker code is pending; the currently deployed Worker version is still the temporary Hello World placeholder. The development D1 database and private R2 bucket exist, and Wrangler declares bindings for both. Access application, Turnstile secret, and Worker runtime secrets still need configuration before protected admin and inquiry flows can be used.**
 
 This Worker is a separate API service intended to sit beside the Astro Pages website.
 
@@ -12,6 +12,10 @@ When configuring Cloudflare Access, use a hostname/path-based self-hosted applic
 
 The intended development Worker name is `paver-blocks-api-dev` on the account's existing `workers.dev` subdomain. Confirm the final hostname before configuring Access. No Access application or Worker deployment is active yet.
 
+## Deployment status and safety
+
+Workers Builds is connected to `paverblockswebsite/Paver-Blocks`, production branch `development/site-foundation`, and root directory `/worker`. Preview builds are disabled. The deployment command is `npx wrangler deploy`; no build command or build-time variables/secrets are configured. The first application-code build is pending. The temporary Hello World deployment remains active until that build succeeds. This Worker must remain development-only; do not merge the draft pull request or deploy Pages production without separate approval.
+
 ## Browser security boundaries
 
 - CORS headers are issued only for `/api/public/*` and only to the exact configured `SITE_ORIGIN`. The public CORS method allowlist is GET, POST, and OPTIONS.
@@ -19,7 +23,7 @@ The intended development Worker name is `paver-blocks-api-dev` on the account's 
 - Admin POST/PATCH requests require an exact `Origin` match with the Worker origin. If `Sec-Fetch-Site` is present, it must be `same-origin`. Requests without Origin or marked cross-site are rejected before any admin handler or database operation.
 - Admin API JSON responses use `Cache-Control: no-store`, `Pragma: no-cache`, and `X-Content-Type-Options: nosniff`. The dashboard and its assets are also served with no-store caching.
 - The dashboard uses same-origin fetches and does not manage its own password or session cookie. Cloudflare Access is intended to provide the browser session at the edge; the Worker independently verifies the signed Access JWT and administrator email allowlist on every protected request.
-- The Access application is not configured yet. Before deployment, protect both `/admin*` and `/api/admin/*` on the exact Worker hostname. Do not apply Access to the whole mixed public/private Worker hostname.
+- The Access application is not configured yet. Before public use, protect both `/admin*` and `/api/admin/*` on the exact Worker hostname. Do not apply Access to the whole mixed public/private Worker hostname.
 
 ## Implemented routes
 
@@ -65,17 +69,17 @@ If this variable is unset, the homepage keeps its static approved copy. If the A
 
 ## Development-only Cloudflare bindings
 
-The Worker configuration declares an R2 binding named `PROJECT_IMAGES` for the development bucket `paver-blocks-project-images-dev`. The private development bucket `paver-blocks-project-images-dev` has been created in Cloudflare with Standard storage class and Public Access disabled. The Wrangler binding name and bucket name match. This does not deploy the Worker or prove live R2 integration. Image uploads fail closed with HTTP 503 until the binding exists. Uploads accept JPEG, PNG, or WebP only, cap file size at 5 MiB, check the file signature, require descriptive alt text, and use random object keys. Public image delivery validates the object-key format and D1 ownership, serves only published-project images and approved MIME types, and sets `nosniff`; public responses use a one-hour cache lifetime while draft admin previews are private and no-store. No public R2 bucket access is enabled by this code; media is served through the Worker route.
+The Worker configuration declares an R2 binding named `PROJECT_IMAGES` for the development bucket `paver-blocks-project-images-dev`. The private development bucket `paver-blocks-project-images-dev` has been created in Cloudflare with Standard storage class and Public Access disabled. The Wrangler binding name and bucket name match. This does not prove live R2 integration. Image uploads fail closed with HTTP 503 until the binding exists. Uploads accept JPEG, PNG, or WebP only, cap file size at 5 MiB, check the file signature, require descriptive alt text, and use random object keys. Public image delivery validates the object-key format and D1 ownership, serves only published-project images and approved MIME types, and sets `nosniff`; public responses use a one-hour cache lifetime while draft admin previews are private and no-store. No public R2 bucket access is enabled by this code; media is served through the Worker route.
 
-The checked-in `worker/wrangler.toml` now binds only the development D1 database `paver-blocks-dev` (database ID `642fbb24-2b16-41f6-b77e-e14de49eebe8`) as `env.DB`. It also allows the exact stable Pages branch-preview origin `https://development-site-foundation.paver-blocks.pages.dev` through `SITE_ORIGIN`, and sets the matching Turnstile hostname for later inquiry-form setup. These are public development configuration values, not secrets.
+The checked-in `worker/wrangler.toml` binds only the development D1 database `paver-blocks-dev` (database ID `642fbb24-2b16-41f6-b77e-e14de49eebe8`) as `env.DB`. It also allows the exact stable Pages branch-preview origin `https://development-site-foundation.paver-blocks.pages.dev` through `SITE_ORIGIN`, and sets the matching Turnstile hostname for later inquiry-form setup. These are public development configuration values, not secrets.
 
-This config change does **not** deploy the Worker, run migrations, create an Access application, configure an Access audience, or set any secret. The D1 schema was already created manually in the development database and should be checked against `migrations/0001_initial.sql` before any future migration command. Do not run migration commands or deploy until the separate development setup review is complete. Production resources remain out of scope.
+This config change does not run migrations, create an Access application, configure an Access audience, or set any secret. The D1 schema was already created manually in the development database and should be checked against `migrations/0001_initial.sql` before any future migration command. Do not run migration commands until the separate development setup review is complete. Production resources remain out of scope.
 
 ## Inquiry rate limiting
 
-The inquiry route checks `env.INQUIRY_RATE_LIMITER` before reading the request body or touching D1. If the binding is absent or errors, the route fails closed with HTTP 503; if the limit is exceeded, it returns HTTP 429. The planned initial setting is **5 attempts per 60 seconds per client IP key**, using the Cloudflare Workers Rate Limiting API. This is an approximate limit maintained separately in each Cloudflare location, not a strict global cap. IP-based counters can affect multiple legitimate visitors who share a mobile-carrier or office IP address, so the threshold must be reviewed against real development traffic before production use.
+The inquiry route checks `env.INQUIRY_RATE_LIMITER` before reading the request body or touching D1. If the binding is absent or errors, the route fails closed with HTTP 503; if the limit is exceeded, it returns HTTP 429. The planned initial setting is 5 attempts per 60 seconds per client IP key, using the Cloudflare Workers Rate Limiting API. This is an approximate limit maintained separately in each Cloudflare location, not a strict global cap. IP-based counters can affect multiple legitimate visitors who share a mobile-carrier or office IP address, so the threshold must be reviewed against real development traffic before production use.
 
-The development Wrangler binding is configured with `namespace_id = "1001"`, after confirming that no other Worker exists in this Cloudflare account. The initial setting is 5 attempts per 60 seconds. Cloudflare requires each namespace ID to be a positive integer unique within the account; bindings that reuse an ID share counters. The ID is a developer-defined configuration value, not a secret. The binding is not active on Cloudflare until this Worker is separately deployed. Until deployment and the other required Turnstile setup are complete, public inquiry submission remains unavailable. The code fails closed with HTTP 503 whenever the binding is absent or errors. Cloudflare recommends avoiding IP keys where possible because many legitimate visitors can share one IP; IP is being used only as a temporary anonymous-form abuse key and must be reviewed before production.
+The development Wrangler binding is configured with namespace ID `1001`, after confirming that no other Worker exists in this Cloudflare account. The initial setting is 5 attempts per 60 seconds. Cloudflare requires each namespace ID to be a positive integer unique within the account; bindings that reuse an ID share counters. The ID is a developer-defined configuration value, not a secret. The binding becomes active on Cloudflare only after the application-code deployment succeeds. Until deployment and the other required Turnstile setup are complete, public inquiry submission remains unavailable. The code fails closed with HTTP 503 whenever the binding is absent or errors. Cloudflare recommends avoiding IP keys where possible because many legitimate visitors can share one IP; IP is being used only as a temporary anonymous-form abuse key and must be reviewed before production.
 
 ## Local smoke tests
 
@@ -97,7 +101,7 @@ The D1 binding must be named `DB`; the Wrangler file currently points only to th
 
 ## Security and deployment prerequisites
 
-1. Review the development `INQUIRY_RATE_LIMITER` binding (namespace `1001`, 5 per 60 seconds) for POST `/api/public/inquiries`. The binding is defined in Wrangler config but will not become active until a separately approved Worker deployment. Do not reuse its namespace ID for another independent limiter. The IP key is temporary due to shared-IP false-positive risk. Turnstile is also required and is not a substitute for rate limiting.
+1. Review the development `INQUIRY_RATE_LIMITER` binding (namespace `1001`, 5 per 60 seconds) for POST `/api/public/inquiries`. The binding is defined in Wrangler config and should become active with the first application-code deployment. Do not reuse its namespace ID for another independent limiter. The IP key is temporary due to shared-IP false-positive risk. Turnstile is also required and is not a substitute for rate limiting.
 2. Create a Turnstile widget for the exact development hostname, set its action to inquiry, and store its secret as a Worker secret. The API requires a matching hostname and action in the Siteverify response.
 3. Create a Cloudflare Access self-hosted application for the Worker hostname and protect `/admin*` plus `/api/admin/*` paths. This must include the dashboard HTML and its assets. Restrict its policy to intended administrators.
 4. Set the Worker environment values and a narrowly scoped ADMIN_EMAILS allowlist.

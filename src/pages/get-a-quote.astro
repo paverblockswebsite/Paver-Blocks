@@ -1,8 +1,19 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 
-const apiBaseValue = (import.meta.env.VITE_PUBLIC_API_BASE_URL || "").trim();
-const turnstileSiteKey = (import.meta.env.VITE_TURNSTILE_SITE_KEY || "").trim();
+// Cloudflare Pages injects CF_PAGES_BRANCH during each build. Keep the
+// development API/site key scoped to the development branch if Preview
+// build variables are not exposed by the current Pages project settings.
+const pagesBranch = process.env.CF_PAGES_BRANCH || "";
+const isDevelopmentBranch = pagesBranch === "development/site-foundation";
+const apiBaseValue = (
+  import.meta.env.VITE_PUBLIC_API_BASE_URL ||
+  (isDevelopmentBranch ? "https://paver-blocks-api-dev.hellopaverblocks.workers.dev" : "")
+).trim();
+const turnstileSiteKey = (
+  import.meta.env.VITE_TURNSTILE_SITE_KEY ||
+  (isDevelopmentBranch ? "0x4AAAAAAF4dR8LB6t5AzlcT" : "")
+).trim();
 let publicApiBase = "";
 try {
   const parsed = new URL(apiBaseValue);

@@ -1,6 +1,6 @@
 # Development Worker deployment runbook
 
-**Status: preparation only. Do not deploy from this document without separate, explicit approval.** The production Pages site and `main` branch must remain untouched.
+**Status:** The development API Worker `paver-blocks-api-dev` is already deployed and its public inquiry flow has passed one end-to-end test. This runbook now governs remaining development admin-gateway setup. Do not deploy the admin gateway or create Access policies without separate, explicit approval. The production Pages site and `main` branch must remain untouched.
 
 ## Confirmed development resources
 
@@ -54,17 +54,17 @@ Set these only in the Worker dashboard's encrypted secrets / environment configu
 
 The Turnstile public site key is not a secret, but the public quote form must be integrated with it before inquiry submissions can work end-to-end. The Worker intentionally fails closed if the rate-limit binding or Turnstile configuration is missing.
 
-## Safe setup order after approval
+## Remaining development admin setup (after separate approval)
 
-1. Confirm the exact development branch and Worker root directory `worker/` in the Cloudflare build setup. Confirm the Wrangler configuration is detected.
-2. Create/deploy only the development Worker named `paver-blocks-api-dev`; verify the actual `workers.dev` hostname. Do not edit Pages production.
-3. Verify `GET /health` returns only the liveness response and that public content routes use the development D1 binding.
-4. Create a Cloudflare Access self-hosted application for the verified Worker hostname. Protect the dashboard path `/admin*`, admin assets beneath it, admin media beneath it, and the API path `/api/admin/*`. Apply an allow policy for the single initial administrator email. Do not protect the whole hostname.
-5. Copy the Access application's audience tag into the Worker's encrypted `ACCESS_AUD` secret/variable, and configure the other required values above. Keep `ADMIN_EMAILS` as a server-side allowlist.
-6. Verify anonymous requests to every admin route are denied, the allowed administrator can reach the dashboard, and a different identity is denied.
-7. Verify public reads, exact-origin CORS, rate limiting, Turnstile rejection/acceptance, inquiry writes, R2 upload/preview/public delivery/deletion/reordering, and D1 audit events with test data only.
-8. Only after the public quote form is integrated and end-to-end checks pass, set the Pages **preview-only** `VITE_PUBLIC_API_BASE_URL` to the verified development Worker origin.
-9. Record test results and review privacy, backup/restore, and retention decisions before collecting real customer inquiries.
+1. Keep the already deployed `paver-blocks-api-dev` Worker connected only to `paver-blocks-dev` and `paver-blocks-project-images-dev`. Do not recreate or redeploy it as part of gateway setup.
+2. Require green GitHub Actions results for both Worker test suites and both Wrangler dry-run checks.
+3. Create a Cloudflare Access application for the dedicated `paver-blocks-admin-dev` gateway Worker only. Do not attach Access to the mixed-purpose API Worker, because public quote routes must remain reachable.
+4. Deploy only `paver-blocks-admin-dev` from the `worker-admin/` root after its Access destination and allow policy are reviewed.
+5. Configure the API Worker's encrypted Access settings and server-side admin allowlist. Keep secrets and account settings out of Git.
+6. Verify anonymous admin denial, allowed-admin access, disallowed-identity denial, and continued public quote form access.
+7. Test admin CRUD, inquiry status updates, audit logging, R2 upload/preview/public delivery/deletion/reordering, and D1 backup/restore using dummy data only.
+8. Review privacy notice, retention/deletion, cost limits, and operational backups before accepting real customer inquiries.
+9. Keep PR #1 unmerged and production Pages, production Workers, production data, DNS, and domain unchanged until separate explicit approval.
 
 ## Rollback
 

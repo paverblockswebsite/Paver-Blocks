@@ -303,7 +303,7 @@ test("admin inquiry updates reject requests without a verified Access identity",
     new Request("https://api.example/api/admin/inquiries/123e4567-e89b-12d3-a456-426614174000", {
       method: "PATCH",
       headers: {
-        Origin: "https://development-site.example",
+        Origin: "https://api.example",
         "CF-Connecting-IP": "203.0.113.20",
         "Content-Type": "application/json",
       },
@@ -405,7 +405,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
       "https://api.example/api/admin/projects",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Cf-Access-Jwt-Assertion": validToken, Origin: "https://api.example" },
+        headers: { "Content-Type": "application/json", "Cf-Access-Jwt-Assertion": validToken },
         body: JSON.stringify({ title: "CSRF probe", slug: "csrf-probe" }),
       },
     ), env);

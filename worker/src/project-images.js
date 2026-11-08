@@ -123,8 +123,8 @@ export async function deleteProjectImage(env, projectId, imageId, identity, resp
   if (!image || typeof image.object_key !== "string") {
     return respond(request, env, { error: "Project photo not found." }, 404);
   }
-  const expectedKey = new RegExp("^projects/" + projectId.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&") + "/" + imageId.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&") + "\\\\.(jpg|png|webp)$", "i");
-  if (!expectedKey.test(image.object_key)) {
+  const expectedPrefix = "projects/" + projectId + "/" + imageId + ".";
+  if (!image.object_key.startsWith(expectedPrefix) || !/\\.(jpg|png|webp)$/i.test(image.object_key)) {
     return respond(request, env, { error: "Project photo not found." }, 404);
   }
 

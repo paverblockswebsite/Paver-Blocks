@@ -1393,7 +1393,7 @@ export default {
         return new Response(null, {
           status: 204,
           headers: {
-            "access-control-allow-methods": "GET, POST, PATCH, OPTIONS",
+            "access-control-allow-methods": "GET, POST, PATCH, DELETE, OPTIONS",
             "access-control-allow-headers": "Content-Type",
             "access-control-max-age": "600",
           },
@@ -1417,7 +1417,7 @@ export default {
     }
     // State-changing admin requests must come from the Worker origin. This protects
     // Access-cookie-authenticated browser sessions from cross-site request forgery.
-    if (isAdminApi && (request.method === "POST" || request.method === "PATCH")) {
+    if (isAdminApi && (request.method === "POST" || request.method === "PATCH" || request.method === "DELETE")) {
       if (!isSameOrigin) {
         return response(request, env, { error: "A same-origin request is required." }, 403);
       }
@@ -1490,7 +1490,7 @@ export default {
       if (url.pathname.startsWith("/api/admin/")) {
         const identity = await verifyAccessIdentity(request, env);
         if (!identity) return response(request, env, { error: "Unauthorized." }, 401);
-        if (request.method !== "GET" && request.method !== "POST" && request.method !== "PATCH") {
+        if (request.method !== "GET" && request.method !== "POST" && request.method !== "PATCH" && request.method !== "DELETE") {
           return response(request, env, { error: "Method not allowed." }, 405);
         }
         return await handleAdmin(request, env, url, identity);

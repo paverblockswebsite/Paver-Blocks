@@ -58,13 +58,14 @@ The Turnstile public site key is not a secret, but the public quote form must be
 
 1. Keep the already deployed `paver-blocks-api-dev` Worker connected only to `paver-blocks-dev` and `paver-blocks-project-images-dev`. Do not recreate or redeploy it as part of gateway setup.
 2. Require green GitHub Actions results for both Worker test suites and both Wrangler dry-run checks.
-3. Create a Cloudflare Access application for the dedicated `paver-blocks-admin-dev` gateway Worker only. Do not attach Access to the mixed-purpose API Worker, because public quote routes must remain reachable.
-4. Deploy only `paver-blocks-admin-dev` from the `worker-admin/` root after its Access destination and allow policy are reviewed.
-5. Configure the API Worker's encrypted Access settings and server-side admin allowlist. Keep secrets and account settings out of Git.
-6. Verify anonymous admin denial, allowed-admin access, disallowed-identity denial, and continued public quote form access.
-7. Test admin CRUD, inquiry status updates, audit logging, R2 upload/preview/public delivery/deletion/reordering, and D1 backup/restore using dummy data only.
-8. Review privacy notice, retention/deletion, cost limits, and operational backups before accepting real customer inquiries.
-9. Keep PR #1 unmerged and production Pages, production Workers, production data, DNS, and domain unchanged until separate explicit approval.
+3. Deploy only `paver-blocks-admin-dev` from the `worker-admin/` root on branch `development/site-foundation`. Do not deploy or change the API Worker in this step. The gateway requires a Cloudflare Access JWT assertion and must deny admin requests when that assertion is absent.
+4. After the gateway appears in Cloudflare, create a Cloudflare Access application with the dedicated `paver-blocks-admin-dev` Worker as its only destination. **Never attach Access to `paver-blocks-api-dev`**, because public quote routes must remain reachable.
+5. Apply a single-user Allow policy for exactly `hellopaverblocks@gmail.com`; all other identities must remain denied. Use Cloudflare's default one-time PIN login unless another identity provider is deliberately configured.
+6. Copy the Access application's audience tag, then configure the API Worker's encrypted `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` values plus the `ADMIN_EMAILS` allowlist. Keep secrets and account settings out of Git.
+7. Verify anonymous admin denial, allowed-admin access, disallowed-identity denial, and continued public quote form access.
+8. Test admin CRUD, inquiry status updates, audit logging, R2 upload/preview/public delivery/deletion/reordering, and D1 backup/restore using dummy data only.
+9. Review privacy notice, retention/deletion, cost limits, and operational backups before accepting real customer inquiries.
+10. Keep PR #1 unmerged and production Pages, production Workers, production data, DNS, and domain unchanged until separate explicit approval.
 
 ## Rollback
 

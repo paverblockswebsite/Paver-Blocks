@@ -1,5 +1,3 @@
-import { randomUUID } from "node:crypto";
-
 const MAX_BYTES = 5 * 1024 * 1024;
 const FORM_OVERHEAD = 64 * 1024;
 const FORMATS = {
@@ -35,7 +33,7 @@ export async function uploadProjectImage(request, env, projectId, identity, resp
   if (!format) return respond(request, env, { error: "Only JPEG, PNG, and WebP images are accepted." }, 415);
   const bytes = new Uint8Array(await file.arrayBuffer());
   if (bytes.byteLength !== file.size || !format.valid(bytes)) return respond(request, env, { error: "The file contents do not match a supported image format." }, 415);
-  const imageId = randomUUID();
+  const imageId = crypto.randomUUID();
   const objectKey = "projects/" + projectId + "/" + imageId + "." + format.ext;
   await bucket.put(objectKey, bytes, {
     httpMetadata: { contentType: file.type, cacheControl: "public, max-age=31536000, immutable" },
@@ -44,7 +42,7 @@ export async function uploadProjectImage(request, env, projectId, identity, resp
   try {
     await env.DB.batch([
       env.DB.prepare("INSERT INTO project_images (id, project_id, object_key, alt_text, caption, sort_order) VALUES (?, ?, ?, ?, ?, ?)").bind(imageId, projectId, objectKey, altText.trim(), caption.trim() || null, 0),
-      env.DB.prepare("INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)").bind(randomUUID(), identity.email, "upload", "project_image", imageId),
+      env.DB.prepare("INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)").bind(crypto.randomUUID(), identity.email, "upload", "project_image", imageId),
     ]);
   } catch (error) {
     try { await bucket.delete(objectKey); } catch {}

@@ -1,4 +1,4 @@
-import { uploadProjectImage, serveProjectImage } from "./project-images.js";
+import { uploadProjectImage, serveProjectImage, deleteProjectImage, reorderProjectImages } from "./project-images.js";
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" };
 const MAX_BODY_BYTES = 16384;
@@ -509,7 +509,7 @@ const ADMIN_CSS = `
 .toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}.toolbar label{font-weight:650}.toolbar select,.editor select,.editor textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink)}.button{font:inherit;font-weight:700;border:0;border-radius:8px;padding:10px 16px;cursor:pointer}.primary{background:var(--navy);color:#fff}.secondary{background:#e9eef4;color:var(--navy)}button:focus-visible,a:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #d69e00;outline-offset:2px}
 .notice{min-height:26px;color:var(--muted)}.notice.error{color:#a12626}.inquiry-list,.project-list{display:grid;gap:14px}.inquiry,.project-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 2px 8px #172b4508}.inquiry-head,.project-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.inquiry h2,.project-card h3{font-size:1.12rem;color:var(--navy);margin:0 0 4px}.meta{color:var(--muted);font-size:.9rem}.pill{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;border-radius:30px;padding:5px 9px;background:#edf1f5;color:#43546a;white-space:nowrap}.details{white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0}.facts{display:flex;gap:10px 18px;flex-wrap:wrap;font-size:.9rem;color:#48576a}.editor{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;display:grid;grid-template-columns:minmax(140px,220px) 1fr auto;gap:10px;align-items:end}.editor label,.project-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.editor textarea,.project-fields input,.project-fields select,.project-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.editor textarea{min-height:42px;resize:vertical}.empty{background:#fff;border:1px dashed #bdc7d3;border-radius:14px;padding:30px;text-align:center;color:var(--muted)}.content-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:48px 0 12px}.content-heading h2{font-size:1.7rem;color:var(--navy);margin:4px 0}.project-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.project-form h3{margin:0 0 16px;color:var(--navy)}.project-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.project-fields .wide{grid-column:1/-1}.project-fields small{font-weight:400;color:var(--muted)}.form-actions{display:flex;gap:10px;margin-top:18px}.project-card p{margin:8px 0}.project-card .project-actions{display:flex;gap:8px;margin-top:14px}.footnote{font-size:.82rem;margin-top:34px}
 .content-fields .consent{display:flex;align-items:flex-start;gap:10px}.content-fields .consent input{width:auto;margin-top:4px}
-.content-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.content-form h3{margin:0 0 16px;color:var(--navy)}.content-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.content-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.content-fields input,.content-fields select,.content-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.content-fields .wide{grid-column:1/-1}.content-actions{display:flex;gap:8px;margin-top:14px}.image-upload-form{display:grid;gap:10px;border-top:1px solid var(--line);margin-top:16px;padding-top:14px}.image-upload-form label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.image-upload-form input{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:9px;max-width:100%}.image-upload-form .meta{margin:0}.project-gallery{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}.project-gallery h4{margin:0 0 8px;font-size:.95rem}.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}.gallery-item{margin:0;min-width:0}.gallery-item img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--line);border-radius:8px;background:#eef1f4}.gallery-item figcaption{font-size:.78rem;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+.content-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.content-form h3{margin:0 0 16px;color:var(--navy)}.content-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.content-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.content-fields input,.content-fields select,.content-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.content-fields .wide{grid-column:1/-1}.content-actions{display:flex;gap:8px;margin-top:14px}.image-upload-form{display:grid;gap:10px;border-top:1px solid var(--line);margin-top:16px;padding-top:14px}.image-upload-form label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.image-upload-form input{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:9px;max-width:100%}.image-upload-form .meta{margin:0}.project-gallery{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}.project-gallery h4{margin:0 0 8px;font-size:.95rem}.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}.gallery-item{margin:0;min-width:0}.gallery-item img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--line);border-radius:8px;background:#eef1f4}.gallery-item figcaption{font-size:.78rem;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}.gallery-controls{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}.gallery-controls .button{font-size:.72rem;padding:6px 8px}.button.danger{background:#fae8e8;color:#8b1e1e}
 @media(max-width:650px){.shell{padding-top:28px}.editor{grid-template-columns:1fr}.inquiry-head,.project-head{align-items:flex-start}.topbar{padding:0 16px}.project-fields{grid-template-columns:1fr}.project-fields .wide{grid-column:auto}.content-heading{align-items:flex-start;flex-direction:column}}
 `;
 
@@ -659,7 +659,7 @@ function makeProject(item) {
       const photos=Array.isArray(result.data)?result.data:[];
       if(!photos.length){galleryStatus.textContent="No photos uploaded for this project yet.";return;}
       const grid=element("div","gallery-grid");
-      photos.forEach(photo=>{
+      photos.forEach((photo,index)=>{
         const figure=element("figure","gallery-item");
         const image=document.createElement("img");
         image.src="/admin/media/"+photo.object_key.split("/").map(encodeURIComponent).join("/");
@@ -667,7 +667,32 @@ function makeProject(item) {
         image.loading="lazy";
         image.decoding="async";
         const caption=element("figcaption","",photo.caption || photo.alt_text || "Project photo");
-        figure.append(image,caption);
+        const controls=element("div","gallery-controls");
+        const up=element("button","button secondary","Move up");up.type="button";up.disabled=index===0;
+        const down=element("button","button secondary","Move down");down.type="button";down.disabled=index===photos.length-1;
+        const remove=element("button","button danger","Delete");remove.type="button";
+        async function move(delta){
+          const reordered=photos.map(item=>item.id);
+          const target=index+delta;
+          [reordered[index],reordered[target]]=[reordered[target],reordered[index]];
+          up.disabled=true;down.disabled=true;remove.disabled=true;
+          try{
+            await api("/api/admin/projects/"+encodeURIComponent(item.id)+"/images/order",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({image_ids:reordered})});
+            await loadGallery();
+          }catch(error){galleryStatus.textContent=error.message;galleryStatus.className="meta error";up.disabled=index===0;down.disabled=index===photos.length-1;remove.disabled=false;}
+        }
+        up.addEventListener("click",()=>move(-1));
+        down.addEventListener("click",()=>move(1));
+        remove.addEventListener("click",async()=>{
+          if(!window.confirm("Delete this project photo permanently?"))return;
+          remove.disabled=true;up.disabled=true;down.disabled=true;
+          try{
+            await api("/api/admin/projects/"+encodeURIComponent(item.id)+"/images/"+encodeURIComponent(photo.id),{method:"DELETE"});
+            await loadGallery();
+          }catch(error){galleryStatus.textContent=error.message;galleryStatus.className="meta error";remove.disabled=false;up.disabled=index===0;down.disabled=index===photos.length-1;}
+        });
+        controls.append(up,down,remove);
+        figure.append(image,caption,controls);
         grid.append(figure);
       });
       gallery.append(grid);
@@ -1185,6 +1210,19 @@ async function handleAdmin(request, env, url, identity) {
   }
   if (request.method === "POST" && projectImagesMatch) {
     return uploadProjectImage(request, env, projectImagesMatch[1], identity, response);
+  }
+  const imageOrderMatch = url.pathname.match(/^\\/api\\/admin\\/projects\\/([0-9a-f-]{36})\\/images\\/order$/i);
+  if (request.method === "PATCH" && imageOrderMatch) {
+    const parsed = await readJson(request);
+    if (parsed.error) return response(request, env, { error: parsed.error }, 400);
+    if (Object.keys(parsed.value).length !== 1 || !Object.hasOwn(parsed.value, "image_ids")) {
+      return response(request, env, { error: "Only image_ids may be updated." }, 400);
+    }
+    return reorderProjectImages(env, imageOrderMatch[1], parsed.value.image_ids, identity, response, request);
+  }
+  const imageDeleteMatch = url.pathname.match(/^\\/api\\/admin\\/projects\\/([0-9a-f-]{36})\\/images\\/([0-9a-f-]{36})$/i);
+  if (request.method === "DELETE" && imageDeleteMatch) {
+    return deleteProjectImage(env, imageDeleteMatch[1], imageDeleteMatch[2], identity, response, request);
   }
   const path = url.pathname;
   const contentResponse = await handleAdminContent(request, env, url, identity);

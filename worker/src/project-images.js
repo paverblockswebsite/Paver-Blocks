@@ -110,3 +110,66 @@ export async function serveProjectImage(request, env, url, respond, requirePubli
     etag: object.httpEtag,
   } });
 }
+
+
+export async function deleteProjectImage(env, projectId, imageId, identity, respond, request) {
+  const bucket = env.PROJECT_IMAGES;
+  if (!bucket || typeof bucket.delete !== "function") {
+    return respond(request, env, { error: "Project image storage is not configured yet." }, 503);
+  }
+  const image = await env.DB.prepare(
+    "SELECT id, object_key FROM project_images WHERE id = ? AND project_id = ? LIMIT 1",
+  ).bind(imageId, projectId).first();
+  if (!image || typeof image.object_key !== "string") {
+    return respond(request, env, { error: "Project photo not found." }, 404);
+  }
+  const expectedKey = new RegExp("^projects/" + projectId.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&") + "/" + imageId.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&") + "\\\\.(jpg|png|webp)$", "i");
+  if (!expectedKey.test(image.object_key)) {
+    return respond(request, env, { error: "Project photo not found." }, 404);
+  }
+
+  // Delete the object first. R2 deletion is idempotent; if the following D1
+  // batch fails, the still-present row can be retried without exposing the file.
+  try {
+    await bucket.delete(image.object_key);
+  } catch {
+    return respond(request, env, { error: "The photo could not be removed from storage. Please retry." }, 503);
+  }
+
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM project_images WHERE id = ? AND project_id = ?")
+      .bind(imageId, projectId),
+    env.DB.prepare(
+      "INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)",
+    ).bind(crypto.randomUUID(), identity.email, "delete", "project_image", imageId),
+  ]);
+  return respond(request, env, { success: true });
+}
+
+export async function reorderProjectImages(env, projectId, imageIds, identity, respond, request) {
+  if (!Array.isArray(imageIds) || imageIds.length < 1 || imageIds.length > 100 ||
+      imageIds.some((id) => typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id)) ||
+      new Set(imageIds).size !== imageIds.length) {
+    return respond(request, env, { error: "Provide a valid, unique order for this project's photos." }, 400);
+  }
+  const project = await env.DB.prepare("SELECT id FROM projects WHERE id = ? LIMIT 1").bind(projectId).first();
+  if (!project) return respond(request, env, { error: "Project not found." }, 404);
+
+  const current = await env.DB.prepare(
+    "SELECT id FROM project_images WHERE project_id = ? ORDER BY sort_order ASC, created_at ASC",
+  ).bind(projectId).all();
+  const currentIds = (current.results || []).map((row) => row.id);
+  if (currentIds.length !== imageIds.length || currentIds.some((id) => !imageIds.includes(id))) {
+    return respond(request, env, { error: "The gallery changed. Refresh it and try again." }, 409);
+  }
+
+  const statements = imageIds.map((id, index) =>
+    env.DB.prepare("UPDATE project_images SET sort_order = ? WHERE id = ? AND project_id = ?")
+      .bind(index, id, projectId)
+  );
+  statements.push(env.DB.prepare(
+    "INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)",
+  ).bind(crypto.randomUUID(), identity.email, "reorder", "project_gallery", projectId));
+  await env.DB.batch(statements);
+  return respond(request, env, { success: true, data: { image_ids: imageIds } });
+}

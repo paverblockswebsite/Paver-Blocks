@@ -634,7 +634,21 @@ function makeProject(item) {
   const actions=element("div","project-actions");
   const edit=element("button","button secondary","Edit");
   edit.type="button";edit.addEventListener("click",()=>showProjectForm(item));
-  actions.append(edit);card.append(actions);
+  const remove=element("button","button danger","Delete project");
+  remove.type="button";
+  remove.addEventListener("click",async()=>{
+    if(!window.confirm("Delete this project? Any uploaded photos must be deleted first. This action cannot be undone."))return;
+    remove.disabled=true;
+    try{
+      await api("/api/admin/projects/"+encodeURIComponent(item.id),{method:"DELETE"});
+      projectNotice.className="notice";projectNotice.textContent="Project deleted.";
+      await loadProjects();
+    }catch(error){
+      projectNotice.className="notice error";projectNotice.textContent=error.message;
+      remove.disabled=false;
+    }
+  });
+  actions.append(edit,remove);card.append(actions);
   const imageForm=element("form","image-upload-form");
   const fileLabel=element("label","","Project photo (JPEG, PNG or WebP; max 5 MB)");
   const file=document.createElement("input");file.type="file";file.name="file";file.accept="image/jpeg,image/png,image/webp";file.required=true;
@@ -788,7 +802,18 @@ function setupContentManager(config) {
     const actions=element("div","content-actions");
     const edit=element("button","button secondary","Edit");
     edit.type="button";edit.addEventListener("click",()=>showForm(item));
-    actions.append(edit);card.append(actions);
+    const remove=element("button","button danger","Delete");
+    remove.type="button";
+    remove.addEventListener("click",async()=>{
+      if(!window.confirm("Delete this "+config.singular+"? This action cannot be undone."))return;
+      remove.disabled=true;
+      try{
+        await api(config.endpoint+"/"+encodeURIComponent(item.id),{method:"DELETE"});
+        noticeNode.className="notice";noticeNode.textContent=config.singular+" deleted.";
+        await loadItems();
+      }catch(error){noticeNode.className="notice error";noticeNode.textContent=error.message;remove.disabled=false;}
+    });
+    actions.append(edit,remove);card.append(actions);
     return card;
   }
   async function loadItems() {
@@ -863,7 +888,18 @@ function makeTestimonial(item) {
   card.append(head,element("p","",item.testimonial_text || ""));
   card.append(element("p","meta",item.permission_confirmed?"Permission confirmed":"Permission not confirmed"));
   const edit=element("button","button secondary","Edit");edit.type="button";edit.addEventListener("click",()=>showTestimonialForm(item));
-  const actions=element("div","content-actions");actions.append(edit);card.append(actions);
+  const remove=element("button","button danger","Delete");
+  remove.type="button";
+  remove.addEventListener("click",async()=>{
+    if(!window.confirm("Delete this testimonial? This action cannot be undone."))return;
+    remove.disabled=true;
+    try{
+      await api("/api/admin/testimonials/"+encodeURIComponent(item.id),{method:"DELETE"});
+      testimonialNotice.className="notice";testimonialNotice.textContent="Testimonial deleted.";
+      await loadTestimonials();
+    }catch(error){testimonialNotice.className="notice error";testimonialNotice.textContent=error.message;remove.disabled=false;}
+  });
+  const actions=element("div","content-actions");actions.append(edit,remove);card.append(actions);
   return card;
 }
 async function loadTestimonials() {
@@ -1045,6 +1081,20 @@ async function handleAdminEditorial(request, env, url, identity) {
   }
 
   const testimonialMatch = url.pathname.match(/^\/api\/admin\/testimonials\/([0-9a-f-]{36})$/i);
+  if (testimonialMatch && request.method === "DELETE") {
+    const id = testimonialMatch[1];
+    const current = await env.DB.prepare(
+      "SELECT id FROM testimonials WHERE id = ? LIMIT 1",
+    ).bind(id).first();
+    if (!current) return response(request, env, { error: "Testimonial not found." }, 404);
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM testimonials WHERE id = ?").bind(id),
+      env.DB.prepare(
+        "INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)",
+      ).bind(crypto.randomUUID(), identity.email, "delete", "testimonial", id),
+    ]);
+    return response(request, env, { success: true });
+  }
   if (testimonialMatch && request.method === "PATCH") {
     const parsed = await readJson(request);
     if (parsed.error) return response(request, env, { error: parsed.error }, 400);
@@ -1169,6 +1219,19 @@ async function handleAdminContent(request, env, url, identity) {
       ).bind(crypto.randomUUID(), identity.email, "create", config.entity, recordId),
     ]);
     return response(request, env, { success: true, id: recordId }, 201);
+  }
+  if (request.method === "DELETE" && id) {
+    const current = await env.DB.prepare(
+      "SELECT id FROM " + config.table + " WHERE id = ? LIMIT 1",
+    ).bind(id).first();
+    if (!current) return response(request, env, { error: "Content record not found." }, 404);
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM " + config.table + " WHERE id = ?").bind(id),
+      env.DB.prepare(
+        "INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)",
+      ).bind(crypto.randomUUID(), identity.email, "delete", config.entity, id),
+    ]);
+    return response(request, env, { success: true });
   }
   if (request.method === "PATCH" && id) {
     const parsed = await readJson(request);
@@ -1345,6 +1408,27 @@ async function handleAdmin(request, env, url, identity) {
 
     const result = await query.all();
     return response(request, env, { data: result.results || [], limit, offset });
+  }
+
+  if (request.method === "DELETE" && projectMatch) {
+    const projectId = projectMatch[1];
+    const current = await env.DB.prepare(
+      "SELECT id FROM projects WHERE id = ? LIMIT 1",
+    ).bind(projectId).first();
+    if (!current) return response(request, env, { error: "Project not found." }, 404);
+    const imageCount = await env.DB.prepare(
+      "SELECT COUNT(*) AS image_count FROM project_images WHERE project_id = ?",
+    ).bind(projectId).first();
+    if (Number(imageCount?.image_count || 0) > 0) {
+      return response(request, env, { error: "Delete this project's photos before deleting the project." }, 409);
+    }
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM projects WHERE id = ?").bind(projectId),
+      env.DB.prepare(
+        "INSERT INTO admin_audit_log (id, admin_email, action, entity_type, entity_id) VALUES (?, ?, ?, ?, ?)",
+      ).bind(crypto.randomUUID(), identity.email, "delete", "project", projectId),
+    ]);
+    return response(request, env, { success: true });
   }
 
   const inquiryMatch = path.match(/^\/api\/admin\/inquiries\/([0-9a-f-]{36})$/i);

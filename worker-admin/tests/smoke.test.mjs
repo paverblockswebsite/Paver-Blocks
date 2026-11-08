@@ -75,12 +75,18 @@ test("gateway forwards only admin paths and preserves the signed assertion", asy
   }
 });
 
-test("gateway fails closed for an invalid upstream origin", async () => {
-  const response = await gateway.fetch(
-    new Request("https://admin.example/admin", {
-      headers: { "Cf-Access-Jwt-Assertion": "signed-access-jwt-placeholder" },
-    }),
-    env({ API_ORIGIN: "http://untrusted.example" }),
-  );
-  assert.equal(response.status, 503);
+test("gateway fails closed for insecure or non-development upstream origins", async () => {
+  for (const origin of [
+    "http://untrusted.example",
+    "https://paver-blocks-api.example.com",
+    "https://paver-blocks-api-prod.hellopaverblocks.workers.dev",
+  ]) {
+    const response = await gateway.fetch(
+      new Request("https://admin.example/admin", {
+        headers: { "Cf-Access-Jwt-Assertion": "signed-access-jwt-placeholder" },
+      }),
+      env({ API_ORIGIN: origin }),
+    );
+    assert.equal(response.status, 503, origin);
+  }
 });

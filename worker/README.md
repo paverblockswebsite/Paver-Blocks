@@ -1,6 +1,6 @@
 # Paver Blocks Worker API
 
-**Status: development code only. Not deployed. A development-only D1 binding is present in Wrangler config; the inquiry rate-limit binding, Access application, Turnstile secret, and production configuration are not active.**
+**Status: development code only. Not deployed. The development D1 database and private R2 bucket have been created; Wrangler declares bindings for both. The Worker is not deployed, and the inquiry rate-limit binding, Access application, Turnstile secret, and production configuration are not active.**
 
 This Worker is a separate API service intended to sit beside the Astro Pages website.
 
@@ -10,7 +10,7 @@ The admin interface is planned to be served by this Worker on the same origin as
 
 When configuring Cloudflare Access, use a hostname/path-based self-hosted application for the Worker hostname and protect only the admin interface path (for example, `/admin*`) and admin API path (`/api/admin/*`). Do not apply a Worker-wide Access rule to this mixed public/private Worker, because that would also block the public API routes. Keep the Worker-side JWT verification and email allowlist even when the Access edge policy is enabled.
 
-The exact hostname will be selected only after the development Worker endpoint is confirmed. No Access application or deployment is active yet.
+The intended development Worker name is `paver-blocks-api-dev` on the account's existing `workers.dev` subdomain. Confirm the final hostname before configuring Access. No Access application or Worker deployment is active yet.
 
 ## Browser security boundaries
 
@@ -55,7 +55,7 @@ The exact hostname will be selected only after the development Worker endpoint i
 - GET /api/admin/homepage-content — reads approved homepage text fields.
 - PATCH /api/admin/homepage-content — updates only allowlisted homepage text fields and records an audit event.
 
-The dashboard currently supports inquiry review/status updates, plus listing, creation, and editing for projects, services, paver designs, and testimonials, along with a small homepage text editor. Testimonials must have explicit customer permission before publication. Homepage settings expose only approved public text keys; internal settings and customer data are not exposed. Project deletion, project image deletion/reordering, testimonial deletion, and broader site settings are not implemented. Project image upload and delivery code is present, but the R2 bucket must be created and the Worker must be deployed separately before the feature can be used. Other admin CRUD routes intentionally remain unavailable until their validation and authorization tests are implemented.
+The dashboard currently supports inquiry review/status updates, plus listing, creation, and editing for projects, services, paver designs, and testimonials, along with a small homepage text editor. Project image galleries support upload, preview, reordering, and deletion. Testimonials must have explicit customer permission before publication. Homepage settings expose only approved public text keys; internal settings and customer data are not exposed. Project deletion, testimonial deletion, and broader site settings are not implemented. Other admin CRUD routes intentionally remain unavailable until their validation and authorization tests are implemented.
 
 ## Public homepage content connection
 
@@ -65,7 +65,7 @@ If this variable is unset, the homepage keeps its static approved copy. If the A
 
 ## Development-only Cloudflare bindings
 
-The Worker configuration declares an R2 binding named `PROJECT_IMAGES` for the development bucket `paver-blocks-project-images-dev`. The bucket has not yet been created or connected on Cloudflare. Create it only after reviewing the bucket name and explicitly approving the Cloudflare dashboard step. Image uploads fail closed with HTTP 503 until the binding exists. Uploads accept JPEG, PNG, or WebP only, cap file size at 5 MiB, check the file signature, require descriptive alt text, and use random object keys. Public image delivery validates the object-key format and serves only approved image MIME types with `nosniff` and immutable caching. No public R2 bucket access is enabled by this code; media is served through the Worker route.
+The Worker configuration declares an R2 binding named `PROJECT_IMAGES` for the development bucket `paver-blocks-project-images-dev`. The private development bucket `paver-blocks-project-images-dev` has been created in Cloudflare with Standard storage class and Public Access disabled. The Wrangler binding name and bucket name match. This does not deploy the Worker or prove live R2 integration. Image uploads fail closed with HTTP 503 until the binding exists. Uploads accept JPEG, PNG, or WebP only, cap file size at 5 MiB, check the file signature, require descriptive alt text, and use random object keys. Public image delivery validates the object-key format and D1 ownership, serves only published-project images and approved MIME types, and sets `nosniff`; public responses use a one-hour cache lifetime while draft admin previews are private and no-store. No public R2 bucket access is enabled by this code; media is served through the Worker route.
 
 The checked-in `worker/wrangler.toml` now binds only the development D1 database `paver-blocks-dev` (database ID `642fbb24-2b16-41f6-b77e-e14de49eebe8`) as `env.DB`. It also allows the exact stable Pages branch-preview origin `https://development-site-foundation.paver-blocks.pages.dev` through `SITE_ORIGIN`, and sets the matching Turnstile hostname for later inquiry-form setup. These are public development configuration values, not secrets.
 
@@ -79,7 +79,7 @@ The development Wrangler binding is configured with `namespace_id = "1001"`, aft
 
 ## Local smoke tests
 
-Run `npm test` from the worker directory with Node.js 22 or later. These tests cover health, public read routing, CORS rejection, Access identity validation, dashboard and asset access controls, request validation, and authenticated project create/edit operations with audit logging. They are smoke tests, not a substitute for live Cloudflare D1, Access, and Turnstile integration tests.
+Run `npm test` from the worker directory with Node.js 22 or later. These tests cover health, public read routing, CORS rejection, Access identity validation, dashboard and asset access controls, request validation, authenticated project create/edit operations with audit logging, and project image upload/delivery/deletion/reordering safeguards. They are smoke tests, not a substitute for live Cloudflare D1, Access, and Turnstile integration tests.
 
 ## Required environment configuration
 

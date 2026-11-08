@@ -88,11 +88,11 @@ The final route contract may change during implementation. Do not expose an endp
 1. Review and approve this API/security design.
 2. Create a separate development-only D1 database, after explicit approval. **Completed:** paver-blocks-dev exists.
 3. Apply the reviewed migration to development D1 and verify table/constraint behavior. **Completed:** 8 application tables and 7 custom indexes were verified in the D1 Console; this is not yet a full live API integration test.
-4. Initial public read routes, Turnstile-protected inquiry submission, Access JWT verification, and limited inquiry-admin routes are coded on the development branch. The inquiry route now requires a rate-limit binding and fails closed with HTTP 503 if it is missing; the development binding is configured with namespace `1001`; the Worker remains undeployed, so the binding is not live. Complete integration, negative-case, and security tests before deployment.
-5. Configure Cloudflare Access and verify admin identity restrictions before enabling any admin route.
-6. Implement admin operations with authorization, validation, and audit tests.
-7. Add development-only R2 uploads with file validation.
-8. Connect the development website and test end-to-end using dummy data only.
-9. Review security, privacy, cost limits, and backup/retention before any production connection.
+4. **Development public API integration completed:** `paver-blocks-api-dev` is deployed with the development D1, private R2, and inquiry rate-limit bindings. The public quote form passed one end-to-end test; Turnstile succeeded and one test inquiry was recorded in `paver-blocks-dev`.
+5. **Admin access remains pending:** the dedicated `paver-blocks-admin-dev` gateway is implemented in code but not deployed. Configure Cloudflare Access for that gateway only, then set the API Worker's Access issuer, audience, and single-admin allowlist. Never attach Access to the mixed-purpose API Worker hostname.
+6. Complete admin integration and negative-case tests, including anonymous denial, the authorized administrator, an unauthorized identity, and continued public quote access. Expand admin CRUD and audit coverage before relying on the dashboard.
+7. Complete development-only R2 upload, preview, public-delivery, deletion, and ordering tests using dummy images.
+8. Review privacy notice, retention/deletion, cost limits, and database backup/restore before collecting real customer inquiries.
+9. Keep production Pages, production Workers, production data, DNS, domain, and PR merge outside this workflow until separate explicit approval.
 
 **No production database, customer data, or live admin credentials may be used during development.**

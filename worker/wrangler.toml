@@ -13,6 +13,11 @@ period = 60
 
 # Development-only connection. This points only to the empty paver-blocks-dev
 # database; never replace it with a production database ID in this file.
+# Development-only object storage. Create this bucket in Cloudflare before any Worker deployment.
+[[r2_buckets]]
+binding = "PROJECT_IMAGES"
+bucket_name = "paver-blocks-project-images-dev"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "paver-blocks-dev"

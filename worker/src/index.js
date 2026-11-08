@@ -19,7 +19,7 @@ function corsHeaders(request, env) {
   if (!pathname.startsWith("/api/public/") || !origin || !env.SITE_ORIGIN || origin !== env.SITE_ORIGIN) return {};
   return {
     "access-control-allow-origin": origin,
-    "access-control-allow-methods": "GET, POST, PATCH, OPTIONS",
+    "access-control-allow-methods": "GET, POST, OPTIONS",
     "access-control-allow-headers": "Content-Type",
     "access-control-max-age": "600",
     "vary": "Origin",

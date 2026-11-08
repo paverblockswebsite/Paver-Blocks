@@ -509,7 +509,7 @@ const ADMIN_CSS = `
 .toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}.toolbar label{font-weight:650}.toolbar select,.editor select,.editor textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink)}.button{font:inherit;font-weight:700;border:0;border-radius:8px;padding:10px 16px;cursor:pointer}.primary{background:var(--navy);color:#fff}.secondary{background:#e9eef4;color:var(--navy)}button:focus-visible,a:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #d69e00;outline-offset:2px}
 .notice{min-height:26px;color:var(--muted)}.notice.error{color:#a12626}.inquiry-list,.project-list{display:grid;gap:14px}.inquiry,.project-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 2px 8px #172b4508}.inquiry-head,.project-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.inquiry h2,.project-card h3{font-size:1.12rem;color:var(--navy);margin:0 0 4px}.meta{color:var(--muted);font-size:.9rem}.pill{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;border-radius:30px;padding:5px 9px;background:#edf1f5;color:#43546a;white-space:nowrap}.details{white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0}.facts{display:flex;gap:10px 18px;flex-wrap:wrap;font-size:.9rem;color:#48576a}.editor{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;display:grid;grid-template-columns:minmax(140px,220px) 1fr auto;gap:10px;align-items:end}.editor label,.project-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.editor textarea,.project-fields input,.project-fields select,.project-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.editor textarea{min-height:42px;resize:vertical}.empty{background:#fff;border:1px dashed #bdc7d3;border-radius:14px;padding:30px;text-align:center;color:var(--muted)}.content-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:48px 0 12px}.content-heading h2{font-size:1.7rem;color:var(--navy);margin:4px 0}.project-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.project-form h3{margin:0 0 16px;color:var(--navy)}.project-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.project-fields .wide{grid-column:1/-1}.project-fields small{font-weight:400;color:var(--muted)}.form-actions{display:flex;gap:10px;margin-top:18px}.project-card p{margin:8px 0}.project-card .project-actions{display:flex;gap:8px;margin-top:14px}.footnote{font-size:.82rem;margin-top:34px}
 .content-fields .consent{display:flex;align-items:flex-start;gap:10px}.content-fields .consent input{width:auto;margin-top:4px}
-.content-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.content-form h3{margin:0 0 16px;color:var(--navy)}.content-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.content-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.content-fields input,.content-fields select,.content-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.content-fields .wide{grid-column:1/-1}.content-actions{display:flex;gap:8px;margin-top:14px}.image-upload-form{display:grid;gap:10px;border-top:1px solid var(--line);margin-top:16px;padding-top:14px}.image-upload-form label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.image-upload-form input{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:9px;max-width:100%}.image-upload-form .meta{margin:0}
+.content-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.content-form h3{margin:0 0 16px;color:var(--navy)}.content-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.content-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.content-fields input,.content-fields select,.content-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.content-fields .wide{grid-column:1/-1}.content-actions{display:flex;gap:8px;margin-top:14px}.image-upload-form{display:grid;gap:10px;border-top:1px solid var(--line);margin-top:16px;padding-top:14px}.image-upload-form label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.image-upload-form input{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:9px;max-width:100%}.image-upload-form .meta{margin:0}.project-gallery{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}.project-gallery h4{margin:0 0 8px;font-size:.95rem}.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}.gallery-item{margin:0;min-width:0}.gallery-item img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--line);border-radius:8px;background:#eef1f4}.gallery-item figcaption{font-size:.78rem;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
 @media(max-width:650px){.shell{padding-top:28px}.editor{grid-template-columns:1fr}.inquiry-head,.project-head{align-items:flex-start}.topbar{padding:0 16px}.project-fields{grid-template-columns:1fr}.project-fields .wide{grid-column:auto}.content-heading{align-items:flex-start;flex-direction:column}}
 `;
 
@@ -647,7 +647,36 @@ function makeProject(item) {
   captionLabel.append(caption);
   const upload=element("button","button secondary","Upload photo");upload.type="submit";
   const status=element("p","meta","Photos are stored privately in the development R2 bucket and served through the Worker.");
+  const gallery=element("div","project-gallery");
+  const galleryTitle=element("h4","","Project photo gallery");
+  const galleryStatus=element("p","meta","Loading photos…");
+  gallery.append(galleryTitle,galleryStatus);
+  async function loadGallery(){
+    gallery.querySelectorAll(".gallery-grid").forEach(node=>node.remove());
+    galleryStatus.textContent="Loading photos…";
+    try {
+      const result=await api("/api/admin/projects/"+encodeURIComponent(item.id)+"/images");
+      const photos=Array.isArray(result.data)?result.data:[];
+      if(!photos.length){galleryStatus.textContent="No photos uploaded for this project yet.";return;}
+      const grid=element("div","gallery-grid");
+      photos.forEach(photo=>{
+        const figure=element("figure","gallery-item");
+        const image=document.createElement("img");
+        image.src="/admin/media/"+photo.object_key.split("/").map(encodeURIComponent).join("/");
+        image.alt=photo.alt_text || "";
+        image.loading="lazy";
+        image.decoding="async";
+        const caption=element("figcaption","",photo.caption || photo.alt_text || "Project photo");
+        figure.append(image,caption);
+        grid.append(figure);
+      });
+      gallery.append(grid);
+      galleryStatus.textContent=photos.length+" photo"+(photos.length===1?"":"s")+" in this project.";
+    } catch(error){galleryStatus.textContent="Gallery could not be loaded: "+error.message;galleryStatus.className="meta error";}
+  }
   imageForm.append(fileLabel,altLabel,captionLabel,upload,status);
+  imageForm.addEventListener("reset",()=>{status.className="meta";});
+  loadGallery();
   imageForm.addEventListener("submit",async event=>{
     event.preventDefault();
     if(!file.files?.[0])return;
@@ -657,8 +686,9 @@ function makeProject(item) {
       const result=await fetch("/api/admin/projects/"+encodeURIComponent(item.id)+"/images",{method:"POST",credentials:"same-origin",body:data});
       const payload=await result.json().catch(()=>({}));
       if(!result.ok)throw new Error(payload.error||"Image upload failed.");
-      status.textContent="Photo uploaded successfully. It will be available once R2 is configured and the Worker is deployed.";
+      status.textContent="Photo uploaded successfully.";
       imageForm.reset();
+      await loadGallery();
     } catch(error){status.textContent=error.message;status.className="meta error";}
     finally{upload.disabled=false;upload.textContent="Upload photo";}
   });
@@ -1144,9 +1174,17 @@ async function handleAdminContent(request, env, url, identity) {
 }
 
 async function handleAdmin(request, env, url, identity) {
-  const imageUploadMatch = url.pathname.match(/^\/api\/admin\/projects\/([0-9a-f-]{36})\/images$/i);
-  if (request.method === "POST" && imageUploadMatch) {
-    return uploadProjectImage(request, env, imageUploadMatch[1], identity, response);
+  const projectImagesMatch = url.pathname.match(/^\/api\/admin\/projects\/([0-9a-f-]{36})\/images$/i);
+  if (request.method === "GET" && projectImagesMatch) {
+    const project = await env.DB.prepare("SELECT id FROM projects WHERE id = ? LIMIT 1").bind(projectImagesMatch[1]).first();
+    if (!project) return response(request, env, { error: "Project not found." }, 404);
+    const result = await env.DB.prepare(
+      "SELECT id, project_id, object_key, alt_text, caption, sort_order, created_at FROM project_images WHERE project_id = ? ORDER BY sort_order ASC, created_at ASC",
+    ).bind(projectImagesMatch[1]).all();
+    return response(request, env, { data: result.results || [] });
+  }
+  if (request.method === "POST" && projectImagesMatch) {
+    return uploadProjectImage(request, env, projectImagesMatch[1], identity, response);
   }
   const path = url.pathname;
   const contentResponse = await handleAdminContent(request, env, url, identity);
@@ -1352,6 +1390,13 @@ export default {
     }
 
     try {
+      if (url.pathname.startsWith("/admin/media/")) {
+        if (request.method !== "GET") return response(request, env, { error: "Method not allowed." }, 405);
+        const identity = await verifyAccessIdentity(request, env);
+        if (!identity) return response(request, env, { error: "Unauthorized." }, 401);
+        return await serveProjectImage(request, env, url, response, false, "/admin/media/");
+      }
+
       if (url.pathname.startsWith("/media/")) {
         return await serveProjectImage(request, env, url, response);
       }

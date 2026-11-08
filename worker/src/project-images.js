@@ -88,15 +88,16 @@ export async function uploadProjectImage(request, env, projectId, identity, resp
   return respond(request, env, { success: true, data: { id: imageId, project_id: projectId, object_key: objectKey, alt_text: altText.trim(), caption: caption.trim() || null } }, 201);
 }
 
-export async function serveProjectImage(request, env, url, respond) {
+export async function serveProjectImage(request, env, url, respond, requirePublished = true, prefix = "/media/") {
   if (request.method !== "GET") return respond(request, env, { error: "Method not allowed." }, 405, { allow: "GET" });
   const bucket = env.PROJECT_IMAGES;
   if (!bucket || typeof bucket.get !== "function") return respond(request, env, { error: "Project image storage is not configured yet." }, 503);
-  const key = url.pathname.slice("/media/".length);
+  const key = url.pathname.slice(prefix.length);
   const match = key.match(/^projects\/([0-9a-f-]{36})\/([0-9a-f-]{36})\.(jpg|png|webp)$/i);
   if (!match) return respond(request, env, { error: "Not found." }, 404);
+  const visibilityClause = requirePublished ? " AND p.status = 'published'" : "";
   const approved = await env.DB.prepare(
-    "SELECT pi.object_key FROM project_images pi INNER JOIN projects p ON p.id = pi.project_id WHERE pi.id = ? AND pi.project_id = ? AND p.status = 'published' LIMIT 1",
+    "SELECT pi.object_key FROM project_images pi INNER JOIN projects p ON p.id = pi.project_id WHERE pi.id = ? AND pi.project_id = ?" + visibilityClause + " LIMIT 1",
   ).bind(match[2], match[1]).first();
   if (!approved || approved.object_key !== key) return respond(request, env, { error: "Not found." }, 404);
   const object = await bucket.get(key);

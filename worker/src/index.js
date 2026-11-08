@@ -391,6 +391,7 @@ const ADMIN_HTML = `<!doctype html>
     </section>
     <p id="notice" class="notice" role="status" aria-live="polite">Loading inquiries…</p>
     <section id="inquiry-list" class="inquiry-list" aria-label="Inquiry list"></section>
+    <div class="form-actions"><button id="load-more-inquiries" type="button" class="button secondary" hidden>Load older inquiries</button></div>
 
     <section class="content-heading">
       <div><p class="eyebrow">PORTFOLIO CONTENT</p><h2>Projects</h2><p class="muted">Create projects and update their public visibility.</p></div>
@@ -568,19 +569,36 @@ function makeInquiry(item) {
   card.append(editor);
   return card;
 }
-async function load() {
-  list.replaceChildren();notice.className="notice";notice.textContent="Loading inquiries…";
+const loadMoreButton=document.querySelector("#load-more-inquiries");
+const inquiryPageSize=50;
+let inquiryOffset=0;
+let inquiryLoadSequence=0;
+async function load(append=false) {
+  const sequence=++inquiryLoadSequence;
+  const offset=append?inquiryOffset:0;
+  if(!append){inquiryOffset=0;list.replaceChildren();loadMoreButton.hidden=true;}
+  notice.className="notice";notice.textContent=append?"Loading older inquiries…":"Loading inquiries…";
+  loadMoreButton.disabled=true;
   try {
-    const query=filter.value ? "?status="+encodeURIComponent(filter.value) : "";
-    const payload=await api("/api/admin/inquiries"+query);
+    const params=new URLSearchParams({limit:String(inquiryPageSize),offset:String(offset)});
+    if(filter.value)params.set("status",filter.value);
+    const payload=await api("/api/admin/inquiries?"+params.toString());
+    if(sequence!==inquiryLoadSequence)return;
     const items=Array.isArray(payload.data)?payload.data:[];
-    if (!items.length) list.append(element("div","empty","No inquiries found for this filter."));
+    if(!items.length&&!append)list.append(element("div","empty","No inquiries found for this filter."));
     else items.forEach(item=>list.append(makeInquiry(item)));
-    notice.textContent=items.length+" inquiry record"+(items.length===1?"":"s")+" loaded.";
-  } catch(error) { notice.className="notice error";notice.textContent=error.message; }
+    inquiryOffset=offset+items.length;
+    loadMoreButton.hidden=items.length<inquiryPageSize;
+    notice.textContent=inquiryOffset+" inquiry record"+(inquiryOffset===1?"":"s")+" loaded.";
+  } catch(error) {
+    if(sequence===inquiryLoadSequence){notice.className="notice error";notice.textContent=error.message;}
+  } finally {
+    if(sequence===inquiryLoadSequence)loadMoreButton.disabled=false;
+  }
 }
-document.querySelector("#refresh").addEventListener("click",load);
-filter.addEventListener("change",load);
+document.querySelector("#refresh").addEventListener("click",()=>load(false));
+loadMoreButton.addEventListener("click",()=>load(true));
+filter.addEventListener("change",()=>load(false));
 
 const projectList = document.querySelector("#project-list");
 const projectNotice = document.querySelector("#project-notice");

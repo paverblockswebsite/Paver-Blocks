@@ -20,6 +20,14 @@ Use a hostname/path-based Cloudflare Access application for the Worker hostname 
 
 Cloudflare documents hostname/path Access protection for Workers, including `workers.dev` hostnames, and documents that browser CORS requests to Access-protected origins require an Access authorization cookie. This is why the same-origin admin design is preferred over a cross-origin admin dashboard. The final hostname and exact Access path patterns must be reviewed in the dashboard before enabling anything.
 
+## 1.1 Browser request, CSRF, and cache controls
+
+- CORS is limited to `/api/public/*` and the exact configured public Pages origin. It does not grant the public website cross-origin access to admin routes.
+- Admin routes are same-origin only. Cross-origin requests to `/admin`, its assets, and `/api/admin/*` are rejected.
+- Admin POST/PATCH requests require an exact same-origin `Origin`; when `Sec-Fetch-Site` is supplied it must equal `same-origin`. This check runs before admin handlers and D1 access.
+- Admin API responses are marked `no-store`, `no-cache`, and `nosniff` to reduce the chance of private inquiry data being retained by browser or intermediary caches.
+- The dashboard has no application-managed password or session cookie. Cloudflare Access provides the edge session and injects a signed JWT; the Worker verifies the JWT and explicit admin email allowlist on every protected request. The Access application itself is not configured yet and must protect both `/admin*` and `/api/admin/*` on the Worker hostname before deployment.
+
 ## 2. Proposed public API
 
 | Method and route | Purpose | Access |

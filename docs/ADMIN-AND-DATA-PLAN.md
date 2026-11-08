@@ -17,7 +17,7 @@ Status: design proposal only. Nothing in this document creates a database, enabl
 - **Cloudflare R2:** uploaded project and gallery images; D1 stores only object keys and metadata.
 - **Cloudflare Access:** protect the admin area with an identity-based login (for example, email one-time PIN) and an explicit allowlist. The Worker must independently verify the Access identity/token before every admin operation; hiding the admin page is not security.
 
-These resources are not created or connected yet. Confirm current Cloudflare plan limits and any paid usage before enabling them.
+Development resources now exist: the Astro Pages preview, `paver-blocks-api-dev`, D1 database `paver-blocks-dev`, and private R2 bucket `paver-blocks-project-images-dev` are connected for development. The quote form has passed one development submission test and that test inquiry was saved in D1. The admin gateway code exists but is not deployed; Cloudflare Access is not configured. Production resources and production website settings must remain separate. Confirm current Cloudflare plan limits and any paid usage before expanding usage.
 
 ## Proposed data model
 

@@ -18,7 +18,7 @@ All other paths return 404 without contacting the API Worker. Only GET, POST, PA
 - Worker name: `paver-blocks-admin-dev`
 - Wrangler root: `worker-admin/`
 - Upstream: development API Worker only, via `API_ORIGIN` in `wrangler.toml`
-- No production API origin is permitted in this development configuration.
+- The gateway code pins the upstream to the exact development API origin `https://paver-blocks-api-dev.hellopaverblocks.workers.dev`; production or any other origin fails closed, even if a dashboard variable is changed.
 
 ## Current state
 

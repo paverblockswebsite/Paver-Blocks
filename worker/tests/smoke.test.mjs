@@ -984,7 +984,7 @@ test("project photo deletion verifies project ownership before touching R2", asy
     PROJECT_IMAGES: { async delete() { bucketDeletes++; } },
     DB: {
       prepare(sql) {
-        assert.match(sql, /WHERE id = \\? AND project_id = \\?/);
+        assert.ok(sql.includes("WHERE id = ? AND project_id = ?"));
         return { bind() { return { async first() { return { id: imageId, object_key: "projects/another-project/" + imageId + ".jpg" }; } }; } };
       },
       async batch() { batches++; },
@@ -1007,7 +1007,7 @@ test("project photo deletion removes the R2 object and records the D1 deletion a
     DB: {
       prepare(sql) {
         events.push(["prepare", sql]);
-        return { bind(...values) { return { sql, values }; } };
+        const statement = { sql, values: [], bind(...values) { statement.values = values; return statement; }, async first() { return { id: imageId, object_key: key }; }, async all() { return { results: [] }; } }; return statement;
       },
       async batch(statements) { events.push(["batch", statements.map(s=>s.sql)]); },
     },

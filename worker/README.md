@@ -27,6 +27,7 @@ The exact hostname will be selected only after the development Worker endpoint i
 - GET /health — basic liveness response; does not query D1.
 - GET /api/public/projects
 - GET /api/public/projects/:slug — published project data and approved image metadata.
+- GET /media/projects/:project-id/:image-id.(jpg|png|webp) — serves only validated image objects from the development R2 bucket.
 - GET /api/public/services
 - GET /api/public/paver-designs
 - GET /api/public/testimonials — published records with permission confirmed only.
@@ -41,6 +42,7 @@ The exact hostname will be selected only after the development Worker endpoint i
 - GET /api/admin/projects — lists project records, including drafts and archived records.
 - POST /api/admin/projects — creates a project as draft by default; supports explicit draft/published/archived status.
 - PATCH /api/admin/projects/:id — edits allowlisted project fields and records an audit event.
+- POST /api/admin/projects/:id/images — Access-protected multipart image upload; accepts JPEG, PNG, and WebP up to 5 MB, verifies file signatures, requires alt text, stores the object in R2, and records image metadata plus an audit event in D1.
 - GET /api/admin/services — lists all service records.
 - POST /api/admin/services — creates a service as draft by default.
 - PATCH /api/admin/services/:id — edits allowlisted service fields and records an audit event.
@@ -53,7 +55,7 @@ The exact hostname will be selected only after the development Worker endpoint i
 - GET /api/admin/homepage-content — reads approved homepage text fields.
 - PATCH /api/admin/homepage-content — updates only allowlisted homepage text fields and records an audit event.
 
-The dashboard currently supports inquiry review/status updates, plus listing, creation, and editing for projects, services, paver designs, and testimonials, along with a small homepage text editor. Testimonials must have explicit customer permission before publication. Homepage settings expose only approved public text keys; internal settings and customer data are not exposed. Project deletion, project image uploads, testimonial deletion, and broader site settings are not implemented. Other admin CRUD routes intentionally remain unavailable until their validation and authorization tests are implemented.
+The dashboard currently supports inquiry review/status updates, plus listing, creation, and editing for projects, services, paver designs, and testimonials, along with a small homepage text editor. Testimonials must have explicit customer permission before publication. Homepage settings expose only approved public text keys; internal settings and customer data are not exposed. Project deletion, project image deletion/reordering, testimonial deletion, and broader site settings are not implemented. Project image upload and delivery code is present, but the R2 bucket must be created and the Worker must be deployed separately before the feature can be used. Other admin CRUD routes intentionally remain unavailable until their validation and authorization tests are implemented.
 
 ## Public homepage content connection
 
@@ -62,6 +64,8 @@ The Astro homepage can read the allowlisted public text settings from `GET /api/
 If this variable is unset, the homepage keeps its static approved copy. If the API is unavailable, returns an error, or contains invalid/empty values, the same static copy remains visible. The browser requests only the public settings route, omits credentials, and writes returned strings through `textContent`; it does not call admin routes. Set the Worker `SITE_ORIGIN` to the exact Pages preview origin to permit the browser request through CORS. Do not configure a production API origin until separately reviewed and approved.
 
 ## Development-only Cloudflare bindings
+
+The Worker configuration declares an R2 binding named `PROJECT_IMAGES` for the development bucket `paver-blocks-project-images-dev`. The bucket has not yet been created or connected on Cloudflare. Create it only after reviewing the bucket name and explicitly approving the Cloudflare dashboard step. Image uploads fail closed with HTTP 503 until the binding exists. Uploads accept JPEG, PNG, or WebP only, cap file size at 5 MiB, check the file signature, require descriptive alt text, and use random object keys. Public image delivery validates the object-key format and serves only approved image MIME types with `nosniff` and immutable caching. No public R2 bucket access is enabled by this code; media is served through the Worker route.
 
 The checked-in `worker/wrangler.toml` now binds only the development D1 database `paver-blocks-dev` (database ID `642fbb24-2b16-41f6-b77e-e14de49eebe8`) as `env.DB`. It also allows the exact stable Pages branch-preview origin `https://development-site-foundation.paver-blocks.pages.dev` through `SITE_ORIGIN`, and sets the matching Turnstile hostname for later inquiry-form setup. These are public development configuration values, not secrets.
 

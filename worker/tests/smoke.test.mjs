@@ -929,6 +929,38 @@ test("project image upload stops oversized streamed bodies before parsing or D1 
   assert.equal(cancelled, true);
 });
 
+test("project image delivery can be restricted to published projects or allowed for authenticated admin previews", async () => {
+  const projectId = "123e4567-e89b-12d3-a456-426614174000";
+  const imageId = "123e4567-e89b-12d3-a456-426614174001";
+  const key = "projects/" + projectId + "/" + imageId + ".jpg";
+  let query = "";
+  let bucketReads = 0;
+  const env = {
+    DB: { prepare(sql) { query = sql; return { bind() { return { async first() { return { object_key: key }; } }; } }; } },
+    PROJECT_IMAGES: { async get() { bucketReads++; return { body: new Uint8Array([1]), httpMetadata: { contentType: "image/jpeg" }, httpEtag: '"etag"' }; } },
+  };
+  const respond = (request, bindings, body, status=200) => new Response(JSON.stringify(body), { status });
+  const publicResponse = await serveProjectImage(
+    new Request("https://api.example/media/" + key),
+    env,
+    new URL("https://api.example/media/" + key),
+    respond,
+  );
+  assert.match(query, /p\.status = 'published'/);
+  assert.equal(publicResponse.status, 200);
+  const adminResponse = await serveProjectImage(
+    new Request("https://api.example/admin/media/" + key),
+    env,
+    new URL("https://api.example/admin/media/" + key),
+    respond,
+    false,
+    "/admin/media/",
+  );
+  assert.doesNotMatch(query, /p\.status = 'published'/);
+  assert.equal(adminResponse.status, 200);
+  assert.equal(bucketReads, 2);
+});
+
 test("public project media rejects arbitrary object keys", async () => {
   let bucketTouched = false;
   const response = await serveProjectImage(

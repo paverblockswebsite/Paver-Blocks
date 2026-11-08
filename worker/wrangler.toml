@@ -1,0 +1,33 @@
+name = "paver-blocks-api-dev"
+main = "src/index.js"
+compatibility_date = "2026-11-07"
+
+# Dedicated development inquiry limiter. No other Workers are present in this account.
+[[ratelimits]]
+name = "INQUIRY_RATE_LIMITER"
+namespace_id = "1001"
+
+[ratelimits.simple]
+limit = 5
+period = 60
+
+# Development-only connection. This points only to the empty paver-blocks-dev
+# database; never replace it with a production database ID in this file.
+# Development-only object storage. Create this bucket in Cloudflare before any Worker deployment.
+[[r2_buckets]]
+binding = "PROJECT_IMAGES"
+bucket_name = "paver-blocks-project-images-dev"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "paver-blocks-dev"
+database_id = "642fbb24-2b16-41f6-b77e-e14de49eebe8"
+
+[vars]
+# Exact branch-preview origin allowed to call public API routes.
+SITE_ORIGIN = "https://development-site-foundation.paver-blocks.pages.dev"
+TURNSTILE_HOSTNAME = "development-site-foundation.paver-blocks.pages.dev"
+
+# Configure ACCESS_TEAM_DOMAIN, ACCESS_AUD, ADMIN_EMAILS, and
+# TURNSTILE_SECRET_KEY in the Cloudflare dashboard only.
+# TURNSTILE_SECRET_KEY must be stored as an encrypted Worker secret.

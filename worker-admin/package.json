@@ -1,0 +1,12 @@
+{
+  "name": "paver-blocks-admin-gateway-dev",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "check:config": "wrangler deploy --dry-run"
+  },
+  "devDependencies": {
+    "wrangler": "4.158.0"
+  }
+}

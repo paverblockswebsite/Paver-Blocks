@@ -1,0 +1,7 @@
+name = "paver-blocks-admin-dev"
+main = "src/index.js"
+compatibility_date = "2026-11-07"
+
+[vars]
+# Development API origin only. The gateway accepts only admin routes.
+API_ORIGIN = "https://paver-blocks-api-dev.hellopaverblocks.workers.dev"

@@ -26,7 +26,7 @@ Cloudflare documents hostname/path Access protection for Workers, including `wor
 - Admin routes are same-origin only. Cross-origin requests to `/admin`, its assets, and `/api/admin/*` are rejected.
 - Admin POST/PATCH requests require an exact same-origin `Origin`; when `Sec-Fetch-Site` is supplied it must equal `same-origin`. This check runs before admin handlers and D1 access.
 - Admin API responses are marked `no-store`, `no-cache`, and `nosniff` to reduce the chance of private inquiry data being retained by browser or intermediary caches.
-- The dashboard has no application-managed password or session cookie. Cloudflare Access provides the edge session and injects a signed JWT; the Worker verifies the JWT and explicit admin email allowlist on every protected request. The Access application itself is not configured yet and must protect both `/admin*` and `/api/admin/*` on the Worker hostname before deployment.
+- The dashboard has no application-managed password or session cookie. Cloudflare Access provides the edge session and injects a signed JWT; the Worker verifies the JWT and explicit admin email allowlist on every protected request. The Access application is not configured yet; it must protect the dedicated admin-gateway Worker hostname only, while the API Worker continues its independent JWT and email-allowlist checks.
 
 ## 2. Proposed public API
 

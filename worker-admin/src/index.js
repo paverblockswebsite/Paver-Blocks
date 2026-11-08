@@ -17,7 +17,10 @@ function isAllowedAdminPath(pathname) {
     pathname.startsWith("/api/admin/");
 }
 
-const DEVELOPMENT_API_ORIGIN = "https://paver-blocks-api-dev.hellopaverblocks.workers.dev";
+const ALLOWED_API_ORIGINS = new Set([
+  "https://paver-blocks-api-dev.hellopaverblocks.workers.dev",
+  "https://paver-blocks-api.hellopaverblocks.workers.dev",
+]);
 
 function getApiOrigin(value) {
   if (typeof value !== "string" || !value.trim()) return null;
@@ -25,7 +28,7 @@ function getApiOrigin(value) {
     const url = new URL(value);
     if (url.protocol !== "https:" || url.username || url.password ||
         url.pathname !== "/" || url.search || url.hash ||
-        url.origin !== DEVELOPMENT_API_ORIGIN) return null;
+        !ALLOWED_API_ORIGINS.has(url.origin)) return null;
     return url.origin;
   } catch {
     return null;

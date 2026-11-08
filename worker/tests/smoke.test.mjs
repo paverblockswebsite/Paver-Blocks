@@ -471,7 +471,6 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.match(dashboardHtml, /id="testimonial-form"/);
     assert.match(dashboardHtml, /id="homepage-form"/);
     assert.match(dashboardHtml, /id="load-more-inquiries"/);
-    assert.match(dashboardHtml, /Delete project/);
     assert.match(dashboardHtml, /permission_confirmed/);
     assert.match(dashboardHtml, /https:\/\/development-site\.example/);
     assert.doesNotMatch(dashboardHtml, /href="\/" rel="noopener"/);

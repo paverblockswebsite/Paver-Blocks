@@ -14,7 +14,9 @@ function json(data, status = 200, extraHeaders = {}) {
 
 function corsHeaders(request, env) {
   const origin = request.headers.get("Origin");
-  if (!origin || !env.SITE_ORIGIN || origin !== env.SITE_ORIGIN) return {};
+  const pathname = new URL(request.url).pathname;
+  // CORS is for the public website API only. The private admin surface is same-origin.
+  if (!pathname.startsWith("/api/public/") || !origin || !env.SITE_ORIGIN || origin !== env.SITE_ORIGIN) return {};
   return {
     "access-control-allow-origin": origin,
     "access-control-allow-methods": "GET, POST, PATCH, OPTIONS",
@@ -25,7 +27,11 @@ function corsHeaders(request, env) {
 }
 
 function response(request, env, data, status = 200, extraHeaders = {}) {
-  return json(data, status, { ...corsHeaders(request, env), ...extraHeaders });
+  const pathname = new URL(request.url).pathname;
+  const privateHeaders = pathname.startsWith("/api/admin/")
+    ? { "cache-control": "no-store", "pragma": "no-cache", "x-content-type-options": "nosniff" }
+    : {};
+  return json(data, status, { ...corsHeaders(request, env), ...privateHeaders, ...extraHeaders });
 }
 
 function isPlainObject(value) {
@@ -1277,8 +1283,20 @@ export default {
     const requestOrigin = request.headers.get("Origin");
     const allowedOrigin = corsHeaders(request, env);
     const isSameOrigin = requestOrigin === url.origin;
+    const isAdminApi = url.pathname.startsWith("/api/admin/");
     if (requestOrigin && !isSameOrigin && !allowedOrigin["access-control-allow-origin"]) {
-      return json({ error: "Origin not allowed." }, 403);
+      return response(request, env, { error: "Origin not allowed." }, 403);
+    }
+    // State-changing admin requests must come from the Worker origin. This protects
+    // Access-cookie-authenticated browser sessions from cross-site request forgery.
+    if (isAdminApi && (request.method === "POST" || request.method === "PATCH")) {
+      if (!isSameOrigin) {
+        return response(request, env, { error: "A same-origin request is required." }, 403);
+      }
+      const fetchSite = request.headers.get("Sec-Fetch-Site");
+      if (fetchSite && fetchSite !== "same-origin") {
+        return response(request, env, { error: "Cross-site requests are not allowed." }, 403);
+      }
     }
 
     try {

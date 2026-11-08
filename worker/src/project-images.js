@@ -56,7 +56,7 @@ export async function serveProjectImage(request, env, url, respond) {
   const bucket = env.PROJECT_IMAGES;
   if (!bucket || typeof bucket.get !== "function") return respond(request, env, { error: "Project image storage is not configured yet." }, 503);
   const key = url.pathname.slice("/media/".length);
-  const match = key.match(/^projects\\/([0-9a-f-]{36})\\/([0-9a-f-]{36})\\.(jpg|png|webp)$/i);
+  const match = key.match(/^projects\/([0-9a-f-]{36})\/([0-9a-f-]{36})\.(jpg|png|webp)$/i);
   if (!match) return respond(request, env, { error: "Not found." }, 404);
   const approved = await env.DB.prepare(
     "SELECT pi.object_key FROM project_images pi INNER JOIN projects p ON p.id = pi.project_id WHERE pi.id = ? AND pi.project_id = ? AND p.status = 'published' LIMIT 1",

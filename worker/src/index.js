@@ -1211,7 +1211,7 @@ async function handleAdmin(request, env, url, identity) {
   if (request.method === "POST" && projectImagesMatch) {
     return uploadProjectImage(request, env, projectImagesMatch[1], identity, response);
   }
-  const imageOrderMatch = url.pathname.match(/^\\/api\\/admin\\/projects\\/([0-9a-f-]{36})\\/images\\/order$/i);
+  const imageOrderMatch = url.pathname.match(new RegExp("^/api/admin/projects/([0-9a-f-]{36})/images/order$", "i"));
   if (request.method === "PATCH" && imageOrderMatch) {
     const parsed = await readJson(request);
     if (parsed.error) return response(request, env, { error: parsed.error }, 400);
@@ -1220,7 +1220,7 @@ async function handleAdmin(request, env, url, identity) {
     }
     return reorderProjectImages(env, imageOrderMatch[1], parsed.value.image_ids, identity, response, request);
   }
-  const imageDeleteMatch = url.pathname.match(/^\\/api\\/admin\\/projects\\/([0-9a-f-]{36})\\/images\\/([0-9a-f-]{36})$/i);
+  const imageDeleteMatch = url.pathname.match(new RegExp("^/api/admin/projects/([0-9a-f-]{36})/images/([0-9a-f-]{36})$", "i"));
   if (request.method === "DELETE" && imageDeleteMatch) {
     return deleteProjectImage(env, imageDeleteMatch[1], imageDeleteMatch[2], identity, response, request);
   }

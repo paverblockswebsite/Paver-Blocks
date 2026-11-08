@@ -33,9 +33,9 @@ All other paths return 404 without contacting the API Worker. Only GET, POST, PA
 ## Safe deployment sequence (only after separate approval)
 
 1. Require green gateway smoke tests and Wrangler dry-run in GitHub Actions.
-2. Review the exact Cloudflare Worker destination and create an Access application for the gateway Worker only.
-3. Apply a single-user allow policy for the business owner's confirmed account.
-4. Deploy only `paver-blocks-admin-dev` from `worker-admin/`.
-5. Configure the API Worker Access issuer, audience, and admin email allowlist as dashboard-side variables/secrets; never commit secrets.
-6. Verify anonymous denial, allowed-admin success, disallowed-identity denial, and that public quote submission remains reachable.
-7. Keep all production changes behind separate explicit approval.
+2. Deploy only `paver-blocks-admin-dev` from the `worker-admin/` root, using the `development/site-foundation` branch. Do not deploy or change the API Worker in this step. Before Access is attached, the gateway must remain unusable for admin requests because it requires a Cloudflare Access JWT assertion.
+3. After the gateway appears in Cloudflare, create a Cloudflare Access application whose only destination is `paver-blocks-admin-dev`. Never select `paver-blocks-api-dev`.
+4. Apply a single-user Allow policy for exactly `hellopaverblocks@gmail.com`; leave all other identities denied. Use the default one-time PIN login unless a different identity provider is deliberately configured.
+5. Copy the Access application's audience tag and configure the API Worker's `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`, and `ADMIN_EMAILS` dashboard-side values. Keep secrets and account settings out of Git.
+6. Verify anonymous admin denial, allowed-admin success, disallowed-identity denial, and that public quote submission remains reachable.
+7. Keep all production changes behind separate explicit approval. Do not merge PR #1 or change production Pages, Workers, databases, DNS, or domain.

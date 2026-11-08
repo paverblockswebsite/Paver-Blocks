@@ -1089,7 +1089,7 @@ test("gallery reorder updates every image in the same project and records an aud
   const result = await reorderProjectImages(env, projectId, [second, first], { email: "admin@example.com" }, respond, new Request("https://api.example"));
   assert.equal(result.status, 200);
   assert.equal(batch.length, 3);
-  assert.match(batch[0].sql, /^UPDATE project_images SET sort_order = \\? WHERE id = \\? AND project_id = \\?/);
+  assert.ok(batch[0].sql.includes("UPDATE project_images SET sort_order = ? WHERE id = ? AND project_id = ?"));
   assert.deepEqual(batch[0].values, [0, second, projectId]);
   assert.deepEqual(batch[1].values, [1, first, projectId]);
   assert.match(batch[2].sql, /^INSERT INTO admin_audit_log/);

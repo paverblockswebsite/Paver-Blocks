@@ -152,7 +152,7 @@ test("public inquiry endpoint rejects missing Turnstile configuration without wr
     new Request("https://api.example/api/public/inquiries", {
       method: "POST",
       headers: {
-        Origin: "https://development-site.example",
+        Origin: "https://api.example",
         "CF-Connecting-IP": "203.0.113.20",
         "Content-Type": "application/json",
       },
@@ -405,7 +405,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
       "https://api.example/api/admin/projects",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Cf-Access-Jwt-Assertion": validToken },
+        headers: { "Content-Type": "application/json", "Cf-Access-Jwt-Assertion": validToken, Origin: "https://api.example" },
         body: JSON.stringify({ title: "CSRF probe", slug: "csrf-probe" }),
       },
     ), env);
@@ -482,7 +482,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     const patchUrl = "/api/admin/inquiries/123e4567-e89b-12d3-a456-426614174000";
     const invalidPatch = await worker.fetch(new Request("https://api.example" + patchUrl, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", "Cf-Access-Jwt-Assertion": validToken },
+      headers: { "Content-Type": "application/json", "Cf-Access-Jwt-Assertion": validToken, Origin: "https://api.example" },
       body: JSON.stringify({ status: "invented", private_field: "not allowed" }),
     }), env);
     assert.equal(invalidPatch.status, 400);
@@ -490,7 +490,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
 
     const successfulPatch = await worker.fetch(new Request("https://api.example" + patchUrl, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", "Cf-Access-Jwt-Assertion": validToken },
+      headers: { "Content-Type": "application/json", "Cf-Access-Jwt-Assertion": validToken, Origin: "https://api.example" },
       body: JSON.stringify({ status: "quoted", internal_notes: "Called customer" }),
     }), env);
     assert.equal(successfulPatch.status, 200);
@@ -830,7 +830,10 @@ test("every admin API family rejects unauthenticated requests before touching th
     ["PATCH", "/api/admin/homepage-content"],
   ];
   for (const [method, path] of requests) {
-    const response = await worker.fetch(new Request("https://api.example" + path, { method }), env);
+    const response = await worker.fetch(new Request("https://api.example" + path, {
+      method,
+      headers: { Origin: "https://api.example" },
+    }), env);
     assert.equal(response.status, 401, method + " " + path + " must require Access authentication");
   }
   assert.equal(databaseTouched, false, "unauthenticated admin requests must not touch D1");

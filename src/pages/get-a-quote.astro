@@ -1,19 +1,146 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
+
+const apiBaseValue = (import.meta.env.VITE_PUBLIC_API_BASE_URL || "").trim();
+const turnstileSiteKey = (import.meta.env.VITE_TURNSTILE_SITE_KEY || "").trim();
+let publicApiBase = "";
+try {
+  const parsed = new URL(apiBaseValue);
+  if (
+    parsed.protocol === "https:" &&
+    parsed.pathname === "/" &&
+    !parsed.search &&
+    !parsed.hash &&
+    !parsed.username &&
+    !parsed.password
+  ) {
+    publicApiBase = parsed.origin;
+  }
+} catch {
+  publicApiBase = "";
+}
+const formReady = Boolean(publicApiBase && turnstileSiteKey);
 const whatsappMessage = encodeURIComponent("Hello Paver Blocks, I would like to discuss a project.\n\nName:\nLocation:\nType of work:\nApproximate area:\nProject details:");
 ---
 <SiteLayout title="Request a Paving & Construction Quote | Paver Blocks" description="Discuss your paving or civil construction project with Paver Blocks. Share the location, work type and approximate area to begin a quotation enquiry." canonical="https://paverblocks.com.pk/get-a-quote/">
   <section class="page-hero"><p class="eyebrow">Request a Quote</p><h1>Tell us about your project.</h1><p>Share a few basic details so we can understand the location, type of work and approximate scope.</p></section>
   <section class="content-section">
-    <div class="quote-grid">
-      <article class="info-card"><p class="eyebrow">Recommended</p><h2>Start on WhatsApp</h2><p>Use the prepared message to tell us about your project. You can edit it before sending and attach site photographs or drawings if available.</p><a class="button button-primary" href={`https://wa.me/923162753210?text=${whatsappMessage}`} target="_blank" rel="noopener noreferrer">Prepare WhatsApp Enquiry</a></article>
-      <article class="info-card"><p class="eyebrow">Prefer another way?</p><h2>Call or email</h2><p>Contact us directly if you would rather explain the project by phone or send details by email.</p><div class="actions"><a class="button" href="tel:+923162753210">Call +92 316 2753210</a><a class="button" href="mailto:hellopaverblocks@gmail.com?subject=Project%20Quotation%20Enquiry">Email Us</a></div></article>
+    {formReady ? (
+      <div class="quote-form-card">
+        <p class="eyebrow">Secure Project Enquiry</p>
+        <h2>Project details</h2>
+        <p class="form-intro">Your enquiry is sent securely and saved in our private admin dashboard. Please do not include passwords, identity documents or other sensitive personal information.</p>
+        <form id="quote-form" data-api-base={publicApiBase}>
+          <div class="form-grid">
+            <label>Your name <span aria-hidden="true">*</span><input name="customer_name" autocomplete="name" maxlength="120" required /></label>
+            <label>Phone number <span aria-hidden="true">*</span><input name="phone" type="tel" autocomplete="tel" maxlength="40" placeholder="+92..." required /></label>
+            <label>Email address <small>Optional</small><input name="email" type="email" autocomplete="email" maxlength="254" /></label>
+            <label>Project location <span aria-hidden="true">*</span><input name="location" autocomplete="address-level2" maxlength="180" placeholder="City, area or site location" required /></label>
+            <label>Type of work <span aria-hidden="true">*</span>
+              <select name="work_type" required>
+                <option value="">Select a service</option>
+                <option>Paver block installation</option>
+                <option>Road construction and paving</option>
+                <option>Footpath construction</option>
+                <option>Parking area construction</option>
+                <option>Industrial flooring</option>
+                <option>Government contract</option>
+                <option>Private construction contract</option>
+              </select>
+            </label>
+            <label>Approximate area <small>Optional</small><input name="approximate_area" maxlength="120" placeholder="e.g. 2,000 sq ft" /></label>
+            <label>Approximate budget <small>Optional</small><input name="budget" maxlength="120" placeholder="If known" /></label>
+            <label class="wide">Project details <span aria-hidden="true">*</span><textarea name="project_details" maxlength="4000" rows="5" placeholder="Describe the work, site condition, requirements or expected timeline." required></textarea></label>
+          </div>
+          <div class="turnstile-wrap">
+            <div class="cf-turnstile" data-sitekey={turnstileSiteKey} data-action="inquiry"></div>
+          </div>
+          <p id="quote-status" class="form-status" role="status" aria-live="polite">Complete the spam-protection check before submitting.</p>
+          <button id="quote-submit" class="button button-primary" type="submit">Submit project enquiry</button>
+        </form>
+      </div>
+      <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    ) : (
+      <div class="quote-grid">
+        <article class="info-card"><p class="eyebrow">Online form setup</p><h2>We are preparing secure online enquiries.</h2><p>The secure form will appear here after the development API and spam-protection keys are configured. You can contact us directly in the meantime.</p></article>
+        <article class="info-card"><p class="eyebrow">Start now</p><h2>Contact Paver Blocks</h2><p>Use WhatsApp to share project details and attach site photographs or drawings if available.</p><a class="button button-primary" href={`https://wa.me/923162753210?text=${whatsappMessage}`} target="_blank" rel="noopener noreferrer">Prepare WhatsApp Enquiry</a></article>
+      </div>
+    )}
+    <div class="quote-note">
+      <h2>Prefer another way?</h2>
+      <p>Call or email us directly if you would rather explain the project by phone or send details by email.</p>
+      <div class="actions"><a class="button" href="tel:+923162753210">Call +92 316 2753210</a><a class="button" href="mailto:hellopaverblocks@gmail.com?subject=Project%20Quotation%20Enquiry">Email Us</a></div>
+      <h3>Helpful details to include</h3>
+      <ul><li>Your name and project location</li><li>Type of work required</li><li>Approximate area or dimensions</li><li>Intended use and existing site condition</li><li>Any drawings, specifications or site photographs you can share</li></ul>
     </div>
-    <div class="quote-note"><h2>Helpful details to include</h2><ul><li>Your name and project location</li><li>Type of work required</li><li>Approximate area or dimensions</li><li>Intended use and existing site condition</li><li>Any drawings, specifications or site photographs you can share</li></ul></div>
-    <p class="notice">The secure website quotation form and private enquiry tracking will be introduced with the admin and database system. This page currently starts enquiries through WhatsApp, phone or email; it does not claim to save submissions on the website.</p>
   </section>
 </SiteLayout>
+
+<script>
+  const form = document.querySelector("#quote-form");
+  const status = document.querySelector("#quote-status");
+  const submit = document.querySelector("#quote-submit");
+
+  if (form && status && submit) {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const formData = new FormData(form);
+      const token = formData.get("cf-turnstile-response");
+      if (typeof token !== "string" || !token.trim()) {
+        status.className = "form-status error";
+        status.textContent = "Please complete the spam-protection check and try again.";
+        return;
+      }
+
+      const value = (name) => String(formData.get(name) || "").trim();
+      const payload = {
+        customer_name: value("customer_name"),
+        phone: value("phone"),
+        email: value("email"),
+        location: value("location"),
+        work_type: value("work_type"),
+        approximate_area: value("approximate_area"),
+        budget: value("budget"),
+        project_details: value("project_details"),
+        turnstile_token: token.trim()
+      };
+
+      submit.disabled = true;
+      submit.textContent = "Submitting…";
+      status.className = "form-status";
+      status.textContent = "Sending your enquiry securely…";
+
+      try {
+        const endpoint = new URL("/api/public/inquiries", form.dataset.apiBase);
+        const response = await fetch(endpoint, {
+          method: "POST",
+          mode: "cors",
+          credentials: "omit",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || "Your enquiry could not be submitted. Please contact us directly.");
+
+        form.reset();
+        if (window.turnstile) window.turnstile.reset();
+        status.className = "form-status success";
+        status.textContent = "Thank you. Your enquiry has been received and saved. We will contact you using the details you provided.";
+      } catch (error) {
+        status.className = "form-status error";
+        status.textContent = error instanceof Error ? error.message : "Your enquiry could not be submitted. Please contact us directly.";
+        if (window.turnstile) window.turnstile.reset();
+      } finally {
+        submit.disabled = false;
+        submit.textContent = "Submit project enquiry";
+      }
+    });
+  }
+</script>
+
 <style>
-.quote-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.quote-grid .info-card{padding:30px}.quote-grid h2,.quote-note h2{font-size:25px}.quote-note{margin-top:28px;padding:26px;border-radius:10px;background:#f4f6f8}.quote-note ul{padding-left:22px;color:#667386}.quote-note li{padding:4px 0}.notice{margin-top:24px;padding:14px 18px;border-left:3px solid #F5C542;background:#fbf8ee;font-size:14px}
-@media(max-width:700px){.quote-grid{grid-template-columns:1fr}}
+.quote-form-card{max-width:900px;margin:0 auto;padding:30px;border:1px solid #e0e5eb;border-radius:12px;background:#fff;box-shadow:0 8px 28px #172b450b}.quote-form-card h2,.quote-note h2{font-size:clamp(26px,3vw,34px);margin-bottom:10px}.form-intro{max-width:720px;color:#667386}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:24px}.form-grid label{display:grid;gap:6px;color:#172B45;font-size:14px;font-weight:750}.form-grid label span{display:inline;color:#9a6500}.form-grid small{display:inline;color:#667386;font-weight:500}.form-grid input,.form-grid select,.form-grid textarea{width:100%;min-height:46px;padding:11px 12px;border:1px solid #bdc7d3;border-radius:6px;background:#fff;color:#172B45;font:inherit;font-weight:450}.form-grid textarea{resize:vertical}.form-grid input:focus,.form-grid select:focus,.form-grid textarea:focus{outline:3px solid #f5c54266;border-color:#9b7410}.form-grid .wide{grid-column:1/-1}.turnstile-wrap{margin-top:20px;min-height:65px}.form-status{min-height:26px;margin:12px 0;color:#667386;font-size:14px}.form-status.success{color:#17653a}.form-status.error{color:#a12626}.button:disabled{opacity:.65;cursor:wait}.quote-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.quote-grid .info-card{padding:30px}.quote-grid h2,.quote-note h3{font-size:25px}.quote-note{max-width:900px;margin:28px auto 0;padding:26px;border-radius:10px;background:#f4f6f8}.quote-note p,.quote-note li{color:#667386}.quote-note ul{padding-left:22px}.quote-note li{padding:4px 0}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
+@media(max-width:700px){.quote-form-card{padding:20px}.form-grid,.quote-grid{grid-template-columns:1fr}.form-grid .wide{grid-column:auto}}
 </style>

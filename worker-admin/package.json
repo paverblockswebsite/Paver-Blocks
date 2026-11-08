@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "node --test",
     "check:config": "wrangler deploy --dry-run"
   },
   "devDependencies": {

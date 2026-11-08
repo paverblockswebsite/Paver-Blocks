@@ -1074,11 +1074,13 @@ test("gallery reorder updates every image in the same project and records an aud
   const env = {
     DB: {
       prepare(sql) {
-        return {
-          bind(...values) { return { sql, values }; },
+        const statement = {
+          sql, values: [],
+          bind(...values) { statement.values = values; return statement; },
           async first() { return { id: projectId }; },
           async all() { return { results: [{ id: first }, { id: second }] }; },
         };
+        return statement;
       },
       async batch(statements) { batch = statements; },
     },

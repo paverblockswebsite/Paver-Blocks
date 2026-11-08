@@ -1,9 +1,17 @@
 name: Worker API tests
 
 on:
+  push:
+    branches:
+      - development/site-foundation
+    paths:
+      - 'worker/**'
+      - 'worker-admin/**'
+      - '.github/workflows/worker-tests.yml'
   pull_request:
     paths:
       - 'worker/**'
+      - 'worker-admin/**'
       - '.github/workflows/worker-tests.yml'
 
 permissions:
@@ -27,4 +35,13 @@ jobs:
         run: npm test
       - name: Validate Wrangler configuration without deploying
         working-directory: worker
+        run: npm run check:config
+      - name: Install admin gateway tooling
+        working-directory: worker-admin
+        run: npm install --no-audit --no-fund
+      - name: Run admin gateway smoke tests
+        working-directory: worker-admin
+        run: npm test
+      - name: Validate admin gateway Wrangler configuration without deploying
+        working-directory: worker-admin
         run: npm run check:config

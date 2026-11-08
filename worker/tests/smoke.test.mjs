@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import worker from "../src/index.js";
+import { uploadProjectImage, serveProjectImage } from "../src/project-images.js";
 
 function makeEnv(overrides = {}) {
   return {
@@ -876,4 +877,41 @@ test("admin dashboard rejects non-GET methods", async () => {
     makeEnv(),
   );
   assert.equal(response.status, 405);
+});
+
+test("project image upload fails closed when development R2 binding is missing", async () => {
+  const response = await uploadProjectImage(
+    new Request("https://api.example/api/admin/projects/123e4567-e89b-12d3-a456-426614174000/images", { method: "POST" }),
+    { DB: { prepare() { throw new Error("D1 must not be touched."); } } },
+    "123e4567-e89b-12d3-a456-426614174000",
+    { email: "admin@example.com" },
+    (request, env, body, status) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } }),
+  );
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { error: "Project image storage is not configured yet." });
+});
+
+test("project image upload rejects missing or oversized content length before D1 access", async () => {
+  let databaseTouched = false;
+  const response = await uploadProjectImage(
+    new Request("https://api.example/api/admin/projects/123e4567-e89b-12d3-a456-426614174000/images", { method: "POST" }),
+    { PROJECT_IMAGES: { async put() {} }, DB: { prepare() { databaseTouched = true; } } },
+    "123e4567-e89b-12d3-a456-426614174000",
+    { email: "admin@example.com" },
+    (request, env, body, status) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } }),
+  );
+  assert.equal(response.status, 413);
+  assert.equal(databaseTouched, false);
+});
+
+test("public project media rejects arbitrary object keys", async () => {
+  let bucketTouched = false;
+  const response = await serveProjectImage(
+    new Request("https://api.example/media/../private/customer-data"),
+    { PROJECT_IMAGES: { async get() { bucketTouched = true; return null; } } },
+    new URL("https://api.example/media/../private/customer-data"),
+    (request, env, body, status) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } }),
+  );
+  assert.equal(response.status, 404);
+  assert.equal(bucketTouched, false);
 });

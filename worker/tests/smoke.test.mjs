@@ -904,6 +904,31 @@ test("project image upload rejects missing or oversized content length before D1
   assert.equal(databaseTouched, false);
 });
 
+test("project image upload stops oversized streamed bodies before parsing or D1 access", async () => {
+  let databaseTouched = false;
+  let cancelled = false;
+  const body = new ReadableStream({
+    pull(controller) { controller.enqueue(new TextEncoder().encode("x".repeat(5 * 1024 * 1024 + 70 * 1024))); },
+    cancel() { cancelled = true; },
+  });
+  const request = new Request("https://api.example/api/admin/projects/123e4567-e89b-12d3-a456-426614174000/images", {
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data; boundary=test-boundary", "Content-Length": "500" },
+    body,
+    duplex: "half",
+  });
+  const response = await uploadProjectImage(
+    request,
+    { PROJECT_IMAGES: { async put() {} }, DB: { prepare() { databaseTouched = true; } } },
+    "123e4567-e89b-12d3-a456-426614174000",
+    { email: "admin@example.com" },
+    (req, env, payload, status) => new Response(JSON.stringify(payload), { status, headers: { "content-type": "application/json" } }),
+  );
+  assert.equal(response.status, 413);
+  assert.equal(databaseTouched, false);
+  assert.equal(cancelled, true);
+});
+
 test("public project media rejects arbitrary object keys", async () => {
   let bucketTouched = false;
   const response = await serveProjectImage(

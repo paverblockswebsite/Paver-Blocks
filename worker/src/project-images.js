@@ -124,7 +124,8 @@ export async function deleteProjectImage(env, projectId, imageId, identity, resp
     return respond(request, env, { error: "Project photo not found." }, 404);
   }
   const expectedPrefix = "projects/" + projectId + "/" + imageId + ".";
-  if (!image.object_key.startsWith(expectedPrefix) || !/\\.(jpg|png|webp)$/i.test(image.object_key)) {
+  const extension = image.object_key.slice(expectedPrefix.length).toLowerCase();
+  if (!image.object_key.startsWith(expectedPrefix) || !["jpg", "png", "webp"].includes(extension)) {
     return respond(request, env, { error: "Project photo not found." }, 404);
   }
 

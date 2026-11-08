@@ -31,3 +31,5 @@ TURNSTILE_HOSTNAME = "development-site-foundation.paver-blocks.pages.dev"
 # Configure ACCESS_TEAM_DOMAIN, ACCESS_AUD, ADMIN_EMAILS, and
 # TURNSTILE_SECRET_KEY in the Cloudflare dashboard only.
 # TURNSTILE_SECRET_KEY must be stored as an encrypted Worker secret.
+
+# GitHub deployment source is consolidated on main; this Worker remains dev-scoped.

@@ -1,6 +1,6 @@
 # Project Image Management
 
-**Status:** Implemented on `development/site-foundation`; not deployed. The development R2 bucket has not been created, and the Worker is not deployed.
+**Status:** Implemented on `development/site-foundation`; not deployed. The private development R2 bucket `paver-blocks-project-images-dev` has been created with Standard storage and Public Access disabled. Wrangler's `PROJECT_IMAGES` binding matches this bucket. Live Worker-to-R2 integration has not yet been tested.
 
 ## Admin routes
 
@@ -44,4 +44,4 @@ Each project's gallery displays thumbnails, captions/alt descriptions, and Move 
 
 Automated smoke tests cover project ownership, R2 deletion failure behavior, atomic D1/audit batches, stale or duplicate ordering requests, successful ordering, Access protection, and private draft-image cache headers.
 
-This is application-level development code, not a live integration test. Before deployment, test against a development-only R2 bucket and D1 database using disposable sample projects and images. No production resources, real project photos, or customer records are involved.
+This is application-level development code, not a live integration test. Before public use, deploy only after separate approval and test against the development-only R2 bucket and D1 database using disposable sample projects and images. No production resources, real project photos, or customer records are involved.

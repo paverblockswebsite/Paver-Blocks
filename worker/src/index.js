@@ -1,3 +1,5 @@
+import { uploadProjectImage, serveProjectImage } from "./project-images.js";
+
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" };
 const MAX_BODY_BYTES = 16384;
 const VALID_INQUIRY_STATUSES = new Set(["new", "contacted", "quoted", "completed", "closed"]);
@@ -1114,6 +1116,10 @@ async function handleAdminContent(request, env, url, identity) {
 }
 
 async function handleAdmin(request, env, url, identity) {
+  const imageUploadMatch = url.pathname.match(/^\/api\/admin\/projects\/([0-9a-f-]{36})\/images$/i);
+  if (request.method === "POST" && imageUploadMatch) {
+    return uploadProjectImage(request, env, imageUploadMatch[1], identity, response);
+  }
   const path = url.pathname;
   const contentResponse = await handleAdminContent(request, env, url, identity);
   if (contentResponse) return contentResponse;
@@ -1318,6 +1324,10 @@ export default {
     }
 
     try {
+      if (url.pathname.startsWith("/media/")) {
+        return await serveProjectImage(request, env, url, response);
+      }
+
       if (url.pathname.startsWith("/api/public/")) {
         if (request.method !== "GET" && request.method !== "POST") {
           return response(request, env, { error: "Method not allowed." }, 405, { allow: "GET, POST" });

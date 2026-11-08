@@ -104,7 +104,7 @@ export async function serveProjectImage(request, env, url, respond, requirePubli
   if (!object || !Object.keys(FORMATS).includes(object.httpMetadata?.contentType)) return respond(request, env, { error: "Not found." }, 404);
   return new Response(object.body, { headers: {
     "content-type": object.httpMetadata.contentType,
-    "cache-control": "public, max-age=31536000, immutable",
+    "cache-control": requirePublished ? "public, max-age=3600" : "private, no-store",
     "x-content-type-options": "nosniff",
     "content-disposition": "inline",
     etag: object.httpEtag,

@@ -782,6 +782,7 @@ test("admin preflight is rejected from the public website origin while public AP
   );
   assert.equal(publicPreflight.status, 204);
   assert.equal(publicPreflight.headers.get("access-control-allow-origin"), "https://public-site.example");
+  assert.equal(publicPreflight.headers.get("access-control-allow-methods"), "GET, POST, OPTIONS");
 });
 
 test("same-origin admin requests reach Access authentication instead of being rejected by the public-site CORS rule", async () => {

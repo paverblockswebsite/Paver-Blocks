@@ -6,6 +6,34 @@ const FORMATS = {
   "image/webp": { ext: "webp", valid: (b) => b.length >= 12 && String.fromCharCode(...b.slice(0, 4)) === "RIFF" && String.fromCharCode(...b.slice(8, 12)) === "WEBP" },
 };
 
+async function readBoundedForm(request, maximumBytes) {
+  if (!request.body) return null;
+  const reader = request.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const part = await reader.read();
+      if (part.done) break;
+      total += part.value.byteLength;
+      if (total > maximumBytes) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(part.value);
+    }
+  } catch {
+    return null;
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes;
+}
+
 export async function uploadProjectImage(request, env, projectId, identity, respond) {
   const bucket = env.PROJECT_IMAGES;
   if (!bucket || typeof bucket.put !== "function") return respond(request, env, { error: "Project image storage is not configured yet." }, 503);
@@ -18,8 +46,17 @@ export async function uploadProjectImage(request, env, projectId, identity, resp
   }
   const project = await env.DB.prepare("SELECT id FROM projects WHERE id = ? LIMIT 1").bind(projectId).first();
   if (!project) return respond(request, env, { error: "Project not found." }, 404);
+  const boundedBody = await readBoundedForm(request, MAX_BYTES + FORM_OVERHEAD);
+  if (!boundedBody) return respond(request, env, { error: "The image upload is too large or could not be read." }, 413);
   let form;
-  try { form = await request.formData(); } catch { return respond(request, env, { error: "The upload form could not be read." }, 400); }
+  try {
+    const boundedRequest = new Request(request.url, {
+      method: "POST",
+      headers: { "content-type": request.headers.get("content-type") },
+      body: boundedBody,
+    });
+    form = await boundedRequest.formData();
+  } catch { return respond(request, env, { error: "The upload form could not be read." }, 400); }
   const file = form.get("file");
   if (!file || typeof file.arrayBuffer !== "function" || typeof file.size !== "number" || file.size < 1 || file.size > MAX_BYTES) {
     return respond(request, env, { error: "Choose one image file up to 5 MB." }, 400);

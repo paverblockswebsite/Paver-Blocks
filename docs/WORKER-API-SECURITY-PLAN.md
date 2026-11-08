@@ -1,6 +1,6 @@
 # Paver Blocks — Worker API and Admin Security Plan
 
-**Status:** Initial Worker API code exists on the development branch and is not deployed. The development D1 database and schema are created and verified, and Wrangler config points only to that development database. The development inquiry rate-limit binding is configured in Wrangler (`namespace_id = "1001"`, 5 attempts per 60 seconds) but is not active on Cloudflare because the Worker is not deployed. The inquiry route fails closed when the binding is absent or unavailable. No Access application, Turnstile widget/secrets, R2 bucket, or production binding is active.
+**Status (development only):** `paver-blocks-api-dev` is deployed and connected to the development D1 database, private R2 bucket, and inquiry rate-limit binding. The public quote form has passed a real development test: Turnstile displayed success and one test inquiry was saved in `paver-blocks-dev`. The Turnstile secret and development hostname settings are configured. The separate `paver-blocks-admin-dev` gateway is code-only and has not been deployed. No Cloudflare Access application is configured yet; the API Worker admin allowlist and Access JWT settings still need to be configured. Production Pages, production data, DNS, and `main` remain outside this development setup.
 
 ## 1. Security boundary
 

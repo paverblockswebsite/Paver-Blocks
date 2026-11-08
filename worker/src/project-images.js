@@ -44,8 +44,6 @@ export async function uploadProjectImage(request, env, projectId, identity, resp
   if ((request.headers.get("content-type") || "").split(";")[0].trim().toLowerCase() !== "multipart/form-data") {
     return respond(request, env, { error: "Use a multipart form upload." }, 415);
   }
-  const project = await env.DB.prepare("SELECT id FROM projects WHERE id = ? LIMIT 1").bind(projectId).first();
-  if (!project) return respond(request, env, { error: "Project not found." }, 404);
   const boundedBody = await readBoundedForm(request, MAX_BYTES + FORM_OVERHEAD);
   if (!boundedBody) return respond(request, env, { error: "The image upload is too large or could not be read." }, 413);
   let form;
@@ -70,6 +68,8 @@ export async function uploadProjectImage(request, env, projectId, identity, resp
   if (!format) return respond(request, env, { error: "Only JPEG, PNG, and WebP images are accepted." }, 415);
   const bytes = new Uint8Array(await file.arrayBuffer());
   if (bytes.byteLength !== file.size || !format.valid(bytes)) return respond(request, env, { error: "The file contents do not match a supported image format." }, 415);
+  const project = await env.DB.prepare("SELECT id FROM projects WHERE id = ? LIMIT 1").bind(projectId).first();
+  if (!project) return respond(request, env, { error: "Project not found." }, 404);
   const imageId = crypto.randomUUID();
   const objectKey = "projects/" + projectId + "/" + imageId + "." + format.ext;
   await bucket.put(objectKey, bytes, {

@@ -830,6 +830,7 @@ test("every admin API family rejects unauthenticated requests before touching th
     ["GET", "/api/admin/projects"],
     ["POST", "/api/admin/projects"],
     ["PATCH", "/api/admin/projects/123e4567-e89b-12d3-a456-426614174000"],
+    ["DELETE", "/api/admin/projects/123e4567-e89b-12d3-a456-426614174000/images/123e4567-e89b-12d3-a456-426614174001"],
     ["GET", "/api/admin/services"],
     ["POST", "/api/admin/services"],
     ["PATCH", "/api/admin/services/123e4567-e89b-12d3-a456-426614174000"],

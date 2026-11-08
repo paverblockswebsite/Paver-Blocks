@@ -58,7 +58,7 @@ test("requests from an unapproved origin are rejected", async () => {
 test("admin inquiry endpoint denies requests without a verified Access identity", async () => {
   const response = await worker.fetch(
     new Request("https://api.example/api/admin/inquiries", {
-      headers: { Origin: "https://development-site.example" },
+      headers: { Origin: "https://api.example" },
     }),
     makeEnv(),
   );
@@ -121,7 +121,7 @@ test("inquiry submission rejects a non-JSON content type", async () => {
     new Request("https://api.example/api/public/inquiries", {
       method: "POST",
       headers: {
-        Origin: "https://development-site.example",
+        Origin: "https://api.example",
         "CF-Connecting-IP": "203.0.113.20",
         "Content-Type": "text/plain",
       },

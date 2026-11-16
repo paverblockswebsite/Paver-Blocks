@@ -7,7 +7,7 @@ const { title, description, canonical, image, intro, approach, uses, considerati
     <p class="eyebrow">Paver Blocks / Services</p>
     <h1>{title}.</h1>
     <p>{description}</p>
-    {image && <img class="service-detail-image" src={image} alt={title} fetchpriority="high" />}
+    {image && <img class="service-detail-image" src={image} alt={title} fetchpriority="high" decoding="async" />}
   </section>
   <section class="content-section">
     <p class="eyebrow">Service overview</p>

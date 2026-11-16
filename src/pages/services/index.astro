@@ -1,12 +1,12 @@
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
 const services = [
-  { name: "Paver Block Installation", description: "Installation of paver blocks for suitable outdoor surfaces.", url: "/services/paver-block-installation/", image: "/images/services/PBI1.png" },
-  { name: "Road Construction & Paving", description: "Paving and related road construction work for project sites.", url: "/services/road-construction/", image: "/images/services/RCP2.png" },
-  { name: "Footpath Construction", description: "Footpath and pedestrian-surface construction.", url: "/services/footpath-construction/", image: "/images/services/FPC3.png" },
-  { name: "Parking Area Construction", description: "Paving and construction for parking areas.", url: "/services/parking-area-construction/", image: "/images/services/PAC4.png" },
-  { name: "Industrial Flooring", description: "Industrial surface and flooring-related civil work.", url: "/services/industrial-flooring/", image: "/images/services/IF5.png" },
-  { name: "Government & Private Contracts", description: "Civil and paving work for government and private-sector projects.", url: "/services/contracts/", image: "/images/services/GPC6.png" }
+  { name: "Paver Block Installation", description: "Installation of paver blocks for suitable outdoor surfaces.", url: "/services/paver-block-installation/", image: "/images/services/PBI1.webp" },
+  { name: "Road Construction & Paving", description: "Paving and related road construction work for project sites.", url: "/services/road-construction/", image: "/images/services/RCP2.webp" },
+  { name: "Footpath Construction", description: "Footpath and pedestrian-surface construction.", url: "/services/footpath-construction/", image: "/images/services/FPC3.webp" },
+  { name: "Parking Area Construction", description: "Paving and construction for parking areas.", url: "/services/parking-area-construction/", image: "/images/services/PAC4.webp" },
+  { name: "Industrial Flooring", description: "Industrial surface and flooring-related civil work.", url: "/services/industrial-flooring/", image: "/images/services/IF5.webp" },
+  { name: "Government & Private Contracts", description: "Civil and paving work for government and private-sector projects.", url: "/services/contracts/", image: "/images/services/GPC6.webp" }
 ];
 ---
 <SiteLayout title="Paving & Civil Construction Services in Pakistan | Paver Blocks" description="Explore paver block installation, road paving, footpath construction, parking areas, industrial flooring and contract services." canonical="https://paverblocks.com.pk/services/">
@@ -17,10 +17,10 @@ const services = [
       <p>Discuss your project requirements, site conditions and scope of work with Paver Blocks.</p>
     </div>
     <div class="services-hero-visual">
-      <img src="https://raw.githubusercontent.com/paverblockswebsite/Paver-Blocks/main/PAVER%20BLOCKS%20%E2%80%94%20Labour%20Team.png" alt="Paver Blocks labour team" width="1920" height="1080" fetchpriority="high" decoding="async" />
+      <img src="/images/services/labour-team.webp" alt="Paver Blocks labour team" width="1920" height="1080" fetchpriority="high" decoding="async" />
     </div>
   </section>
-  <section class="content-section soft-section"><div class="card-grid">{services.map((service) => <article class="info-card"><img class="service-card-image" src={service.image} alt={service.name} loading="lazy" /><p class="eyebrow">Paver Blocks / Service</p><h3>{service.name}</h3><p>{service.description}</p><a class="button" href={service.url}>Explore service</a></article>)}</div></section>
+  <section class="content-section soft-section"><div class="card-grid">{services.map((service, index) => <article class="info-card"><img class="service-card-image" src={service.image} alt={service.name} loading={index < 3 ? "eager" : "lazy"} fetchpriority={index < 3 ? "high" : "auto"} decoding="async" /><p class="eyebrow">Paver Blocks / Service</p><h3>{service.name}</h3><p>{service.description}</p><a class="button" href={service.url}>Explore service</a></article>)}</div></section>
   <section class="content-section"><h2>Need help defining the scope?</h2><p>Share your project location, intended use and approximate area so we can understand your requirements.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Request a Quote</a><a class="button" href="https://wa.me/923162753210">WhatsApp Us</a></div></section>
 </SiteLayout>
 <style>

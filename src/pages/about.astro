@@ -9,8 +9,8 @@ import SiteLayout from "../layouts/SiteLayout.astro";
         <h1>Experience grounded in practical work.</h1>
         <p>Paver Blocks is the public brand of Mithal Shahan, Civil Contractor, based in Hyderabad, Sindh and serving projects across Pakistan.</p>
       </div>
-      <div class="about-hero-visual">
-        <svg class="paving-illustration" viewBox="0 0 640 440" role="img" aria-labelledby="paving-title paving-desc" xmlns="http://www.w3.org/2000/svg">
+      <div class="about-hero-visual" role="group" aria-label="Paving illustration and Paver Blocks labour team photograph">
+        <div class="hero-visual-slide hero-visual-illustration">        <svg class="paving-illustration" aria-hidden="true" viewBox="0 0 640 440" role="img" aria-labelledby="paving-title paving-desc" xmlns="http://www.w3.org/2000/svg">
           <title id="paving-title">Paver road construction illustration</title>
           <desc id="paving-desc">An isometric paved roadway with interlocking blocks, a compact yellow road roller and construction details.</desc>
           <defs>
@@ -54,8 +54,10 @@ import SiteLayout from "../layouts/SiteLayout.astro";
           </g>
           <g stroke="#F5C542" stroke-width="4" stroke-linecap="round" opacity=".9"><path d="m524 55 10-10M552 62l6-13M82 112l-8-8"/></g>
           <path d="M80 367 119 389M523 350l42 24" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".3"/>
-        </svg>
-        <span class="visual-caption"><span class="visual-caption-dot"></span> Paving &amp; civil construction</span>
+        </svg></div>
+        <div class="hero-visual-slide hero-visual-photo">
+          <img src="https://raw.githubusercontent.com/paverblockswebsite/Paver-Blocks/PAVER-BLOCKS-%E2%80%94-Labour-Team.png/PAVER%20BLOCKS%20%E2%80%94%20Labour%20Team.png" alt="Paver Blocks labour team" loading="eager" decoding="async" />
+        </div>
       </div>
     </div>
   </section>
@@ -76,22 +78,25 @@ import SiteLayout from "../layouts/SiteLayout.astro";
   <section class="content-section"><h2>Discuss your project with us</h2><p>Tell us what you are planning and where the work is located.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Request a Quote</a><a class="button" href="/contact/">Contact Us</a></div></section>
 </SiteLayout>
 <style>
-  .about-hero{padding-top:clamp(54px,7vw,88px);padding-bottom:clamp(54px,7vw,88px)}
-  .about-hero-grid{width:100%;max-width:1440px;margin-inline:auto;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);align-items:center;gap:clamp(28px,5vw,72px)}
+  .about-hero-grid{width:100%;max-width:1440px;margin-inline:auto;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(280px,.95fr);align-items:center;gap:clamp(24px,4vw,56px)}
   .about-hero-copy{min-width:0}
   .about-hero-copy h1{max-width:680px;font-size:clamp(38px,5vw,64px)}
   .about-hero-copy>p:last-child{max-width:650px;margin-bottom:0}
-  .about-hero-visual{position:relative;width:100%;max-width:620px;justify-self:end;padding:10px 0}
-  .paving-illustration{display:block;width:100%;height:auto;overflow:visible}
-  .visual-caption{display:flex;align-items:center;gap:9px;width:max-content;max-width:100%;margin:-2px auto 0;padding:9px 15px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.08);color:#edf3f8;font-size:12px;font-weight:700;letter-spacing:.02em}
-  .visual-caption-dot{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:#F5C542;box-shadow:0 0 0 4px rgba(245,197,66,.16)}
+  .about-hero-visual{position:relative;width:100%;max-width:360px;aspect-ratio:640/440;justify-self:end;overflow:hidden}
+  .hero-visual-slide{position:absolute;inset:0;display:grid;place-items:center;opacity:0}
+  .hero-visual-illustration{animation:aboutHeroIllustration 12s infinite}
+  .hero-visual-photo{animation:aboutHeroPhoto 12s infinite}
+  .paving-illustration,.hero-visual-photo img{display:block;width:100%;height:100%;object-fit:contain}
+  @keyframes aboutHeroIllustration{0%,42%{opacity:1}50%,92%{opacity:0}100%{opacity:1}}
+  @keyframes aboutHeroPhoto{0%,42%{opacity:0}50%,92%{opacity:1}100%{opacity:0}}
   .profile-feature-section{max-width:1280px;margin-inline:auto}
   .profile-feature{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);align-items:center;gap:clamp(28px,5vw,64px)}
   .profile-feature-copy{min-width:0}
   .profile-feature-copy>p:not(.eyebrow){max-width:760px}
   .profile-feature-photo{width:100%;max-width:460px;justify-self:end;margin:0 0 0 18px;overflow:hidden;border:1px solid #e0e5eb;border-radius:14px;background:#f4f6f8;box-shadow:0 18px 42px rgba(23,43,69,.12)}
   .profile-feature-photo img{display:block;width:100%;height:auto;aspect-ratio:1023/1011;object-fit:contain;object-position:center}
-  @media(max-width:900px){.about-hero-grid{grid-template-columns:minmax(0,1fr) minmax(280px,.9fr);gap:24px}.about-hero-copy h1{font-size:clamp(36px,5vw,54px)}}
-  @media(max-width:760px){.about-hero-grid{grid-template-columns:1fr;gap:20px}.about-hero-copy h1{max-width:620px}.about-hero-visual{max-width:560px;justify-self:center;padding:0}.visual-caption{margin-top:-4px}.profile-feature{grid-template-columns:1fr}.profile-feature-photo{max-width:400px;justify-self:center;margin:12px auto 0}}
-  @media(max-width:380px){.about-hero-copy h1{font-size:36px}.visual-caption{font-size:11px;padding:8px 12px}}
+  @media(max-width:900px){.about-hero-grid{grid-template-columns:minmax(0,1fr) minmax(220px,.9fr);gap:20px}.about-hero-visual{max-width:300px}.about-hero-copy h1{font-size:clamp(36px,5vw,54px)}}
+  @media(max-width:760px){.about-hero-grid{grid-template-columns:minmax(0,1fr) minmax(96px,24vw);gap:12px}.about-hero-copy h1{max-width:620px;font-size:clamp(32px,6vw,40px)}.about-hero-visual{max-width:none;justify-self:center}.profile-feature{grid-template-columns:1fr}.profile-feature-photo{max-width:400px;justify-self:center;margin:12px auto 0}}
+  @media(max-width:380px){.about-hero-grid{grid-template-columns:minmax(0,1fr) 88px;gap:8px}.about-hero-copy h1{font-size:32px}}
+  @media(prefers-reduced-motion:reduce){.hero-visual-illustration{animation:none;opacity:0}.hero-visual-photo{animation:none;opacity:1}}
 </style>

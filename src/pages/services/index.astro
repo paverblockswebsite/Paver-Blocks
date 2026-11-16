@@ -23,8 +23,22 @@ const services = [
   <section class="content-section soft-section"><div class="card-grid">{services.map((service, index) => <article class="info-card"><img class="service-card-image" src={service.image} alt={service.name} width="1600" height="1000" loading={index < 3 ? "eager" : "lazy"} fetchpriority={index < 3 ? "high" : "auto"} decoding="async" /><p class="eyebrow">Paver Blocks / Service</p><h3>{service.name}</h3><p>{service.description}</p><a class="button" href={service.url}>Explore service</a></article>)}</div></section>
   <section class="content-section"><h2>Need help defining the scope?</h2><p>Share your project location, intended use and approximate area so we can understand your requirements.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Request a Quote</a><a class="button" href="https://wa.me/923162753210">WhatsApp Us</a></div></section>
 </SiteLayout>
+<script>
+  // Phase 6: remove the lightweight image placeholder as soon as each service image is ready.
+  document.querySelectorAll(".service-card-image").forEach((image) => {
+    const markLoaded = () => image.classList.add("is-loaded");
+    const markError = () => image.classList.add("is-error");
+    if (image.complete) {
+      if (image.naturalWidth > 0) markLoaded();
+      else markError();
+    } else {
+      image.addEventListener("load", markLoaded, { once: true });
+      image.addEventListener("error", markError, { once: true });
+    }
+  });
+</script>
 <style>
-.service-card-image{display:block;width:100%;aspect-ratio:16/10;object-fit:contain;background:#fff;border-radius:12px;margin-bottom:18px}
+.service-card-image{display:block;width:100%;aspect-ratio:16/10;object-fit:contain;background:#eef2f6;border-radius:12px;margin-bottom:18px}.service-card-image:not(.is-loaded):not(.is-error){background:linear-gradient(105deg,#edf1f5 25%,#f8fafc 40%,#edf1f5 55%);background-size:220% 100%;animation:serviceImageShimmer 1.25s ease-in-out infinite}@keyframes serviceImageShimmer{to{background-position-x:-220%}}.service-card-image.is-loaded,.service-card-image.is-error{animation:none;background:#f3f5f7}@media(prefers-reduced-motion:reduce){.service-card-image:not(.is-loaded):not(.is-error){animation:none;background:#edf1f5}}
 .services-hero{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(240px,.8fr);align-items:center;gap:clamp(24px,4vw,56px)}
 .services-hero-copy{min-width:0}
 .services-hero-visual{width:100%;max-width:520px;justify-self:end;overflow:hidden;border:1px solid rgba(255,255,255,.16);border-radius:14px;background:rgba(255,255,255,.06)}

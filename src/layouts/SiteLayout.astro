@@ -5,6 +5,9 @@ const {
   canonical = "https://paverblocks.com.pk/",
   ogImage = "/images/og-default.svg"
 } = Astro.props;
+const productionOrigin = "https://paverblocks.com.pk";
+const canonicalUrl = new URL(canonical, productionOrigin).toString();
+const ogImageUrl = new URL(ogImage, productionOrigin).toString();
 const deploymentBranch = (import.meta as any).env?.CF_PAGES_BRANCH || "main";
 const isPreviewDeployment = deploymentBranch !== "main";
 const nav = [
@@ -24,13 +27,13 @@ const nav = [
     <meta name="description" content={description} />
     <meta name="theme-color" content="#172B45" />
     <meta name="robots" content={isPreviewDeployment ? "noindex, nofollow" : "index, follow, max-image-preview:large"} />
-    <link rel="canonical" href={canonical} />
+    <link rel="canonical" href={canonicalUrl} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Paver Blocks" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={new URL(ogImage, Astro.site).toString()} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
     <meta name="twitter:card" content="summary_large_image" />
     <title>{title}</title>
     <link rel="icon" type="image/png" href="/images/brand/paver-blocks-icon.png" />

@@ -11,16 +11,84 @@ const designs = [
   <section class="page-hero"><p class="eyebrow">Paver Options</p><h1>Explore paver designs.</h1><p>We help clients identify suitable paver designs and connect with third-party suppliers when product sourcing is required.</p></section>
   <section class="content-section">
     <div class="design-grid">
-      {designs.map((design,index)=><a class="design-card" href={`/paver-designs/${design.slug}/`}>
-        <img src={design.image} alt={design.alt} width="360" height="360" loading="lazy" />
-        <div class="design-card-copy"><p class="eyebrow">Design option 0{index+1}</p><h2>{design.name}</h2><p>Ask us about suitability, available sizes, thicknesses and colours. Availability depends on independent suppliers.</p><span>View design →</span></div>
+      {designs.map((design,index)=><a class="design-card" data-design-card href={\`/paver-designs/\${design.slug}/\`} aria-label={\`Explore \${design.name} paver design\`}>
+        <div class="design-card-inner">
+          <div class="design-visual design-card-front" aria-hidden="true">
+            <span class="design-index">0{index+1} / 04</span>
+            <div class="design-image-wrap"><img src={design.image} alt="" width="360" height="360" loading="lazy" /></div>
+            <span class="visual-hint">Explore design <span aria-hidden="true">↗</span></span>
+          </div>
+          <div class="design-card-copy design-card-back">
+            <p class="eyebrow">Design option 0{index+1}</p><h2>{design.name}</h2>
+            <p>Ask us about suitability, available sizes, thicknesses and colours. Availability depends on independent suppliers.</p>
+            <span class="design-link">View design <span aria-hidden="true">→</span></span>
+          </div>
+        </div>
       </a>)}
-      <div class="design-card other-designs"><div class="design-card-copy"><p class="eyebrow">Design option 05</p><h2>Other Designs</h2><p>Have another paver shape in mind? Share a photo or describe the pattern and we can discuss sourcing options with independent suppliers.</p><a href="/get-a-quote/">Ask about another design →</a></div></div>
+      <div class="design-card other-designs"><div class="other-designs-copy"><p class="eyebrow">Design option 05</p><h2>Other Designs</h2><p>Have another paver shape in mind? Share a photo or describe the pattern and we can discuss sourcing options with independent suppliers.</p><a href="/get-a-quote/">Ask about another design →</a></div></div>
     </div>
   </section>
   <section class="content-section soft-section"><h2>Not sure which design is suitable?</h2><p>Tell us about the intended use and site conditions. We can discuss options and supplier sourcing where needed.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Discuss Your Requirements</a></div></section>
 </SiteLayout>
+<script>
+  const designCards = document.querySelectorAll("[data-design-card]");
+  const reduceDesignMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!reduceDesignMotion && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    designCards.forEach((card) => {
+      card.addEventListener("pointermove", (event) => {
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width;
+        const y = (event.clientY - rect.top) / rect.height;
+        card.style.setProperty("--pointer-x", \`\${(x * 100).toFixed(1)}%\`);
+        card.style.setProperty("--pointer-y", \`\${(y * 100).toFixed(1)}%\`);
+        card.style.setProperty("--tilt-x", \`\${((0.5 - y) * 5).toFixed(2)}deg\`);
+        card.style.setProperty("--tilt-y", \`\${((x - 0.5) * 7).toFixed(2)}deg\`);
+      });
+      card.addEventListener("pointerleave", () => {
+        card.style.setProperty("--tilt-x", "0deg");
+        card.style.setProperty("--tilt-y", "0deg");
+      });
+    });
+  }
+  if (!reduceDesignMotion && "IntersectionObserver" in window) {
+    const designObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-in-view");
+          designObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.22 });
+    document.querySelectorAll(".design-card").forEach((card) => designObserver.observe(card));
+  } else {
+    document.querySelectorAll(".design-card").forEach((card) => card.classList.add("is-in-view"));
+  }
+</script>
 <style>
-.design-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.design-card{min-width:0;overflow:hidden;display:grid;grid-template-columns:minmax(160px,.8fr) minmax(0,1.2fr);align-items:center;border:1px solid #e0e5eb;border-radius:12px;background:#fff;transition:transform .2s ease,box-shadow .2s ease}.design-card[href]:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(23,43,69,.12)}.design-card img{display:block;width:100%;height:100%;min-height:220px;padding:14px;object-fit:contain;background:#f4f6f8}.design-card-copy{padding:22px}.design-card-copy .eyebrow{margin-bottom:8px}.design-card-copy h2{margin:0 0 8px;font-size:clamp(22px,2.2vw,30px)}.design-card-copy p:not(.eyebrow){margin:0 0 12px;font-size:14px}.design-card-copy span,.design-card-copy>a{color:#8a6500;font-weight:850}.other-designs{display:flex;min-height:220px;background:#f4f6f8}.other-designs .design-card-copy{align-self:center}
-@media(max-width:900px){.design-grid{grid-template-columns:1fr}}@media(max-width:600px){.design-card{grid-template-columns:1fr}.design-card img{height:230px;min-height:0}.design-card-copy{padding:18px}}
+.design-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;perspective:1400px}
+.design-card{--pointer-x:50%;--pointer-y:50%;--tilt-x:0deg;--tilt-y:0deg;position:relative;display:block;min-width:0;min-height:310px;border:1px solid #e0e5eb;border-radius:14px;background:#fff;box-shadow:0 5px 18px rgba(23,43,69,.06);transform:perspective(1100px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));transform-style:preserve-3d;transition:transform .32s cubic-bezier(.2,.75,.25,1),box-shadow .32s ease,border-color .32s ease;isolation:isolate}
+.design-card::before{position:absolute;inset:0;z-index:3;border-radius:inherit;content:"";pointer-events:none;opacity:0;background:radial-gradient(circle at var(--pointer-x) var(--pointer-y),rgba(255,255,255,.58),rgba(245,197,66,.16) 18%,transparent 48%);transition:opacity .25s ease}
+.design-card:hover,.design-card:focus-visible{border-color:#d7bd70;box-shadow:0 22px 42px rgba(23,43,69,.16)}
+.design-card:hover::before,.design-card:focus-visible::before{opacity:1}
+.design-card-inner{position:relative;display:grid;grid-template-columns:1fr 1fr;min-height:310px;height:100%;border-radius:inherit;transform-style:preserve-3d}
+.design-card-front{position:relative;display:flex;flex-direction:column;justify-content:space-between;min-width:0;overflow:hidden;padding:16px;border-radius:13px 0 0 13px;background:linear-gradient(145deg,#f8fafc,#e9eef3)}
+.design-index{position:relative;z-index:2;color:#657386;font-size:11px;font-weight:850;letter-spacing:.14em}
+.design-image-wrap{position:relative;display:grid;place-items:center;min-height:210px;perspective:900px;isolation:isolate}
+.design-image-wrap::before,.design-image-wrap::after{position:absolute;z-index:-1;inset:16% 12%;border:1px solid rgba(23,43,69,.12);border-radius:12px;content:"";transform:translate3d(0,0,-28px) rotate(-5deg);opacity:0;transition:transform .75s cubic-bezier(.2,.7,.2,1),opacity .5s ease}
+.design-image-wrap::after{inset:23% 18%;transform:translate3d(0,0,-54px) rotate(5deg)}
+.is-in-view .design-image-wrap::before{transform:translate3d(-13px,9px,-28px) rotate(-5deg);opacity:1}
+.is-in-view .design-image-wrap::after{transform:translate3d(13px,-8px,-54px) rotate(5deg);opacity:1}
+.design-image-wrap img{display:block;width:100%;height:220px;object-fit:contain;transform:translateZ(20px) rotateY(0deg);backface-visibility:visible;transition:transform .85s cubic-bezier(.2,.7,.2,1),filter .35s ease;filter:drop-shadow(0 12px 12px rgba(23,43,69,.12))}
+.design-card:hover .design-image-wrap img,.design-card:focus-visible .design-image-wrap img{transform:translateZ(28px) rotateY(360deg) scale(1.035);filter:drop-shadow(0 18px 15px rgba(23,43,69,.2))}
+.visual-hint{display:flex;justify-content:space-between;align-items:center;color:#526174;font-size:12px;font-weight:800}
+.design-card-back{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:24px;background:rgba(255,255,255,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:0 13px 13px 0}
+.design-card-back .eyebrow{margin-bottom:9px}.design-card-back h2,.other-designs h2{margin:0 0 10px;font-size:clamp(22px,2.2vw,30px);color:#172b45}
+.design-card-back p:not(.eyebrow),.other-designs p:not(.eyebrow){margin:0 0 16px;color:#667386;font-size:14px;line-height:1.65}
+.design-link,.other-designs a{color:#8a6500;font-weight:850}
+.other-designs{display:flex;align-items:center;min-height:310px;padding:28px;border:1px solid #e0e5eb;border-radius:14px;background:linear-gradient(135deg,#f4f6f8,#fff);box-shadow:inset 0 1px 0 #fff}
+.other-designs-copy{max-width:430px}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+@media(max-width:900px){.design-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.design-card{min-height:0;transform:none!important}.design-card-inner{grid-template-columns:1fr;min-height:0}.design-card-front{min-height:240px;border-radius:13px 13px 0 0}.design-image-wrap{min-height:165px}.design-image-wrap img{height:175px}.design-card-back{padding:20px;border-radius:0 0 13px 13px}.other-designs{min-height:230px}}
+@media(prefers-reduced-motion:reduce){.design-card,.design-card::before,.design-image-wrap::before,.design-image-wrap::after,.design-image-wrap img{transition:none!important;transform:none!important}.design-image-wrap::before,.design-image-wrap::after{opacity:0!important}}
 </style>

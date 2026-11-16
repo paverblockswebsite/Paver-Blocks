@@ -1,7 +1,7 @@
 import { defineConfig } from "astro/config";
 
 export default defineConfig({
-  site: "https://paver-blocks.pages.dev",
+  site: "https://paverblocks.com.pk",
   output: "static",
   vite: { envPrefix: ["VITE_", "CF_PAGES_"] }
 });

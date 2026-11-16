@@ -1,12 +1,13 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
-const { title, description, canonical, intro, approach, uses, considerations } = Astro.props;
+const { title, description, canonical, image, intro, approach, uses, considerations } = Astro.props;
 ---
 <SiteLayout title={title + " | Paver Blocks Pakistan"} description={description} canonical={canonical}>
   <section class="page-hero">
     <p class="eyebrow">Paver Blocks / Services</p>
     <h1>{title}.</h1>
     <p>{description}</p>
+    {image && <img class="service-detail-image" src={image} alt={title} fetchpriority="high" />}
   </section>
   <section class="content-section">
     <p class="eyebrow">Service overview</p>
@@ -36,6 +37,8 @@ const { title, description, canonical, intro, approach, uses, considerations } =
   </section>
 </SiteLayout>
 <style>
+.service-detail-image{display:block;width:100%;max-width:760px;max-height:420px;aspect-ratio:16/9;object-fit:contain;background:#fff;border-radius:14px;margin:28px auto 0}
 .detail-list{max-width:760px;padding-left:22px;color:#526176}
 .detail-list li{padding:7px 0}
+@media(max-width:640px){.service-detail-image{max-height:280px;margin-top:20px}}
 </style>

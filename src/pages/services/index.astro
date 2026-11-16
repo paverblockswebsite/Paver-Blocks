@@ -1,16 +1,34 @@
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
 const services = [
-["Paver Block Installation","Installation of paver blocks for suitable outdoor surfaces.","/services/paver-block-installation/"],
-["Road Construction & Paving","Paving and related road construction work for project sites.","/services/road-construction/"],
-["Footpath Construction","Footpath and pedestrian-surface construction.","/services/footpath-construction/"],
-["Parking Area Construction","Paving and construction for parking areas.","/services/parking-area-construction/"],
-["Industrial Flooring","Industrial surface and flooring-related civil work.","/services/industrial-flooring/"],
-["Government & Private Contracts","Civil and paving work for government and private-sector projects.","/services/contracts/"]
+  { name: "Paver Block Installation", description: "Installation of paver blocks for suitable outdoor surfaces.", url: "/services/paver-block-installation/", image: "/images/services/PBI1.png" },
+  { name: "Road Construction & Paving", description: "Paving and related road construction work for project sites.", url: "/services/road-construction/", image: "/images/services/RCP2.png" },
+  { name: "Footpath Construction", description: "Footpath and pedestrian-surface construction.", url: "/services/footpath-construction/", image: "/images/services/FPC3.png" },
+  { name: "Parking Area Construction", description: "Paving and construction for parking areas.", url: "/services/parking-area-construction/", image: "/images/services/PAC4.png" },
+  { name: "Industrial Flooring", description: "Industrial surface and flooring-related civil work.", url: "/services/industrial-flooring/", image: "/images/services/IF5.png" },
+  { name: "Government & Private Contracts", description: "Civil and paving work for government and private-sector projects.", url: "/services/contracts/", image: "/images/services/GPC6.png" }
 ];
 ---
 <SiteLayout title="Paving & Civil Construction Services in Pakistan | Paver Blocks" description="Explore paver block installation, road paving, footpath construction, parking areas, industrial flooring and contract services." canonical="https://paverblocks.com.pk/services/">
-  <section class="page-hero"><p class="eyebrow">What We Do</p><h1>Paving and civil construction services.</h1><p>Discuss your project requirements, site conditions and scope of work with Paver Blocks.</p></section>
-  <section class="content-section soft-section"><div class="card-grid">{services.map(([name,desc,url])=><article class="info-card"><p class="eyebrow">Paver Blocks / Service</p><h3>{name}</h3><p>{desc}</p><a class="button" href={url}>Explore service</a></article>)}</div></section>
+  <section class="page-hero services-hero">
+    <div class="services-hero-copy">
+      <p class="eyebrow">What We Do</p>
+      <h1>Paving and civil construction services.</h1>
+      <p>Discuss your project requirements, site conditions and scope of work with Paver Blocks.</p>
+    </div>
+    <div class="services-hero-visual">
+      <img src="https://raw.githubusercontent.com/paverblockswebsite/Paver-Blocks/main/PAVER%20BLOCKS%20%E2%80%94%20Labour%20Team.png" alt="Paver Blocks labour team" width="1920" height="1080" fetchpriority="high" decoding="async" />
+    </div>
+  </section>
+  <section class="content-section soft-section"><div class="card-grid">{services.map((service) => <article class="info-card"><img class="service-card-image" src={service.image} alt={service.name} loading="lazy" /><p class="eyebrow">Paver Blocks / Service</p><h3>{service.name}</h3><p>{service.description}</p><a class="button" href={service.url}>Explore service</a></article>)}</div></section>
   <section class="content-section"><h2>Need help defining the scope?</h2><p>Share your project location, intended use and approximate area so we can understand your requirements.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Request a Quote</a><a class="button" href="https://wa.me/923162753210">WhatsApp Us</a></div></section>
 </SiteLayout>
+<style>
+.service-card-image{display:block;width:100%;aspect-ratio:16/10;object-fit:contain;background:#fff;border-radius:12px;margin-bottom:18px}
+.services-hero{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(240px,.8fr);align-items:center;gap:clamp(24px,4vw,56px)}
+.services-hero-copy{min-width:0}
+.services-hero-visual{width:100%;max-width:520px;justify-self:end;overflow:hidden;border:1px solid rgba(255,255,255,.16);border-radius:14px;background:rgba(255,255,255,.06)}
+.services-hero-visual img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:contain}
+@media(max-width:760px){.services-hero{grid-template-columns:minmax(0,1fr) minmax(110px,30vw);gap:12px}.services-hero-visual{align-self:center}.services-hero h1{font-size:clamp(28px,6vw,40px)}.services-hero-copy>p:last-child{font-size:14px;line-height:1.45}}
+@media(max-width:380px){.services-hero{grid-template-columns:minmax(0,1fr) 100px;gap:8px}.services-hero h1{font-size:27px}}
+</style>

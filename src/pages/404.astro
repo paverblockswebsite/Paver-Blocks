@@ -1,0 +1,29 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+---
+
+<SiteLayout
+  title="Page Not Found | Paver Blocks"
+  description="The page you were looking for could not be found. Return to the Paver Blocks homepage, services or contact page."
+  noindex={true}
+>
+  <section class="page-hero">
+    <p class="eyebrow">Error 404</p>
+    <h1>We couldn’t find that page.</h1>
+    <p>The link may be out of date or the address may have been typed incorrectly. Use one of the options below to continue.</p>
+  </section>
+
+  <section class="content-section soft-section">
+    <div class="card-grid">
+      <article class="info-card"><p class="eyebrow">Start here</p><h3>Homepage</h3><p>Return to the main page for an overview of Paver Blocks.</p><div class="actions"><a class="button button-primary" href="/">Go to homepage</a></div></article>
+      <article class="info-card"><p class="eyebrow">What we do</p><h3>Services</h3><p>Paver block installation, road, footpath and parking area construction, and more.</p><div class="actions"><a class="button" href="/services/">View services</a></div></article>
+      <article class="info-card"><p class="eyebrow">Paver options</p><h3>Paver designs</h3><p>Compare popular paver shapes and ask us about suitability.</p><div class="actions"><a class="button" href="/paver-designs/">Explore designs</a></div></article>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <h2>Looking for something specific?</h2>
+    <p>Tell us about your project and we will point you in the right direction.</p>
+    <div class="actions"><a class="button button-primary" href="/get-a-quote/">Request a Quote</a><a class="button" href="/contact/">Contact Us</a><a class="button" href="https://wa.me/923162753210">WhatsApp Us</a></div>
+  </section>
+</SiteLayout>

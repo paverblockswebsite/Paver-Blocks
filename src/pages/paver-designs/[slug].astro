@@ -12,7 +12,7 @@ export function getStaticPaths() {
 }
 const { design } = Astro.props;
 ---
-<SiteLayout title={`${design.name} Paver Blocks | Paver Blocks Pakistan`} description={`Explore the ${design.name} paver block shape. Ask Paver Blocks about suitability, available sizes, thicknesses, colours and independent supplier options.`} canonical={`https://paver-blocks.pages.dev/paver-designs/${design.slug}/`}>
+<SiteLayout title={`${design.name} Paver Blocks | Paver Blocks Pakistan`} description={`Explore the ${design.name} paver block shape. Ask Paver Blocks about suitability, available sizes, thicknesses, colours and independent supplier options.`} canonical={`https://paverblocks.com.pk/paver-designs/${design.slug}/`}>
   <section class="page-hero"><p class="eyebrow">Paver Design</p><h1>{design.name} Paver Blocks</h1><p>{design.description}</p></section>
   <section class="content-section design-detail">
     <div class="detail-image"><img src={design.image} alt={design.alt} width="600" height="600" fetchpriority="high" /></div>

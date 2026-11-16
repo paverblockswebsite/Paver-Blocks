@@ -5,8 +5,8 @@ export function getStaticPaths() {
   const designs = [
     { name: "I-Shape", slug: "i-shape", image: "/images/paver-designs/i-shape-paver.webp", alt: "Grey I-shape interlocking concrete paver block", description: "The I-shaped profile is designed to interlock with neighbouring units. Ask us about suitability for your site and intended use." },
     { name: "Zigzag", slug: "zigzag", image: "/images/paver-designs/zigzag-paver.webp", alt: "Interlocking zigzag concrete paver block", description: "The zigzag profile creates a repeating interlocking paving pattern. Ask us about suitable applications and supplier options." },
-    { name: "Rectangular", slug: "rectangular", image: "/images/paver-designs/rectangular-paver.webp", alt: "Rectangular concrete paving blocks in grey, red and charcoal", description: "Rectangular pavers offer a clean, regular format that can be arranged in different laying patterns. Ask us about available options." },
-    { name: "Uni-Paver", slug: "uni-paver", image: "/images/paver-designs/uni-paver.webp", alt: "Grey Uni-Paver interlocking concrete block", description: "Uni-Paver is another interlocking block profile to consider for suitable paving work. Confirm product specifications with the supplier." }
+    { name: "Rectangular", slug: "rectangular", image: "/images/paver-designs/rectangular-paver.jpg", alt: "Rectangular concrete paving blocks in grey, red and charcoal", description: "Rectangular pavers offer a clean, regular format that can be arranged in different laying patterns. Ask us about available options." },
+    { name: "Uni-Paver", slug: "uni-paver", image: "/images/paver-designs/uni-paver.jpeg", alt: "Red Uni-Paver interlocking concrete block", description: "Uni-Paver is another interlocking block profile to consider for suitable paving work. Confirm product specifications with the supplier." }
   ];
   return designs.map((design) => ({ params: { slug: design.slug }, props: { design } }));
 }

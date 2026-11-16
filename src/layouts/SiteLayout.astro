@@ -58,6 +58,7 @@ const nav = [
     })} />
   </head>
   <body>
+    <div class="scroll-progress" aria-hidden="true"><span></span></div>
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <header class="site-header">
       <a class="brand" href="/" aria-label="Paver Blocks home">
@@ -74,10 +75,28 @@ const nav = [
       <div class="footer-links"><a href="/services/">Services</a><a href="/projects/">Projects</a><a href="/paver-designs/">Paver Designs</a><a href="/faqs/">FAQs</a><a href="/contact/">Contact</a><a href="/privacy-policy/">Privacy Policy</a><a href="/cookie-policy/">Cookie Policy</a><a href="/terms-and-conditions/">Terms &amp; Conditions</a></div>
     </footer>
     <script>
-      // Shared, opt-in motion foundation. Pages gain effects only when they add data-motion attributes.
+      // Phase 1: progressively enhance content already present in the page.
       const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
-      if (!motionPreference.matches && "IntersectionObserver" in window) {
-        const motionTargets = document.querySelectorAll('[data-motion="reveal"], [data-motion="stagger"]');
+      const prefersMotion = !motionPreference.matches;
+      const main = document.querySelector("main");
+
+      if (main && prefersMotion && "IntersectionObserver" in window) {
+        main.querySelectorAll(":scope > section:not(.hero):not(.page-hero)").forEach((section) => {
+          section.setAttribute("data-motion", "reveal");
+        });
+        main.querySelectorAll(".card-grid,.paver-design-grid,.design-grid,.faq-list").forEach((grid) => {
+          grid.setAttribute("data-motion", "stagger");
+        });
+        main.querySelectorAll("img").forEach((img) => {
+          if (img.closest(".hero-visual,.hero-gif,.about-hero-visual")) return;
+          img.setAttribute("data-motion", "reveal");
+          img.classList.add("motion-image-reveal");
+        });
+        main.querySelectorAll(".info-card,.paver-design-card,.design-card,.faq-item").forEach((card) => {
+          card.classList.add("motion-hover-lift");
+        });
+
+        const motionTargets = main.querySelectorAll('[data-motion="reveal"], [data-motion="stagger"]');
         if (motionTargets.length) {
           document.documentElement.classList.add("motion-ready");
           const revealObserver = new IntersectionObserver((entries, observer) => {
@@ -99,13 +118,30 @@ const nav = [
           });
         }
       }
+
+      // Lightweight scroll progress indicator, updated at most once per animation frame.
+      const progressBar = document.querySelector(".scroll-progress > span");
+      let progressFrame = 0;
+      const updateScrollProgress = () => {
+        progressFrame = 0;
+        if (!progressBar) return;
+        const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = scrollable > 0 ? window.scrollY / scrollable : 0;
+        progressBar.style.transform = `scaleX(${Math.min(1, Math.max(0, progress))})`;
+      };
+      window.addEventListener("scroll", () => {
+        if (!progressFrame) progressFrame = window.requestAnimationFrame(updateScrollProgress);
+      }, { passive: true });
+      window.addEventListener("resize", updateScrollProgress, { passive: true });
+      updateScrollProgress();
     </script>
   </body>
 </html>
 <style is:global>
   :root{color-scheme:light;--navy:#172B45;--yellow:#F5C542;--ink:#172B45;--muted:#667386;--soft:#F4F6F8;--motion-duration-fast:160ms;--motion-duration-base:420ms;--motion-ease:cubic-bezier(.2,.7,.2,1)}
   *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:#fff;line-height:1.65}a{color:inherit;text-decoration:none}
-  .skip-link{position:absolute;left:16px;top:-60px;z-index:1000;padding:10px 14px;border-radius:5px;color:#172B45;background:#F5C542;font-weight:800}.skip-link:focus{top:12px}
+  .scroll-progress{position:fixed;inset:0 0 auto;z-index:2000;height:3px;pointer-events:none;background:transparent}.scroll-progress span{display:block;width:100%;height:100%;background:var(--yellow);transform:scaleX(0);transform-origin:left center;will-change:transform}
+  .skip-link{position:absolute;left:16px;top:-60px;z-index:2100;padding:10px 14px;border-radius:5px;color:#172B45;background:#F5C542;font-weight:800}.skip-link:focus{top:12px}
   a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #C18D00;outline-offset:3px;border-radius:3px}
   .site-header{min-height:82px;padding:14px max(5vw,24px);display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:1px solid #e8ebef;background:#fff}
   .brand{display:flex;align-items:center;flex-shrink:0}.brand-logo{display:block;width:220px;height:auto;max-height:58px;object-fit:contain;object-position:left center}.footer-brand-logo{display:block;width:150px;height:auto;max-height:92px;object-fit:contain;object-position:left center}.footer-brand p{margin-top:10px}
@@ -113,13 +149,24 @@ const nav = [
   .page-hero{padding:76px max(8vw,24px);color:#fff;background:radial-gradient(ellipse at 85% 10%,#294969 0,transparent 42%),var(--navy)}.eyebrow{margin:0 0 14px;color:#b18408;font-size:12px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}.page-hero .eyebrow{color:var(--yellow)}h1,h2,h3,p{margin-top:0}h1{max-width:900px;margin-bottom:18px;font-size:clamp(40px,5.6vw,68px);line-height:1.08;letter-spacing:-.05em}.page-hero p:last-child{max-width:760px;color:#dce4ed;font-size:18px}
   .content-section{padding:72px max(8vw,24px)}.content-section h2{font-size:clamp(28px,3.5vw,44px);line-height:1.15;letter-spacing:-.04em}.content-section p{max-width:800px;color:var(--muted)}.soft-section{background:var(--soft)}.card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.info-card{padding:24px;border:1px solid #e0e5eb;border-radius:10px;background:#fff}.info-card h3{margin:12px 0 8px}.info-card p{margin:0;font-size:14px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:11px 18px;border:1px solid #aab5c1;border-radius:6px;font-weight:750}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
   .site-footer{display:grid;grid-template-columns:minmax(0,2fr) minmax(180px,1fr);gap:30px;padding:36px max(5vw,24px);color:#dce4ed;background:#101e30;font-size:13px}.site-footer p{margin:4px 0}.site-footer>div{display:flex;flex-direction:column;gap:7px}.footer-contact{display:flex;flex-direction:column;gap:5px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(220,228,237,.2)}.footer-contact span{color:#b8c5d3}.footer-links{align-self:center}
-  /* Opt-in motion utilities: content remains visible unless the motion script is available. */
+  /* Scroll reveals and staggered cards remain opt-in until the script is ready. */
   .motion-ready [data-motion="reveal"],.motion-ready [data-motion="stagger"]{opacity:0;transform:translate3d(0,20px,0);transition:opacity var(--motion-duration-base) var(--motion-ease),transform var(--motion-duration-base) var(--motion-ease)}
   .motion-ready [data-motion="reveal"].motion-visible,.motion-ready [data-motion="stagger"].motion-visible{opacity:1;transform:translate3d(0,0,0)}
   .motion-ready [data-motion="stagger"]>.motion-stagger-item{opacity:0;transform:translate3d(0,16px,0);transition:opacity var(--motion-duration-base) var(--motion-ease),transform var(--motion-duration-base) var(--motion-ease);transition-delay:calc(var(--motion-stagger-index,0)*65ms)}
   .motion-ready [data-motion="stagger"].motion-visible>.motion-stagger-item{opacity:1;transform:translate3d(0,0,0)}
+  .motion-ready img.motion-image-reveal{clip-path:inset(0 0 100% 0 round 8px);transition:clip-path 560ms var(--motion-ease),opacity var(--motion-duration-base) var(--motion-ease),transform var(--motion-duration-base) var(--motion-ease)}
+  .motion-ready img.motion-image-reveal.motion-visible{clip-path:inset(0 0 0 0 round 8px)}
   .motion-hover-lift{transition:transform var(--motion-duration-fast) var(--motion-ease),box-shadow var(--motion-duration-fast) var(--motion-ease)}
-  @media(hover:hover) and (pointer:fine){.motion-hover-lift:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(23,43,69,.12)}}
+  @media(hover:hover) and (pointer:fine){.motion-hover-lift:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(23,43,69,.12)}.button:hover,.nav-cta:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(23,43,69,.14)}}
+  .button,.nav-cta{transition:transform var(--motion-duration-fast) var(--motion-ease),box-shadow var(--motion-duration-fast) var(--motion-ease)}
+  .button:active,.nav-cta:active{transform:translateY(0) scale(.98)}
+  .faq-item{interpolate-size:allow-keywords}
+  .faq-item::details-content{block-size:0;overflow:clip;transition:block-size 280ms var(--motion-ease),content-visibility 280ms allow-discrete}
+  .faq-item[open]::details-content{block-size:auto}
+  @keyframes gentle-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @media(prefers-reduced-motion:no-preference){.profile-feature-photo,.about-hero-visual{animation:gentle-float 7s ease-in-out infinite}}
+  @media(prefers-reduced-motion:no-preference){@view-transition{navigation:auto}::view-transition-old(root){animation:page-fade-out 120ms ease both}::view-transition-new(root){animation:page-fade-in 220ms ease both}}
+  @keyframes page-fade-out{to{opacity:0}}@keyframes page-fade-in{from{opacity:0}to{opacity:1}}
   @media(max-width:760px){.site-header{align-items:flex-start;flex-direction:column}nav{width:100%;flex-wrap:wrap;gap:12px 16px;font-size:13px}.page-hero{padding-top:58px;padding-bottom:58px}.content-section{padding-top:54px;padding-bottom:54px}.card-grid{grid-template-columns:1fr}.site-footer{grid-template-columns:1fr}}
-  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.motion-ready [data-motion],.motion-ready [data-motion]>.motion-stagger-item{opacity:1!important;transform:none!important}}
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.scroll-progress span{will-change:auto}.motion-ready [data-motion],.motion-ready [data-motion]>.motion-stagger-item{opacity:1!important;transform:none!important;clip-path:none!important}}
 </style>

@@ -154,6 +154,87 @@ const nav = [
       }, { passive: true });
       window.addEventListener("resize", updateScrollProgress, { passive: true });
       updateScrollProgress();
+
+      // Phase 5: magnetic feedback, click ripples, text scramble and desktop pointer follower.
+      const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (finePointer.matches && !reduceMotion.matches) {
+        document.querySelectorAll('.button, .nav-cta').forEach((button) => {
+          button.classList.add('magnetic-button');
+          button.addEventListener('pointermove', (event) => {
+            const rect = button.getBoundingClientRect();
+            const dx = event.clientX - (rect.left + rect.width / 2);
+            const dy = event.clientY - (rect.top + rect.height / 2);
+            button.style.setProperty('--mag-x', Math.max(-7, Math.min(7, dx * 0.12)) + 'px');
+            button.style.setProperty('--mag-y', Math.max(-6, Math.min(6, dy * 0.12)) + 'px');
+          });
+          button.addEventListener('pointerleave', () => {
+            button.style.setProperty('--mag-x', '0px');
+            button.style.setProperty('--mag-y', '0px');
+          });
+        });
+      }
+      document.querySelectorAll('.button, .nav-cta').forEach((button) => {
+        button.addEventListener('click', (event) => {
+          if (reduceMotion.matches) return;
+          const rect = button.getBoundingClientRect();
+          const ripple = document.createElement('span');
+          const diameter = Math.max(rect.width, rect.height) * 1.35;
+          ripple.className = 'interaction-ripple';
+          ripple.style.width = diameter + 'px';
+          ripple.style.height = diameter + 'px';
+          ripple.style.left = (event.clientX - rect.left - diameter / 2) + 'px';
+          ripple.style.top = (event.clientY - rect.top - diameter / 2) + 'px';
+          button.append(ripple);
+          ripple.addEventListener('animationend', () => ripple.remove(), { once: true });
+        });
+      });
+
+      const scrambleChars = '01アイウエオカキクケコサシスセソ';
+      document.querySelectorAll('[data-scramble]').forEach((target) => {
+        const original = target.textContent || '';
+        if (!original.trim()) return;
+        const reveal = () => {
+          let frame = 0;
+          const totalFrames = Math.max(18, original.length * 2);
+          const tick = () => {
+            const settled = Math.floor((frame / totalFrames) * original.length);
+            target.textContent = Array.from(original).map((char, index) => {
+              if (char === ' ' || index < settled) return char;
+              return scrambleChars[Math.floor(Math.random() * scrambleChars.length)];
+            }).join('');
+            frame += 1;
+            if (frame <= totalFrames) window.requestAnimationFrame(tick);
+            else target.textContent = original;
+          };
+          tick();
+        };
+        if (reduceMotion.matches || !('IntersectionObserver' in window)) target.textContent = original;
+        else {
+          const scrambleObserver = new IntersectionObserver((entries, observer) => {
+            if (!entries.some((entry) => entry.isIntersecting)) return;
+            reveal();
+            observer.disconnect();
+          }, { threshold: 0.7 });
+          scrambleObserver.observe(target);
+        }
+      });
+
+      if (finePointer.matches && !reduceMotion.matches) {
+        const follower = document.createElement('span');
+        follower.className = 'cursor-follower';
+        follower.setAttribute('aria-hidden', 'true');
+        document.body.append(follower);
+        document.addEventListener('pointermove', (event) => {
+          follower.style.transform = 'translate3d(' + event.clientX + 'px, ' + event.clientY + 'px, 0)';
+          follower.classList.add('is-visible');
+        }, { passive: true });
+        document.addEventListener('pointerleave', () => follower.classList.remove('is-visible'));
+        document.querySelectorAll('a, button, [role="button"]').forEach((item) => {
+          item.addEventListener('pointerenter', () => follower.classList.add('is-hovering'));
+          item.addEventListener('pointerleave', () => follower.classList.remove('is-hovering'));
+        });
+      }
     </script>
   </body>
 </html>
@@ -203,4 +284,16 @@ const nav = [
   }
   @media(prefers-reduced-motion:reduce){.mobile-menu-toggle span,#primary-navigation{transition:none!important}}
   @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.scroll-progress span{will-change:auto}.motion-ready [data-motion],.motion-ready [data-motion]>.motion-stagger-item{opacity:1!important;transform:none!important;clip-path:none!important}}
+  /* Phase 5 interaction layer: restrained, touch-safe and motion-preference aware. */
+  .button,.nav-cta{position:relative;overflow:hidden;isolation:isolate}
+  .magnetic-button{transform:translate3d(var(--mag-x,0px),var(--mag-y,0px),0);will-change:transform}
+  .magnetic-button:hover{transform:translate3d(var(--mag-x,0px),calc(var(--mag-y,0px) - 2px),0)}
+  .interaction-ripple{position:absolute;z-index:0;display:block;border-radius:50%;pointer-events:none;background:rgba(255,255,255,.48);transform:scale(0);animation:interactionRipple 620ms ease-out forwards}
+  .button-primary .interaction-ripple,.nav-cta .interaction-ripple{background:rgba(23,43,69,.18)}
+  @keyframes interactionRipple{to{transform:scale(1);opacity:0}}
+  .cursor-follower{position:fixed;top:0;left:0;z-index:3000;width:12px;height:12px;border:1.5px solid rgba(245,197,66,.9);border-radius:50%;pointer-events:none;opacity:0;transition:opacity 160ms ease,width 180ms ease,height 180ms ease,background 180ms ease;will-change:transform}
+  .cursor-follower.is-visible{opacity:1}
+  .cursor-follower.is-hovering{width:26px;height:26px;background:rgba(245,197,66,.14)}
+  @media(hover:none),(pointer:coarse){.cursor-follower{display:none}}
+  @media(prefers-reduced-motion:reduce){.magnetic-button{transform:none!important;will-change:auto}.interaction-ripple,.cursor-follower{display:none!important}}
 </style>

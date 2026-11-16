@@ -87,11 +87,7 @@ const nav = [
         main.querySelectorAll(".card-grid,.paver-design-grid,.design-grid,.faq-list").forEach((grid) => {
           grid.setAttribute("data-motion", "stagger");
         });
-        main.querySelectorAll("img").forEach((img) => {
-          if (img.closest(".hero-visual,.hero-gif,.about-hero-visual")) return;
-          img.setAttribute("data-motion", "reveal");
-          img.classList.add("motion-image-reveal");
-        });
+        // Keep every source image visible; animate its surrounding section/card instead.
         main.querySelectorAll(".info-card,.paver-design-card,.design-card,.faq-item").forEach((card) => {
           card.classList.add("motion-hover-lift");
         });
@@ -154,8 +150,6 @@ const nav = [
   .motion-ready [data-motion="reveal"].motion-visible,.motion-ready [data-motion="stagger"].motion-visible{opacity:1;transform:translate3d(0,0,0)}
   .motion-ready [data-motion="stagger"]>.motion-stagger-item{opacity:0;transform:translate3d(0,16px,0);transition:opacity var(--motion-duration-base) var(--motion-ease),transform var(--motion-duration-base) var(--motion-ease);transition-delay:calc(var(--motion-stagger-index,0)*65ms)}
   .motion-ready [data-motion="stagger"].motion-visible>.motion-stagger-item{opacity:1;transform:translate3d(0,0,0)}
-  .motion-ready img.motion-image-reveal{clip-path:inset(0 0 100% 0 round 8px);transition:clip-path 560ms var(--motion-ease),opacity var(--motion-duration-base) var(--motion-ease),transform var(--motion-duration-base) var(--motion-ease)}
-  .motion-ready img.motion-image-reveal.motion-visible{clip-path:inset(0 0 0 0 round 8px)}
   .motion-hover-lift{transition:transform var(--motion-duration-fast) var(--motion-ease),box-shadow var(--motion-duration-fast) var(--motion-ease)}
   @media(hover:hover) and (pointer:fine){.motion-hover-lift:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(23,43,69,.12)}.button:hover,.nav-cta:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(23,43,69,.14)}}
   .button,.nav-cta{transition:transform var(--motion-duration-fast) var(--motion-ease),box-shadow var(--motion-duration-fast) var(--motion-ease)}

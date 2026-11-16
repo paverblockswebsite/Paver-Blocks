@@ -11,7 +11,7 @@ const designs = [
   <section class="page-hero"><p class="eyebrow">Paver Options</p><h1>Explore paver designs.</h1><p>We help clients identify suitable paver designs and connect with third-party suppliers when product sourcing is required.</p></section>
   <section class="content-section">
     <div class="design-grid">
-      {designs.map((design,index)=><a class="design-card" data-design-card href={\`/paver-designs/\${design.slug}/\`} aria-label={\`Explore \${design.name} paver design\`}>
+      {designs.map((design,index)=><a class="design-card" data-design-card href={`/paver-designs/${design.slug}/`} aria-label={`Explore ${design.name} paver design`}>
         <div class="design-card-inner">
           <div class="design-visual design-card-front" aria-hidden="true">
             <span class="design-index">0{index+1} / 04</span>
@@ -39,10 +39,10 @@ const designs = [
         const rect = card.getBoundingClientRect();
         const x = (event.clientX - rect.left) / rect.width;
         const y = (event.clientY - rect.top) / rect.height;
-        card.style.setProperty("--pointer-x", \`\${(x * 100).toFixed(1)}%\`);
-        card.style.setProperty("--pointer-y", \`\${(y * 100).toFixed(1)}%\`);
-        card.style.setProperty("--tilt-x", \`\${((0.5 - y) * 5).toFixed(2)}deg\`);
-        card.style.setProperty("--tilt-y", \`\${((x - 0.5) * 7).toFixed(2)}deg\`);
+        card.style.setProperty("--pointer-x", `${(x * 100).toFixed(1)}%`);
+        card.style.setProperty("--pointer-y", `${(y * 100).toFixed(1)}%`);
+        card.style.setProperty("--tilt-x", `${((0.5 - y) * 5).toFixed(2)}deg`);
+        card.style.setProperty("--tilt-y", `${((x - 0.5) * 7).toFixed(2)}deg`);
       });
       card.addEventListener("pointerleave", () => {
         card.style.setProperty("--tilt-x", "0deg");

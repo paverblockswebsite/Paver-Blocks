@@ -1,55 +1,181 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
-const faqs = [
+
+const faqSections = [
   {
-    question: "What services does Paver Blocks provide?",
-    answer: "Our listed services include paver block installation, road construction and paving, footpath construction, parking area construction, industrial flooring-related civil work, and government or private contract enquiries. The exact scope is discussed for each project."
+    title: "About Paver Blocks",
+    faqs: [
+      {
+        question: "What services does Paver Blocks provide?",
+        answer: "Paver Blocks provides paver block installation, road construction and paving, footpath construction, parking area construction, industrial flooring-related civil work, and support for government and private construction contracts. Project requirements are assessed individually."
+      },
+      {
+        question: "Where is Paver Blocks based?",
+        answer: "Paver Blocks is based in Hyderabad, Sindh, Pakistan."
+      },
+      {
+        question: "Which areas of Pakistan do you serve?",
+        answer: "We welcome project enquiries from all provinces of Pakistan. Project availability, location, scope and logistics are assessed before confirming work."
+      },
+      {
+        question: "How much experience does Paver Blocks have?",
+        answer: "Our work is backed by more than 40 years of personal experience in the civil construction field."
+      },
+      {
+        question: "Does Paver Blocks manufacture paver blocks?",
+        answer: "No. Paver Blocks focuses on installation and paving-related civil work. We can also help clients source suitable paver blocks from independent manufacturers and suppliers."
+      }
+    ]
   },
   {
-    question: "Does Paver Blocks manufacture paver blocks?",
-    answer: "No. Paver Blocks focuses on installation and paving-related civil work. When product sourcing is needed, we can help clients identify suitable options from independent third-party manufacturers and suppliers."
+    title: "Paver Blocks, Designs and Materials",
+    faqs: [
+      {
+        question: "What types of paver block designs are available?",
+        answer: "Common design options include I-Shape, Zigzag, Rectangular and Uni-Paver, along with other available designs depending on supplier availability."
+      },
+      {
+        question: "What sizes and thicknesses of paver blocks are available?",
+        answer: "Sizes and thicknesses vary according to the selected design, intended application and supplier. We can help clients explore suitable options for their project."
+      },
+      {
+        question: "Are paver blocks available in different colours?",
+        answer: "Colour availability depends on the design and the independent supplier. Available options can be discussed during project planning."
+      },
+      {
+        question: "Can Paver Blocks arrange paver block supply?",
+        answer: "Yes. We can help clients source paver blocks from independent manufacturers and suppliers, subject to product availability and agreed project requirements."
+      },
+      {
+        question: "How do I choose the right paver block for my project?",
+        answer: "The right option depends on the intended use, expected traffic, site conditions, design preference, required thickness and available budget. These factors should be considered before selecting a product."
+      }
+    ]
   },
   {
-    question: "Where is Paver Blocks based, and which areas do you serve?",
-    answer: "Paver Blocks is based in Hyderabad, Sindh, Pakistan, and welcomes project enquiries from across Pakistan. Availability and project suitability are discussed case by case."
+    title: "Installation and Construction",
+    faqs: [
+      {
+        question: "How does the paver block installation process work?",
+        answer: "The process generally involves site assessment, ground preparation, base preparation, laying the paver blocks, alignment, joint filling and final inspection. The exact work sequence depends on site conditions and project requirements."
+      },
+      {
+        question: "Do you prepare the ground before installing paver blocks?",
+        answer: "Ground and base preparation requirements are assessed as part of the project scope. Any required excavation, levelling or base work should be discussed before the quotation is finalised."
+      },
+      {
+        question: "Can paver blocks be installed in parking areas and driveways?",
+        answer: "Paver blocks can be considered for parking areas and suitable paved surfaces. Product thickness, base preparation and site conditions should be evaluated according to the expected vehicle load."
+      },
+      {
+        question: "Do you provide road and footpath construction services?",
+        answer: "Yes. We accept enquiries for road construction and paving, as well as footpath construction. The scope is assessed according to project specifications and site requirements."
+      },
+      {
+        question: "Do you undertake industrial flooring-related civil work?",
+        answer: "Yes. We welcome enquiries for industrial flooring-related civil work. The intended use, loading requirements and site conditions must be reviewed to determine the appropriate scope."
+      },
+      {
+        question: "Can existing or damaged paver blocks be repaired or replaced?",
+        answer: "You can contact us with details and photographs of the affected area. We can review the requirement and discuss whether the repair or replacement work is suitable for our services."
+      }
+    ]
   },
   {
-    question: "What information should I share to request a quotation?",
-    answer: "Please share your project location, type of work, approximate area or dimensions, intended use, existing site conditions and any available drawings or scope documents. These details help us understand the enquiry."
+    title: "Pricing, Quotations and Project Planning",
+    faqs: [
+      {
+        question: "What information should I provide to request a quotation?",
+        answer: "Please share your project location, type of work, approximate area or dimensions, intended use, existing site conditions and any available drawings, photographs or scope documents."
+      },
+      {
+        question: "What factors affect the cost of a paving project?",
+        answer: "Project cost depends on the area, material selection, paver block design and thickness, ground conditions, base preparation, labour, transportation and overall project scope. A quotation can be discussed after reviewing the requirements."
+      },
+      {
+        question: "How long does a paver block installation project take?",
+        answer: "Project duration depends on the work area, site conditions, preparation requirements, material availability, workforce and project scope. A more realistic timeframe can be discussed after assessment."
+      },
+      {
+        question: "Do you provide site visits or project assessments?",
+        answer: "Please contact us with your project location and requirements to discuss a site assessment. Availability and any applicable arrangements can be confirmed individually."
+      },
+      {
+        question: "Can I request a quotation for a government or private project?",
+        answer: "Yes. We welcome enquiries about government and private-sector construction and paving projects. Please share the project scope, location, specifications and relevant tender or procurement documents, if applicable."
+      }
+    ]
   },
   {
-    question: "Can I request a quotation for a government or private project?",
-    answer: "Yes. You can contact us about government and private-sector paving or civil-work opportunities. Please share the relevant scope, location and tender or procurement documents if applicable."
-  },
-  {
-    question: "Where can I see completed project photographs?",
-    answer: "Our project portfolio will show project details and photographs as verified material is provided and approved for publication. We do not present stock images or unverified examples as completed Paver Blocks projects."
+    title: "Portfolio and Contact",
+    faqs: [
+      {
+        question: "Where can I see completed project photographs?",
+        answer: "You can visit our Projects page to view project photographs and details as verified material becomes available and is approved for publication."
+      },
+      {
+        question: "How can I contact Paver Blocks?",
+        answer: "You can contact us by phone or WhatsApp at +92 316 2753210, or by email at hellopaverblocks@gmail.com. You can also use the Contact page on our website."
+      },
+      {
+        question: "How can I get started with my construction project?",
+        answer: "Contact us with your project location, required service, approximate area and any available photographs or drawings. We can review your enquiry and discuss the next steps."
+      }
+    ]
   }
 ];
+
+const faqs = faqSections.flatMap((section) => section.faqs);
 ---
-<SiteLayout title="Paving & Construction FAQs | Paver Blocks Pakistan" description="Answers to common questions about Paver Blocks services, paver sourcing, service areas, quotation enquiries and project information." canonical="https://paverblocks.com.pk/faqs/">
+<SiteLayout title="Paving & Construction FAQs | Paver Blocks Pakistan" description="Answers to common questions about Paver Blocks services, paver designs, materials, installation, project costs, quotations and construction enquiries." canonical="https://paverblocks.com.pk/faqs/">
   <Fragment slot="head">
     <script type="application/ld+json" set:html={JSON.stringify({
       "@context": "https://schema.org",
       "@type": "FAQPage",
-      "mainEntity": faqs.map((faq) => ({
+      mainEntity: faqs.map((faq) => ({
         "@type": "Question",
-        "name": faq.question,
-        "acceptedAnswer": { "@type": "Answer", "text": faq.answer }
+        name: faq.question,
+        acceptedAnswer: { "@type": "Answer", text: faq.answer }
       }))
     })} />
   </Fragment>
-  <section class="page-hero"><p class="eyebrow">Helpful Information</p><h1>Frequently asked questions.</h1><p>Clear answers about our services, paver sourcing, project enquiries and how to get started.</p></section>
+  <section class="page-hero">
+    <p class="eyebrow">Helpful Information</p>
+    <h1>Frequently asked questions.</h1>
+    <p>Find clear answers about our services, paver designs and sourcing, installation, project planning and quotations.</p>
+  </section>
   <section class="content-section">
-    <div class="faq-list">
-      {faqs.map((faq, index) => <details class="faq-item" open={index === 0}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}
+    <div class="faq-sections">
+      {faqSections.map((section, sectionIndex) => (
+        <section class="faq-category" aria-labelledby={`faq-category-${sectionIndex}`}>
+          <h2 id={`faq-category-${sectionIndex}`}>{section.title}</h2>
+          <div class="faq-list">
+            {section.faqs.map((faq, index) => (
+              <details class="faq-item" open={sectionIndex === 0 && index === 0}>
+                <summary>{faq.question}</summary>
+                <p>{faq.answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   </section>
-  <section class="content-section soft-section"><h2>Have another question?</h2><p>Contact us directly and tell us what you need to know.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Discuss a Project</a><a class="button" href="/contact/">Contact Us</a></div></section>
+  <section class="content-section soft-section">
+    <h2>Have another question?</h2>
+    <p>If your requirement is not covered above, contact us directly. We will be happy to discuss your paving or construction project.</p>
+    <div class="actions">
+      <a class="button button-primary" href="/get-a-quote/">Discuss a Project</a>
+      <a class="button" href="/contact/">Contact Us</a>
+    </div>
+  </section>
 </SiteLayout>
 <style>
-.faq-list{max-width:900px;display:grid;gap:12px}
+.faq-sections{max-width:900px;display:grid;gap:38px}
+.faq-category h2{margin:0 0 16px;color:#172B45;font-size:clamp(21px,2.4vw,27px)}
+.faq-list{display:grid;gap:12px}
 .faq-item{padding:20px 22px;border:1px solid #e0e5eb;border-radius:9px;background:#fff}
-.faq-item summary{cursor:pointer;color:#172B45;font-size:17px;font-weight:800}
-.faq-item p{margin:12px 0 0;color:#667386}
+.faq-item summary{cursor:pointer;color:#172B45;font-size:17px;font-weight:800;line-height:1.45}
+.faq-item summary:focus-visible{outline:3px solid #F5C542;outline-offset:4px;border-radius:3px}
+.faq-item p{margin:12px 0 0;color:#667386;line-height:1.7}
 </style>

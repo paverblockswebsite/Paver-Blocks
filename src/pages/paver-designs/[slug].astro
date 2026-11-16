@@ -11,7 +11,7 @@ export function getStaticPaths() {
 }
 const { design } = Astro.props;
 ---
-<SiteLayout title={\`\${design.name} Paver Blocks | Paver Blocks Pakistan\`} description={\`Explore the \${design.name} paver block shape. Ask Paver Blocks about suitability, available sizes, thicknesses, colours and independent supplier options.\`} canonical={\`https://paverblocks.com.pk/paver-designs/\${design.slug}/\`}>
+<SiteLayout title={`${design.name} Paver Blocks | Paver Blocks Pakistan`} description={`Explore the ${design.name} paver block shape. Ask Paver Blocks about suitability, available sizes, thicknesses, colours and independent supplier options.`} canonical={`https://paverblocks.com.pk/paver-designs/${design.slug}/`}>
   <section class="page-hero"><p class="eyebrow">Paver Design</p><h1>{design.name} Paver Blocks</h1><p>{design.description}</p></section>
   <section class="content-section design-detail">
     <div class="detail-image" data-product-stage>
@@ -42,8 +42,8 @@ const { design } = Astro.props;
         const rect = productStage.getBoundingClientRect();
         const x = (event.clientX - rect.left) / rect.width;
         const y = (event.clientY - rect.top) / rect.height;
-        productStage.style.setProperty("--stage-rotate-x", \`\${((0.5 - y) * 5).toFixed(2)}deg\`);
-        productStage.style.setProperty("--stage-rotate-y", \`\${((x - 0.5) * 8).toFixed(2)}deg\`);
+        productStage.style.setProperty("--stage-rotate-x", `${((0.5 - y) * 5).toFixed(2)}deg`);
+        productStage.style.setProperty("--stage-rotate-y", `${((x - 0.5) * 8).toFixed(2)}deg`);
       });
       productStage.addEventListener("pointerleave", () => {
         productStage.style.setProperty("--stage-rotate-x", "0deg");

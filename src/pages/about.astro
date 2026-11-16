@@ -3,7 +3,28 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 ---
 <SiteLayout title="About Paver Blocks | Mithal Shahan, Civil Contractor" description="Learn about Paver Blocks, the public brand of Mithal Shahan, a civil contractor with 40+ years of personal experience since 1986." canonical="https://paverblocks.com.pk/about/">
   <section class="page-hero"><p class="eyebrow">About Paver Blocks</p><h1>Experience grounded in practical work.</h1><p>Paver Blocks is the public brand of Mithal Shahan, Civil Contractor, based in Hyderabad, Sindh and serving projects across Pakistan.</p></section>
-  <section class="content-section"><p class="eyebrow">Our background</p><h2>40+ years of personal experience</h2><p>Mithal Shahan began his professional journey on 6 November 1986. That hands-on experience informs our approach to paving and related civil construction work.</p><p>Our primary focus is paver block installation and paving-related civil works. When a project requires paver products, we can help clients identify and source suitable options from independent manufacturers and suppliers. Paver Blocks does not claim to manufacture pavers.</p></section>
+  <section class="content-section profile-feature-section">
+    <div class="profile-feature">
+      <div class="profile-feature-copy">
+        <p class="eyebrow">Our background</p>
+        <h2>40+ years of personal experience</h2>
+        <p>Mithal Shahan began his professional journey on 6 November 1986. That hands-on experience informs our approach to paving and related civil construction work.</p>
+        <p>Our primary focus is paver block installation and paving-related civil works. When a project requires paver products, we can help clients identify and source suitable options from independent manufacturers and suppliers. Paver Blocks does not claim to manufacture pavers.</p>
+      </div>
+      <figure class="profile-feature-photo">
+        <img src="https://raw.githubusercontent.com/paverblockswebsite/Paver-Blocks/Mithal-Shahan.PNG/Mithal%20Shahan.PNG" alt="Portrait of Mithal Shahan, Civil Contractor" width="1023" height="1011" loading="lazy" decoding="async" />
+      </figure>
+    </div>
+  </section>
   <section class="content-section soft-section"><p class="eyebrow">How we work</p><div class="card-grid"><article class="info-card"><h3>Understand the site</h3><p>We begin by understanding the location, intended use, site conditions and approximate project area.</p></article><article class="info-card"><h3>Clarify the scope</h3><p>We discuss the work required so that expectations and project requirements are clear.</p></article><article class="info-card"><h3>Discuss next steps</h3><p>We communicate directly about the practical next steps for the proposed work.</p></article></div></section>
   <section class="content-section"><h2>Discuss your project with us</h2><p>Tell us what you are planning and where the work is located.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Request a Quote</a><a class="button" href="/contact/">Contact Us</a></div></section>
 </SiteLayout>
+<style>
+  .profile-feature-section{max-width:1280px;margin-inline:auto}
+  .profile-feature{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);align-items:center;gap:clamp(28px,5vw,64px)}
+  .profile-feature-copy{min-width:0}
+  .profile-feature-copy>p:not(.eyebrow){max-width:760px}
+  .profile-feature-photo{width:100%;max-width:420px;margin:0 auto;overflow:hidden;border:1px solid #e0e5eb;border-radius:14px;background:#f4f6f8;box-shadow:0 18px 42px rgba(23,43,69,.12)}
+  .profile-feature-photo img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;object-position:center 35%}
+  @media(max-width:760px){.profile-feature{grid-template-columns:1fr}.profile-feature-photo{max-width:380px;margin:12px auto 0}}
+</style>

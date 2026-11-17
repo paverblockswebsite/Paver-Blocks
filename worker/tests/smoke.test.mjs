@@ -416,7 +416,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.equal(auditResponse.headers.get("x-content-type-options"), "nosniff");
     assert.deepEqual(await auditResponse.json(), { data: [{ id: "audit-1", admin_email: "hellopaverblocks@gmail.com", action: "upload", entity_type: "project_image", entity_id: "image-1", created_at: "2026-11-17 05:00:00" }], limit: 25, offset: 10 });
     const auditQuery = preparedStatements.at(-1);
-    assert.match(auditQuery.sql, /FROM admin_audit_log WHERE entity_type = \\? AND action = \\? ORDER BY created_at DESC, id DESC LIMIT \\? OFFSET \\?$/);
+    assert.equal(auditQuery.sql, "SELECT id, admin_email, action, entity_type, entity_id, created_at FROM admin_audit_log WHERE entity_type = ? AND action = ? ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?");
     assert.deepEqual(auditQuery.values, ["project_image", "upload", 25, 10]);
     assert.doesNotMatch(auditQuery.sql, /customer_name|phone|project_details|internal_notes/);
 

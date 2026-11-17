@@ -7,6 +7,7 @@ import {
 } from "../src/backup-utils.js";
 
 const imageKey = "projects/123e4567-e89b-12d3-a456-426614174000/123e4567-e89b-12d3-a456-426614174001.webp";
+const existingImageKey = "projects/123e4567-e89b-12d3-a456-426614174000/123e4567-e89b-12d3-a456-426614174002.png";
 
 test("accepts only project image object keys", () => {
   assert.equal(isProjectImageKey(imageKey), true);
@@ -56,7 +57,7 @@ test("archives valid project images and skips unrelated or already archived obje
   const sourceBucket = {
     async list() {
       return {
-        objects: [{ key: imageKey }, { key: "misc/readme.txt" }],
+        objects: [{ key: imageKey }, { key: existingImageKey }, { key: "misc/readme.txt" }],
         truncated: false,
       };
     },
@@ -71,7 +72,7 @@ test("archives valid project images and skips unrelated or already archived obje
   };
   const archiveBucket = {
     async head(key) {
-      return key === "images/" + imageKey ? null : null;
+      return key === "images/" + existingImageKey ? { etag: "already-there" } : null;
     },
     async put(key, body, options) {
       copied.push({ key, body, options });
@@ -86,7 +87,7 @@ test("archives valid project images and skips unrelated or already archived obje
     "2026-11-17T21:00:00.000Z",
   );
 
-  assert.deepEqual(result, { archived: 1, skipped: 1, truncated: false, cursor: null });
+  assert.deepEqual(result, { archived: 1, skipped: 2, truncated: false, cursor: null });
   assert.equal(copied.length, 1);
   assert.equal(copied[0].key, "images/" + imageKey);
   assert.equal(copied[0].body, "image-bytes");

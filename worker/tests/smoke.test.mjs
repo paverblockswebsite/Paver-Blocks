@@ -369,7 +369,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
           sql,
           values: [],
           bind(...values) { statement.values = values; return statement; },
-          async all() { return { results: [] }; },
+          async all() { return sql.includes("FROM admin_audit_log") ? { results: [{ id: "audit-1", admin_email: "hellopaverblocks@gmail.com", action: "upload", entity_type: "project_image", entity_id: "image-1", created_at: "2026-11-17 05:00:00" }] } : { results: [] }; },
           async first() {
             if (sql.includes("COUNT(*) AS image_count")) return { image_count: projectImageCount };
             return sql.includes("permission_confirmed, status FROM testimonials") ? { permission_confirmed: 0, status: "draft" } : { id: "123e4567-e89b-12d3-a456-426614174000" };
@@ -405,6 +405,28 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.equal(validResponse.headers.get("cache-control"), "no-store", "private inquiry responses must not be cached");
     assert.equal(validResponse.headers.get("x-content-type-options"), "nosniff");
     assert.deepEqual(await validResponse.json(), { data: [], limit: 50, offset: 0 });
+
+    const unauthenticatedAudit = await worker.fetch(new Request("https://api.example/api/admin/audit-log"), env);
+    assert.equal(unauthenticatedAudit.status, 401, "audit history must require a verified Access identity");
+
+    const auditResponse = await requestWithToken(validToken, "/api/admin/audit-log?entity_type=project_image&action=upload&limit=25&offset=10");
+    assert.equal(auditResponse.status, 200);
+    assert.equal(auditResponse.headers.get("cache-control"), "no-store");
+    assert.equal(auditResponse.headers.get("pragma"), "no-cache");
+    assert.equal(auditResponse.headers.get("x-content-type-options"), "nosniff");
+    assert.deepEqual(await auditResponse.json(), { data: [{ id: "audit-1", admin_email: "hellopaverblocks@gmail.com", action: "upload", entity_type: "project_image", entity_id: "image-1", created_at: "2026-11-17 05:00:00" }], limit: 25, offset: 10 });
+    const auditQuery = preparedStatements.at(-1);
+    assert.match(auditQuery.sql, /FROM admin_audit_log WHERE entity_type = \\? AND action = \\? ORDER BY created_at DESC, id DESC LIMIT \\? OFFSET \\?$/);
+    assert.deepEqual(auditQuery.values, ["project_image", "upload", 25, 10]);
+    assert.doesNotMatch(auditQuery.sql, /customer_name|phone|project_details|internal_notes/);
+
+    const invalidAuditFilter = await requestWithToken(validToken, "/api/admin/audit-log?entity_type=inquiries");
+    assert.equal(invalidAuditFilter.status, 400, "unknown audit filters must be rejected");
+
+    const boundedAudit = await requestWithToken(validToken, "/api/admin/audit-log?limit=500&offset=-5");
+    assert.equal(boundedAudit.status, 200);
+    assert.deepEqual(await boundedAudit.json(), { data: [{ id: "audit-1", admin_email: "hellopaverblocks@gmail.com", action: "upload", entity_type: "project_image", entity_id: "image-1", created_at: "2026-11-17 05:00:00" }], limit: 100, offset: 0 });
+    assert.deepEqual(preparedStatements.at(-1).values, [100, 0]);
 
     const pagedInquiryResponse = await requestWithToken(
       validToken,

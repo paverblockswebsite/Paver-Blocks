@@ -116,3 +116,14 @@ test("unknown blog routes are left for the existing router to handle", async () 
   );
   assert.equal(result, null);
 });
+
+test("non-blog public POST routes are not intercepted by the blog router", async () => {
+  const { db } = fakeDb();
+  const result = await handleBlogPublic(
+    request("/api/public/inquiries", "POST", { customer_name: "Test" }),
+    { DB: db },
+    new URL("https://api.example.test/api/public/inquiries"),
+    () => { throw new Error("The blog handler must not answer non-blog routes."); },
+  );
+  assert.equal(result, null);
+});

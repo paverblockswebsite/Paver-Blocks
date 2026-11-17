@@ -414,14 +414,14 @@ export async function handleBlogPublic(request, env, url, respond) {
     const limit = Math.min(Math.max(limitRaw, 1), 50);
     const offset = Math.min(offsetRaw, 1000000);
     const rows = await env.DB.prepare(
-      "SELECT a.id, a.title, a.slug, a.excerpt, a.category_id, c.name AS category_name, c.slug AS category_slug, a.author_id, u.display_name AS author_name, a.featured_media_id, a.seo_title, a.meta_description, a.og_media_id, a.published_at, a.reading_minutes, a.is_featured FROM blog_articles a LEFT JOIN blog_categories c ON c.id = a.category_id LEFT JOIN blog_authors u ON u.id = a.author_id WHERE a.status = 'published' AND a.robots_index = 1 ORDER BY a.published_at DESC LIMIT ? OFFSET ?"
+      "SELECT a.id, a.title, a.slug, a.excerpt, a.category_id, c.name AS category_name, c.slug AS category_slug, a.author_id, u.display_name AS author_name, a.featured_media_id, a.seo_title, a.meta_description, a.og_media_id, a.published_at, a.reading_minutes, a.is_featured, a.robots_index FROM blog_articles a LEFT JOIN blog_categories c ON c.id = a.category_id LEFT JOIN blog_authors u ON u.id = a.author_id WHERE a.status = 'published' ORDER BY a.published_at DESC LIMIT ? OFFSET ?"
     ).bind(limit, offset).all();
     return respond(request, env, { data: rows.results || [], limit, offset });
   }
   const articleMatch = path.match(/^\/api\/public\/blog\/articles\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
   if (articleMatch) {
     const article = await env.DB.prepare(
-      "SELECT a.id, a.title, a.slug, a.excerpt, a.content_json, a.category_id, c.name AS category_name, c.slug AS category_slug, a.author_id, u.display_name AS author_name, u.slug AS author_slug, u.biography AS author_biography, a.featured_media_id, a.seo_title, a.meta_description, a.canonical_url, a.og_title, a.og_description, a.og_media_id, a.published_at, a.updated_at, a.reading_minutes FROM blog_articles a LEFT JOIN blog_categories c ON c.id = a.category_id LEFT JOIN blog_authors u ON u.id = a.author_id WHERE a.slug = ? AND a.status = 'published' AND a.robots_index = 1 LIMIT 1"
+      "SELECT a.id, a.title, a.slug, a.excerpt, a.content_json, a.category_id, c.name AS category_name, c.slug AS category_slug, a.author_id, u.display_name AS author_name, u.slug AS author_slug, u.biography AS author_biography, a.featured_media_id, a.seo_title, a.meta_description, a.canonical_url, a.og_title, a.og_description, a.og_media_id, a.published_at, a.updated_at, a.reading_minutes, a.robots_index FROM blog_articles a LEFT JOIN blog_categories c ON c.id = a.category_id LEFT JOIN blog_authors u ON u.id = a.author_id WHERE a.slug = ? AND a.status = 'published' LIMIT 1"
     ).bind(articleMatch[1]).first();
     if (!article) return respond(request, env, { error: "Not found." }, 404);
     const tags = await env.DB.prepare("SELECT t.name, t.slug FROM blog_tags t INNER JOIN blog_article_tags at ON at.tag_id = t.id WHERE at.article_id = ? ORDER BY t.name").bind(article.id).all();

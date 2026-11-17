@@ -28,9 +28,13 @@ async function fetchPublicData(path) {
   }
 }
 
-export async function fetchPublicList(path) {
-  const data = await fetchPublicData(path);
-  return Array.isArray(data) ? data : [];
+const publicListCache = new Map();
+
+export function fetchPublicList(path) {
+  if (!publicListCache.has(path)) {
+    publicListCache.set(path, fetchPublicData(path).then((data) => Array.isArray(data) ? data : []));
+  }
+  return publicListCache.get(path);
 }
 
 export async function fetchPublicProject(slug) {

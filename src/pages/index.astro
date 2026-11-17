@@ -2,7 +2,7 @@
 import SiteLayout from "../layouts/SiteLayout.astro";
 import { fetchPublicList } from "../lib/public-cms.js";
 const publicApiBase = import.meta.env.VITE_PUBLIC_API_BASE_URL || "";
-const testimonials = await fetchPublicList("/api/public/testimonials");
+const testimonials = (await fetchPublicList("/api/public/testimonials")).slice(0, 6);
 const services = [
   { name: "Paver Block Installation", description: "Professional paver installation for suitable outdoor surfaces.", url: "/services/paver-block-installation/", image: "/images/services/paver-block-installation.jpg", alt: "Paver block installation on an outdoor paved surface" },
   { name: "Road Construction & Paving", description: "Road paving and related civil construction work.", url: "/services/road-construction/", image: "/images/services/road-construction.jpg", alt: "Road construction and paving work" },

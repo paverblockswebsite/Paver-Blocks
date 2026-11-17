@@ -12,7 +12,7 @@ function jsonBody(value, status = 200) {
 }
 
 function cleanString(value, max, required = false) {
-  if (typeof value !== "string") return required ? null : "";
+  if (typeof value !== "string") return null;
   const result = value.trim();
   if ((required && !result) || result.length > max) return null;
   return result;
@@ -364,9 +364,11 @@ async function handleArticles(request, env, url, identity, id) {
     try {
       const statements = [
         env.DB.prepare("INSERT INTO blog_article_revisions (id, article_id, snapshot_json, edited_by) VALUES (?, ?, ?, ?)").bind(crypto.randomUUID(), id, snapshot, identity.email),
-        env.DB.prepare("UPDATE blog_articles SET " + keys.map((key) => key + " = ?").join(", ") + ", updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-          .bind(...keys.map((key) => values[key]), identity.email, id),
       ];
+      if (keys.length) {
+        statements.push(env.DB.prepare("UPDATE blog_articles SET " + keys.map((key) => key + " = ?").join(", ") + ", updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+          .bind(...keys.map((key) => values[key]), identity.email, id));
+      }
       if (tagIds) {
         statements.push(env.DB.prepare("DELETE FROM blog_article_tags WHERE article_id = ?").bind(id));
         for (const tagId of tagIds) statements.push(env.DB.prepare("INSERT INTO blog_article_tags (article_id, tag_id) VALUES (?, ?)").bind(id, tagId));

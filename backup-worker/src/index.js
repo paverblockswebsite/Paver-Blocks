@@ -41,6 +41,35 @@ async function requestD1Export(env, body) {
   return parseD1ExportResponse(payload);
 }
 
+// Keep the one-hour signed download URL inside this step. Workflow state stores
+// only the bookmark and backup-object metadata, never the temporary URL.
+async function requestAndStoreD1Export(env, body, sqlKey, databaseName, databaseId, scheduledAt) {
+  const exportState = await requestD1Export(env, body);
+  if (exportState.status !== "complete") return exportState;
+
+  const download = await fetch(exportState.signedUrl);
+  if (!download.ok || !download.body) {
+    throw new Error("The signed D1 SQL export download failed.");
+  }
+  const stored = await env.BACKUPS.put(sqlKey, download.body, {
+    httpMetadata: { contentType: "application/sql" },
+    customMetadata: {
+      databaseName,
+      databaseId,
+      sourceFilename: exportState.filename,
+      exportedAt: scheduledAt,
+    },
+  });
+
+  return {
+    status: "complete",
+    bookmark: exportState.bookmark,
+    filename: exportState.filename,
+    key: sqlKey,
+    etag: stored?.etag || null,
+  };
+}
+
 export class ProductionBackupWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
     const env = this.env;
@@ -59,6 +88,7 @@ export class ProductionBackupWorkflow extends WorkflowEntrypoint {
       : new Date().toISOString();
     const date = scheduledAt.slice(0, 10);
     const runId = date + "T" + scheduledAt.slice(11, 19).replace(/:/g, "-");
+    const sqlKey = "d1/" + date + "/" + runId + ".sql";
 
     // Archive any existing live project images before taking the matching D1 snapshot.
     let cursor;
@@ -81,46 +111,42 @@ export class ProductionBackupWorkflow extends WorkflowEntrypoint {
       if (pageNumber === 999) throw new Error("R2 image archive exceeded the safe page limit.");
     }
 
-    let exportState = await step.do("start D1 SQL export", async () => {
-      return await requestD1Export(env, {
-        output_format: "polling",
-        dump_options: { compatibility: "d1" },
-      });
+    let exportState = await step.do("start and store D1 SQL export", async () => {
+      return await requestAndStoreD1Export(
+        env,
+        {
+          output_format: "polling",
+          dump_options: { compatibility: "d1" },
+        },
+        sqlKey,
+        databaseName,
+        databaseId,
+        scheduledAt,
+      );
     });
 
     for (let pollNumber = 0; exportState.status !== "complete" && pollNumber < 40; pollNumber++) {
       if (!exportState.bookmark) throw new Error("D1 export polling bookmark is missing.");
       await step.sleep("wait for D1 export poll " + pollNumber, "10 seconds");
-      exportState = await step.do("poll D1 SQL export " + pollNumber, async () => {
-        return await requestD1Export(env, {
-          output_format: "polling",
-          current_bookmark: exportState.bookmark,
-          dump_options: { compatibility: "d1" },
-        });
-      });
-    }
-
-    if (exportState.status !== "complete" || !exportState.signedUrl || !exportState.filename) {
-      throw new Error("D1 export did not complete within the polling window.");
-    }
-
-    const sqlKey = "d1/" + date + "/" + runId + ".sql";
-    const sqlResult = await step.do("store D1 SQL export", async () => {
-      const download = await fetch(exportState.signedUrl);
-      if (!download.ok || !download.body) {
-        throw new Error("The signed D1 SQL export download failed.");
-      }
-      const stored = await env.BACKUPS.put(sqlKey, download.body, {
-        httpMetadata: { contentType: "application/sql" },
-        customMetadata: {
+      exportState = await step.do("poll and store D1 SQL export " + pollNumber, async () => {
+        return await requestAndStoreD1Export(
+          env,
+          {
+            output_format: "polling",
+            current_bookmark: exportState.bookmark,
+            dump_options: { compatibility: "d1" },
+          },
+          sqlKey,
           databaseName,
           databaseId,
-          sourceFilename: exportState.filename,
-          exportedAt: scheduledAt,
-        },
+          scheduledAt,
+        );
       });
-      return { key: sqlKey, etag: stored?.etag || null };
-    });
+    }
+
+    if (exportState.status !== "complete" || !exportState.key || !exportState.filename) {
+      throw new Error("D1 export did not complete within the polling window.");
+    }
 
     const manifest = {
       formatVersion: 1,
@@ -131,13 +157,13 @@ export class ProductionBackupWorkflow extends WorkflowEntrypoint {
       completedAt: new Date().toISOString(),
       exportBookmark: exportState.bookmark,
       sql: {
-        key: sqlResult.key,
+        key: exportState.key,
         sourceFilename: exportState.filename,
-        etag: sqlResult.etag,
+        etag: exportState.etag,
         compatibility: "d1",
       },
       imageArchive: {
-        bucketPurpose: "immutable project-image recovery archive",
+        bucketPurpose: "project-image recovery archive",
         pagesScanned: scannedPages,
         newlyArchivedObjects: archivedImages,
         archivePrefix: "images/",
@@ -155,7 +181,7 @@ export class ProductionBackupWorkflow extends WorkflowEntrypoint {
     return {
       status: "complete",
       databaseName,
-      sqlKey: sqlResult.key,
+      sqlKey: exportState.key,
       manifestKey,
       newlyArchivedImages: archivedImages,
     };

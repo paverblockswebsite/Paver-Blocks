@@ -1,0 +1,28 @@
+name = "paver-blocks-production-backup"
+main = "src/index.js"
+compatibility_date = "2026-11-17"
+
+[observability]
+enabled = true
+
+[vars]
+D1_DATABASE_NAME = "paver-blocks-production"
+D1_DATABASE_ID = "76f0020d-9f13-4237-97e9-1c7824ad864d"
+
+[[r2_buckets]]
+binding = "BACKUPS"
+bucket_name = "paver-blocks-backups-production"
+
+[[r2_buckets]]
+binding = "PROJECT_IMAGES"
+bucket_name = "paver-blocks-project-images-production"
+
+[[r2_buckets]]
+binding = "PROJECT_IMAGE_ARCHIVE"
+bucket_name = "paver-blocks-backups-production"
+
+[[workflows]]
+name = "paver-blocks-production-backup"
+binding = "BACKUP_WORKFLOW"
+class_name = "ProductionBackupWorkflow"
+schedules = ["0 21 * * *"]

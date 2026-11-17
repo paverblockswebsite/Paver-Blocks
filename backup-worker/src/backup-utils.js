@@ -1,4 +1,4 @@
-const IMAGE_KEY = /^projects\\/[0-9a-f-]{36}\\/[0-9a-f-]{36}\\.(?:jpg|png|webp)$/i;
+const IMAGE_KEY = /^projects\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(?:jpg|png|webp)$/i;
 
 export function isProjectImageKey(key) {
   return typeof key === "string" && IMAGE_KEY.test(key);
@@ -53,30 +53,19 @@ export async function archiveListedImagePage(sourceBucket, archiveBucket, cursor
   };
 }
 
-// Cloudflare's documented polling API returns at_bookmark while the export
-// is running, then signed_url and filename at the top level of result.
 export function parseD1ExportResponse(payload) {
   if (!payload || payload.success !== true || !payload.result) {
     throw new Error("Cloudflare D1 export API returned an unsuccessful response.");
   }
-
   const result = payload.result;
   if (result.status === "error") {
     throw new Error(typeof result.error === "string" ? result.error : "D1 export failed.");
   }
-
   if (typeof result.signed_url === "string" && typeof result.filename === "string") {
-    return {
-      status: "complete",
-      bookmark: result.at_bookmark || null,
-      filename: result.filename,
-      signedUrl: result.signed_url,
-    };
+    return { status: "complete", bookmark: result.at_bookmark || null, filename: result.filename, signedUrl: result.signed_url };
   }
-
   if (typeof result.at_bookmark === "string" && result.at_bookmark) {
     return { status: "running", bookmark: result.at_bookmark };
   }
-
-  throw new Error("D1 export response contains neither a polling bookmark nor a downloadable SQL file.");
+  throw new Error("Cloudflare D1 export response contains neither a polling bookmark nor a downloadable SQL file.");
 }

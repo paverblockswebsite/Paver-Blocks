@@ -502,7 +502,7 @@ const ADMIN_HTML = `<!doctype html>
       <label for="audit-entity-filter">Record type</label>
       <select id="audit-entity-filter"><option value="">All types</option><option value="inquiry">Inquiries</option><option value="project">Projects</option><option value="service">Services</option><option value="paver_design">Paver designs</option><option value="testimonial">Testimonials</option><option value="homepage_content">Homepage</option><option value="project_image">Project images</option><option value="project_gallery">Project galleries</option></select>
       <label for="audit-action-filter">Action</label>
-      <select id="audit-action-filter"><option value="">All actions</option><option value="create">Created</option><option value="update">Updated</option><option value="delete">Deleted</option></select>
+      <select id="audit-action-filter"><option value="">All actions</option><option value="create">Created</option><option value="update">Updated</option><option value="delete">Deleted</option><option value="upload">Uploaded</option><option value="reorder">Reordered</option></select>
       <button id="audit-refresh" type="button" class="button secondary">Refresh log</button>
     </div>
     <p id="audit-notice" class="notice" role="status" aria-live="polite">Loading audit history…</p>

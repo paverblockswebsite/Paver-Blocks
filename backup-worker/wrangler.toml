@@ -18,8 +18,5 @@ binding = "PROJECT_IMAGES"
 bucket_name = "paver-blocks-project-images-production"
 
 
-[[workflows]]
-name = "paver-blocks-production-backup"
-binding = "BACKUP_WORKFLOW"
-class_name = "ProductionBackupWorkflow"
-schedules = ["0 21 * * *"]
+[triggers]
+crons = ["0 21 * * *"]

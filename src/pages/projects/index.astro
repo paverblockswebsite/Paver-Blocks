@@ -1,8 +1,48 @@
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
+import { fetchPublicList, fetchPublicProject, publicProjectImageUrl } from "../../lib/public-cms.js";
+
+const projectRecords = (await fetchPublicList("/api/public/projects"))
+  .filter((project) => project && typeof project.title === "string" &&
+    typeof project.slug === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(project.slug)).slice(0, 24);
+
+const projects = await Promise.all(projectRecords.map(async (project) => {
+  const detail = await fetchPublicProject(project.slug);
+  const images = Array.isArray(detail?.images)
+    ? detail.images.map((image) => ({
+        url: publicProjectImageUrl(image.object_key),
+        alt: typeof image.alt_text === "string" ? image.alt_text : project.title,
+        caption: typeof image.caption === "string" ? image.caption : "",
+      })).filter((image) => image.url).slice(0, 12)
+    : [];
+  return {
+    ...project,
+    description: typeof detail?.description === "string" ? detail.description : "",
+    images,
+  };
+}));
 ---
 <SiteLayout title="Paving & Construction Projects | Paver Blocks" description="View the Paver Blocks project portfolio. Verified project photographs and details will be published as they are provided and approved." canonical="https://paverblocks.com.pk/projects/">
   <section class="page-hero"><p class="eyebrow">Our Work</p><h1>Project portfolio.</h1><p>A place to explore paving and civil construction work, with project details and photographs added as verified records become available.</p></section>
-  <section class="content-section"><p class="eyebrow">Project gallery</p><h2>Real work. Real project details.</h2><p>Project entries will include the project location, work type, scope and photographs where available. We will only publish project information supplied and approved for display.</p><div class="info-card"><h3>Project gallery is being prepared</h3><p>We will add your real project photographs and descriptions here. No sample or stock project photos will be presented as completed Paver Blocks work.</p></div></section>
+  <section class="content-section"><p class="eyebrow">Project gallery</p><h2>Real work. Real project details.</h2><p>Project entries include published details and photographs approved for display.</p>
+    {projects.length ? <div class="project-grid">{projects.map((project) => <article class="info-card project-card">
+      {project.images.length > 0 && <div class="project-gallery">{project.images.map((image) => <figure><img src={image.url} alt={image.alt} loading="lazy" decoding="async" />{image.caption && <figcaption>{image.caption}</figcaption>}</figure>)}</div>}
+      <p class="eyebrow">{project.location || "Paver Blocks project"}</p>
+      <h3>{project.title}</h3>
+      {project.completed_on && <p class="project-date">Completed: {project.completed_on}</p>}
+      {project.summary && <p>{project.summary}</p>}
+      {project.description && <p>{project.description}</p>}
+    </article>)}</div> : <div class="info-card"><h3>Project gallery is being prepared</h3><p>We will add your real project photographs and descriptions here. No sample or stock project photos will be presented as completed Paver Blocks work.</p></div>}
+  </section>
   <section class="content-section soft-section"><h2>Have a project in mind?</h2><p>Talk to us about your proposed work.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Request a Quote</a></div></section>
 </SiteLayout>
+<style>
+.project-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.project-card{min-width:0}
+.project-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px}
+.project-gallery figure{margin:0;min-width:0}
+.project-gallery img{display:block;width:100%;height:190px;object-fit:contain;background:#f4f6f8;border-radius:10px}
+.project-gallery figcaption{margin-top:6px;color:#667386;font-size:13px}
+.project-date{color:#667386;font-size:13px}
+@media(max-width:700px){.project-grid{grid-template-columns:1fr}.project-gallery img{height:160px}}
+</style>

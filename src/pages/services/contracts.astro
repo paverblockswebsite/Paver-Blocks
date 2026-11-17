@@ -1,12 +1,14 @@
 ---
 import ServiceDetail from "../../components/ServiceDetail.astro";
+import { fetchPublicList } from "../../lib/public-cms.js";
+const cmsService = (await fetchPublicList("/api/public/services")).find((service) => service?.slug === "contracts");
 ---
 <ServiceDetail
-  title="Government & Private Contracts"
+  title={cmsService?.title || "Government & Private Contracts"}
   image="/images/services/GPC6.webp"
-  description="Enquiries for paving and related civil construction work from government departments, institutions, businesses and private clients."
+  description={(cmsService?.short_description || "Enquiries for paving and related civil construction work from government departments, institutions, businesses and private clients.").slice(0, 300)}
   canonical="https://paverblocks.com.pk/services/contracts/"
-  intro="Contract enquiries are reviewed according to the requested work, project location, scope documents, timelines and procurement process. Sharing the available project information helps establish whether the requested work is suitable for discussion."
+  intro={cmsService?.description || "Contract enquiries are reviewed according to the requested work, project location, scope documents, timelines and procurement process. Sharing the available project information helps establish whether the requested work is suitable for discussion."}
   approach="For government or formal procurement opportunities, clients may share the relevant tender notice, drawings, specifications and submission requirements. Any participation, eligibility or delivery commitments must be assessed against the actual project documents and applicable requirements."
   uses={["Government paving and footpath project enquiries","Private commercial and institutional projects","Road and access-area paving scopes","Other related civil construction enquiries"]}
   considerations={["Department, organisation or client name","Project location and work description","Tender notice, BOQ, drawings or specifications, if available","Submission deadline and procurement requirements","Contact details for project coordination"]}

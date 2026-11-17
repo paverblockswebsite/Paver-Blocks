@@ -1,15 +1,37 @@
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
-export function getStaticPaths() {
-  const designs = [
+import { fetchPublicList } from "../../lib/public-cms.js";
+
+export async function getStaticPaths() {
+  const staticDesigns = [
     { name: "I-Shape", slug: "i-shape", image: "/images/paver-designs/i-shape-paver.webp", alt: "Grey I-shape interlocking concrete paver block", description: "The I-shaped profile is designed to interlock with neighbouring units. Ask us about suitability for your site and intended use." },
     { name: "Zigzag", slug: "zigzag", image: "/images/paver-designs/zigzag-paver.webp", alt: "Interlocking zigzag concrete paver block", description: "The zigzag profile creates a repeating interlocking paving pattern. Ask us about suitable applications and supplier options." },
     { name: "Rectangular", slug: "rectangular", image: "/images/paver-designs/rectangular-paver.jpg", alt: "Rectangular concrete paving blocks in grey, red and charcoal", description: "Rectangular pavers offer a clean, regular format that can be arranged in different laying patterns. Ask us about available options." },
     { name: "Uni-Paver", slug: "uni-paver", image: "/images/paver-designs/uni-paver.jpeg", alt: "Red Uni-Paver interlocking concrete block", description: "Uni-Paver is another interlocking block profile to consider for suitable paving work. Confirm product specifications with the supplier." }
   ];
+  const publishedDesigns = (await fetchPublicList("/api/public/paver-designs"))
+    .filter((design) => design && typeof design.name === "string" &&
+      typeof design.slug === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(design.slug));
+  const designs = publishedDesigns.length
+    ? publishedDesigns.map((design) => {
+        const knownDesign = staticDesigns.find((item) => item.slug === design.slug);
+        return {
+          ...design,
+          image: knownDesign?.image || "",
+          alt: knownDesign?.alt || `${design.name} paver design`,
+          description: knownDesign?.description || `Explore ${design.name} paver blocks and ask us about suitability and supplier options.`,
+        };
+      })
+    : staticDesigns;
   return designs.map((design) => ({ params: { slug: design.slug }, props: { design } }));
 }
 const { design } = Astro.props;
+const specifications = [
+  ["Shape", design.shape],
+  ["Dimensions", design.dimensions],
+  ["Thickness", design.thickness],
+  ["Colour", design.colour],
+].filter(([, value]) => typeof value === "string" && value.trim());
 ---
 <SiteLayout title={`${design.name} Paver Blocks | Paver Blocks Pakistan`} description={`Explore the ${design.name} paver block shape. Ask Paver Blocks about suitability, available sizes, thicknesses, colours and independent supplier options.`} canonical={`https://paverblocks.com.pk/paver-designs/${design.slug}/`}>
   <section class="page-hero"><p class="eyebrow">Paver Design</p><h1>{design.name} Paver Blocks</h1><p>{design.description}</p></section>
@@ -17,10 +39,12 @@ const { design } = Astro.props;
     <div class="detail-image" data-product-stage>
       <span class="stage-label">Product view <span aria-hidden="true">✦</span></span>
       <div class="detail-image-layers" aria-hidden="true"></div>
-      <img src={design.image} alt={design.alt} width="600" height="600" fetchpriority="high" />
-      <span class="stage-caption">Original product graphic · proportions preserved</span>
+      {design.image ? <img src={design.image} alt={design.alt} width="600" height="600" fetchpriority="high" /> : <div class="detail-image-placeholder"><span>{design.shape || design.name}</span></div>}
+      <span class="stage-caption">{design.image ? "Original product graphic · proportions preserved" : "Product appearance depends on supplier options"}</span>
     </div>
-    <div class="detail-copy"><p class="eyebrow">Design information</p><h2>Discuss this paver shape for your project.</h2><p>Ask us about suitability, available sizes, thicknesses and colours. Availability and product specifications depend on independent suppliers.</p><p>Paver Blocks focuses on installation and paving-related civil works. When required, we can help connect clients with third-party manufacturers and suppliers; we do not claim to manufacture pavers.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Ask about {design.name}</a><a class="button" href="/paver-designs/">Back to all designs</a></div></div>
+    <div class="detail-copy"><p class="eyebrow">Design information</p><h2>Discuss this paver shape for your project.</h2><p>Ask us about suitability, available sizes, thicknesses and colours. Availability and product specifications depend on independent suppliers.</p>
+      {specifications.length > 0 && <dl class="design-specifications">{specifications.map(([label, value]) => <div><dt>{label}</dt><dd>{value}</dd></div>)}</dl>}
+      <p>Paver Blocks focuses on installation and paving-related civil works. When required, we can help connect clients with third-party manufacturers and suppliers; we do not claim to manufacture pavers.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Ask about {design.name}</a><a class="button" href="/paver-designs/">Back to all designs</a></div></div>
   </section>
   <section class="content-section soft-section"><h2>Need help choosing?</h2><p>Share the intended use, site location and approximate area. We can discuss the work and help identify suitable product options.</p><a class="button button-primary" href="/get-a-quote/">Discuss Your Requirements</a></section>
 </SiteLayout>
@@ -58,6 +82,12 @@ const { design } = Astro.props;
 .design-detail{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:center}
 .detail-image{--stage-rotate-x:0deg;--stage-rotate-y:0deg;position:relative;display:grid;place-items:center;min-height:390px;padding:36px;border:1px solid #e3e8ee;border-radius:16px;background:radial-gradient(ellipse at 50% 42%,#fff 0,#f4f6f8 68%);perspective:1200px;transform:perspective(1200px) rotateX(var(--stage-rotate-x)) rotateY(var(--stage-rotate-y));transform-style:preserve-3d;transition:transform .3s ease,box-shadow .35s ease;isolation:isolate;overflow:hidden}
 .detail-image::after{position:absolute;inset:0;z-index:0;content:"";pointer-events:none;background:radial-gradient(circle at 50% 45%,rgba(245,197,66,.16),transparent 58%)}
+.detail-image-placeholder{position:relative;z-index:2;display:grid;place-items:center;width:100%;min-height:260px;padding:24px;border:1px dashed #c7d0db;border-radius:14px;background:linear-gradient(145deg,#f8fafc,#e9eef3);color:#526174;font-size:clamp(22px,3vw,34px);font-weight:800;text-align:center;overflow-wrap:anywhere}
+.design-specifications{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:22px 0}
+.design-specifications div{padding:12px;border:1px solid #e3e8ee;border-radius:10px;background:#f8fafc}
+.design-specifications dt{color:#657386;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.design-specifications dd{margin:5px 0 0;color:#172b45;font-weight:750}
+@media(max-width:480px){.design-specifications{grid-template-columns:1fr}}
 .stage-label,.stage-caption{position:absolute;z-index:3;left:20px;color:#657386;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
 .stage-label{top:18px}.stage-label span{color:#b18408}.stage-caption{right:20px;bottom:17px;left:auto;font-size:10px;letter-spacing:.04em;text-transform:none}
 .detail-image img{position:relative;z-index:2;display:block;width:100%;max-width:600px;max-height:520px;object-fit:contain;transform:translateZ(36px) rotateY(0deg);filter:drop-shadow(0 18px 16px rgba(23,43,69,.15));transition:transform .9s cubic-bezier(.2,.7,.2,1),filter .4s ease}

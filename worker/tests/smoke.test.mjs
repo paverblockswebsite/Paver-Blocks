@@ -1291,7 +1291,12 @@ test("project image upload rolls back live object when archive write fails", asy
       async delete(key) { events.push(["delete-live", key]); },
     },
     PROJECT_IMAGE_ARCHIVE: { async put() { throw new Error("archive unavailable"); } },
-    DB: { prepare() { throw new Error("D1 must not be touched."); } },
+    DB: {
+      prepare() {
+        return { bind() { return { async first() { return { id: projectId }; } }; } };
+      },
+      async batch() { throw new Error("D1 metadata must not be written after archive failure."); },
+    },
   };
   const form = new FormData();
   form.set("file", new File([new Uint8Array([255, 216, 255, 1])], "test.jpg", { type: "image/jpeg" }));

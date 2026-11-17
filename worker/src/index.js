@@ -389,7 +389,10 @@ const ADMIN_HTML = `<!doctype html>
         <option value="completed">Completed</option>
         <option value="closed">Closed</option>
       </select>
+      <label for="inquiry-search">Search inquiries</label>
+      <input id="inquiry-search" type="search" maxlength="120" placeholder="Name, phone, email or location…" autocomplete="off">
       <button id="refresh" type="button" class="button secondary">Refresh</button>
+      <button id="export-inquiries" type="button" class="button secondary">Export CSV</button>
     </section>
     <p id="notice" class="notice" role="status" aria-live="polite">Loading inquiries…</p>
     <section id="inquiry-list" class="inquiry-list" aria-label="Inquiry list"></section>
@@ -521,7 +524,7 @@ const ADMIN_CSS = `
 .topbar{height:68px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 max(22px,calc((100% - 1100px)/2))}
 .brand{color:#fff;text-decoration:none;font-weight:800;letter-spacing:.06em}.brand span{color:var(--yellow);font-size:.75rem;margin-left:8px}.public-link{color:#fff;text-decoration:none;font-size:.9rem}
 .shell{max-width:1100px;margin:0 auto;padding:42px 22px 64px}.intro{margin-bottom:28px}.eyebrow{font-size:.75rem;font-weight:800;letter-spacing:.14em;color:#8b6810}.intro h1{font-size:clamp(2rem,5vw,2.7rem);line-height:1.1;margin:8px 0;color:var(--navy)}.muted,.footnote{color:var(--muted)}
-.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}.toolbar label{font-weight:650}.toolbar select,.editor select,.editor textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink)}.button{font:inherit;font-weight:700;border:0;border-radius:8px;padding:10px 16px;cursor:pointer}.primary{background:var(--navy);color:#fff}.secondary{background:#e9eef4;color:var(--navy)}button:focus-visible,a:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #d69e00;outline-offset:2px}
+.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}.toolbar label{font-weight:650}.toolbar select,.toolbar input,.editor select,.editor textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink)}.toolbar input{min-width:min(260px,100%);flex:1 1 220px}.button{font:inherit;font-weight:700;border:0;border-radius:8px;padding:10px 16px;cursor:pointer}.primary{background:var(--navy);color:#fff}.secondary{background:#e9eef4;color:var(--navy)}button:focus-visible,a:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #d69e00;outline-offset:2px}
 .notice{min-height:26px;color:var(--muted)}.notice.error{color:#a12626}.inquiry-list,.project-list{display:grid;gap:14px}.inquiry,.project-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 2px 8px #172b4508}.inquiry-head,.project-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.inquiry h2,.project-card h3{font-size:1.12rem;color:var(--navy);margin:0 0 4px}.meta{color:var(--muted);font-size:.9rem}.pill{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;border-radius:30px;padding:5px 9px;background:#edf1f5;color:#43546a;white-space:nowrap}.details{white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0}.facts{display:flex;gap:10px 18px;flex-wrap:wrap;font-size:.9rem;color:#48576a}.editor{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;display:grid;grid-template-columns:minmax(140px,220px) 1fr auto;gap:10px;align-items:end}.editor label,.project-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.editor textarea,.project-fields input,.project-fields select,.project-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.editor textarea{min-height:42px;resize:vertical}.empty{background:#fff;border:1px dashed #bdc7d3;border-radius:14px;padding:30px;text-align:center;color:var(--muted)}.content-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:48px 0 12px}.content-heading h2{font-size:1.7rem;color:var(--navy);margin:4px 0}.project-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.project-form h3{margin:0 0 16px;color:var(--navy)}.project-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.project-fields .wide{grid-column:1/-1}.project-fields small{font-weight:400;color:var(--muted)}.form-actions{display:flex;gap:10px;margin-top:18px}.project-card p{margin:8px 0}.project-card .project-actions{display:flex;gap:8px;margin-top:14px}.footnote{font-size:.82rem;margin-top:34px}
 .content-fields .consent{display:flex;align-items:flex-start;gap:10px}.content-fields .consent input{width:auto;margin-top:4px}
 .content-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.content-form h3{margin:0 0 16px;color:var(--navy)}.content-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.content-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.content-fields input,.content-fields select,.content-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.content-fields .wide{grid-column:1/-1}.content-actions{display:flex;gap:8px;margin-top:14px}.image-upload-form{display:grid;gap:10px;border-top:1px solid var(--line);margin-top:16px;padding-top:14px}.image-upload-form label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.image-upload-form input{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:9px;max-width:100%}.image-upload-form .meta{margin:0}.project-gallery{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}.project-gallery h4{margin:0 0 8px;font-size:.95rem}.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}.gallery-item{margin:0;min-width:0}.gallery-item img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--line);border-radius:8px;background:#eef1f4}.gallery-item figcaption{font-size:.78rem;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}.gallery-controls{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}.gallery-controls .button{font-size:.72rem;padding:6px 8px}.button.danger{background:#fae8e8;color:#8b1e1e}
@@ -532,6 +535,8 @@ const ADMIN_JS = `
 const list = document.querySelector("#inquiry-list");
 const notice = document.querySelector("#notice");
 const filter = document.querySelector("#status-filter");
+const searchInput = document.querySelector("#inquiry-search");
+const exportButton = document.querySelector("#export-inquiries");
 const statuses = ["new","contacted","quoted","completed","closed"];
 const labelStatus = value => value.charAt(0).toUpperCase() + value.slice(1);
 const element = (tag, className, value) => {
@@ -599,6 +604,7 @@ async function load(append=false) {
   try {
     const params=new URLSearchParams({limit:String(inquiryPageSize),offset:String(offset)});
     if(filter.value)params.set("status",filter.value);
+    if(searchInput.value.trim())params.set("search",searchInput.value.trim());
     const payload=await api("/api/admin/inquiries?"+params.toString());
     if(sequence!==inquiryLoadSequence)return;
     const items=Array.isArray(payload.data)?payload.data:[];
@@ -616,6 +622,42 @@ async function load(append=false) {
 document.querySelector("#refresh").addEventListener("click",()=>load(false));
 loadMoreButton.addEventListener("click",()=>load(true));
 filter.addEventListener("change",()=>load(false));
+let inquirySearchTimer;
+searchInput.addEventListener("input",()=>{
+  window.clearTimeout(inquirySearchTimer);
+  inquirySearchTimer=window.setTimeout(()=>load(false),300);
+});
+exportButton.addEventListener("click",async()=>{
+  const params=new URLSearchParams();
+  if(filter.value)params.set("status",filter.value);
+  if(searchInput.value.trim())params.set("search",searchInput.value.trim());
+  exportButton.disabled=true;
+  try{
+    const response=await fetch("/api/admin/inquiries/export?"+params.toString(),{credentials:"same-origin"});
+    if(!response.ok){
+      const payload=await response.json().catch(()=>({}));
+      throw new Error(payload.error||"The CSV export could not be completed.");
+    }
+    const blob=await response.blob();
+    const objectUrl=URL.createObjectURL(blob);
+    const link=document.createElement("a");
+    link.href=objectUrl;
+    link.download="paver-blocks-inquiries.csv";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(()=>URL.revokeObjectURL(objectUrl),1000);
+    notice.className="notice";
+    notice.textContent=response.headers.get("x-export-truncated")==="true"
+      ?"CSV downloaded. Export is limited to the first 5,000 matching inquiries."
+      :"CSV export downloaded.";
+  }catch(error){
+    notice.className="notice error";
+    notice.textContent=error.message;
+  }finally{
+    exportButton.disabled=false;
+  }
+});
 
 const projectList = document.querySelector("#project-list");
 const projectNotice = document.querySelector("#project-notice");
@@ -1479,24 +1521,79 @@ async function handleAdmin(request, env, url, identity) {
     return response(request, env, { success: true });
   }
 
+  if (request.method === "GET" && path === "/api/admin/inquiries/export") {
+    const status = url.searchParams.get("status") || "";
+    const search = cleanString(url.searchParams.get("search") || "", 120);
+    if ((status && !VALID_INQUIRY_STATUSES.has(status)) || search === null) {
+      return response(request, env, { error: "Invalid inquiry export filter." }, 400);
+    }
+    const conditions = [];
+    const bindings = [];
+    if (status) { conditions.push("status = ?"); bindings.push(status); }
+    if (search) {
+      conditions.push("(customer_name LIKE ? COLLATE NOCASE OR phone LIKE ? COLLATE NOCASE OR COALESCE(email, '') LIKE ? COLLATE NOCASE OR location LIKE ? COLLATE NOCASE OR work_type LIKE ? COLLATE NOCASE OR project_details LIKE ? COLLATE NOCASE)");
+      const pattern = "%" + search + "%";
+      bindings.push(pattern, pattern, pattern, pattern, pattern, pattern);
+    }
+    const where = conditions.length ? " WHERE " + conditions.join(" AND ") : "";
+    const result = await env.DB.prepare(
+      "SELECT customer_name, phone, email, location, work_type, approximate_area, budget, project_details, status, created_at FROM inquiries" +
+      where + " ORDER BY created_at DESC LIMIT ?",
+    ).bind(...bindings, 5001).all();
+    const allRows = result.results || [];
+    const rows = allRows.slice(0, 5000);
+    const columns = [
+      ["Customer name", "customer_name"], ["Phone", "phone"], ["Email", "email"],
+      ["Location", "location"], ["Work type", "work_type"], ["Approximate area", "approximate_area"],
+      ["Budget", "budget"], ["Project details", "project_details"], ["Status", "status"],
+      ["Received at", "created_at"],
+    ];
+    const csvCell = (value) => {
+      let text = value === null || value === undefined ? "" : String(value);
+      if (/^[\\t\\r ]*[=+\\-@]/.test(text)) text = "'" + text;
+      return '"' + text.replace(/"/g, '""').replace(/\\r?\\n/g, " ") + '"';
+    };
+    const csv = "\\uFEFF" + [
+      columns.map(([label]) => csvCell(label)).join(","),
+      ...rows.map((row) => columns.map(([, key]) => csvCell(row[key])).join(",")),
+    ].join("\\r\\n");
+    const filenameDate = new Date().toISOString().slice(0, 10);
+    return new Response(csv, {
+      status: 200,
+      headers: {
+        "content-type": "text/csv; charset=utf-8",
+        "content-disposition": 'attachment; filename="paver-blocks-inquiries-' + filenameDate + '.csv"',
+        "cache-control": "no-store",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff",
+        "x-export-truncated": allRows.length > 5000 ? "true" : "false",
+      },
+    });
+  }
+
   if (request.method === "GET" && path === "/api/admin/inquiries") {
-    const status = url.searchParams.get("status");
-    if (status && !VALID_INQUIRY_STATUSES.has(status)) {
-      return response(request, env, { error: "Invalid inquiry status." }, 400);
+    const status = url.searchParams.get("status") || "";
+    const search = cleanString(url.searchParams.get("search") || "", 120);
+    if ((status && !VALID_INQUIRY_STATUSES.has(status)) || search === null) {
+      return response(request, env, { error: "Invalid inquiry filter." }, 400);
+    }
+    const conditions = [];
+    const bindings = [];
+    if (status) { conditions.push("status = ?"); bindings.push(status); }
+    if (search) {
+      conditions.push("(customer_name LIKE ? COLLATE NOCASE OR phone LIKE ? COLLATE NOCASE OR COALESCE(email, '') LIKE ? COLLATE NOCASE OR location LIKE ? COLLATE NOCASE OR work_type LIKE ? COLLATE NOCASE OR project_details LIKE ? COLLATE NOCASE)");
+      const pattern = "%" + search + "%";
+      bindings.push(pattern, pattern, pattern, pattern, pattern, pattern);
     }
     const limitValue = Number(url.searchParams.get("limit") || 50);
     const limit = Number.isInteger(limitValue) ? Math.min(Math.max(limitValue, 1), 100) : 50;
     const offsetValue = Number(url.searchParams.get("offset") || 0);
     const offset = Number.isInteger(offsetValue) ? Math.max(offsetValue, 0) : 0;
-
-    const query = status
-      ? env.DB.prepare(
-          "SELECT id, customer_name, phone, email, location, work_type, approximate_area, budget, project_details, status, internal_notes, created_at, updated_at FROM inquiries WHERE status = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
-        ).bind(status, limit, offset)
-      : env.DB.prepare(
-          "SELECT id, customer_name, phone, email, location, work_type, approximate_area, budget, project_details, status, internal_notes, created_at, updated_at FROM inquiries ORDER BY created_at DESC LIMIT ? OFFSET ?",
-        ).bind(limit, offset);
-
+    const where = conditions.length ? " WHERE " + conditions.join(" AND ") : "";
+    const query = env.DB.prepare(
+      "SELECT id, customer_name, phone, email, location, work_type, approximate_area, budget, project_details, status, internal_notes, created_at, updated_at FROM inquiries" +
+      where + " ORDER BY created_at DESC LIMIT ? OFFSET ?",
+    ).bind(...bindings, limit, offset);
     const result = await query.all();
     return response(request, env, { data: result.results || [], limit, offset });
   }

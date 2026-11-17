@@ -1,0 +1,30 @@
+name: Backup Worker validation
+
+on:
+  pull_request:
+    paths:
+      - "backup-worker/**"
+      - ".github/workflows/backup-worker-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backup-worker
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run backup utility tests
+        run: npm test
+      - name: Validate Wrangler config and Worker bundle
+        run: npm run check:config

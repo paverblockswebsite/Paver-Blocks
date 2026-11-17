@@ -1,88 +1,119 @@
-# Paver Blocks — D1 Backup, Restore, Retention and Audit Plan
+# Paver Blocks — Production Backup, Restore and Retention Plan
 
-**Status:** Review/design only. This document does not create a backup, schedule a job, change D1, delete data, or deploy a Worker.
+**Status:** Production audit completed; implementation and deployment are not yet complete. This document is a plan, not an active backup service. No production data, Cloudflare resources, or settings are changed by this document.
 
-## Current verified project state
+## 1. Verified production state (17 November 2026)
 
-- The development D1 database is `paver-blocks-dev`; it contains the application schema but no real customer inquiries.
-- The migration defines separate `inquiries` and `admin_audit_log` tables.
-- Inquiry updates and content-management mutations are submitted together with an audit-log insert using D1 batch operations.
-- Audit entries currently store administrator email, action, entity type, entity ID, and timestamp. Inquiry phone numbers, email addresses, and message bodies are not copied into audit entries.
-- There is no implemented retention job, inquiry deletion workflow, audit-log viewer, or configured external export schedule.
-- The Worker remains undeployed. No production database is connected.
+- Production D1 database: `paver-blocks-production`.
+- Production D1 database has 8 tables and is connected to the production API Worker.
+- Cloudflare dashboard shows D1 Time Travel available for the previous 7 days. The displayed restore window during the owner check was 10–17 November 2026.
+- A current Time Travel bookmark was retrieved by the owner. The bookmark is operational recovery information and must be stored privately, not committed to this public repository.
+- Production API Worker configuration binds D1 as `DB` and the private R2 bucket `paver-blocks-project-images-production` as `PROJECT_IMAGES`.
+- The production R2 bucket showed Standard storage, Public Access disabled, and 0 B stored at the time of the owner check.
+- Project-image uploads write an object to R2 and metadata to D1. The current delete path removes the original R2 object and then its D1 metadata. There is no independent image archive in the current implementation.
+- No scheduled D1 export Workflow or backup bucket binding is deployed yet. Implementation code and a separate production backup Worker configuration are being prepared in PR #43; production resources and secrets still require owner setup. No automated restore process is planned.
+- The existing production API Worker and admin dashboard are deployed. This replaces earlier project notes that incorrectly described the Worker as undeployed or the production database as unconnected.
 
-## Cloudflare D1 recovery facts (must be checked against this database)
+## 2. Recovery layers
 
-Cloudflare's current D1 documentation describes Time Travel as automatic point-in-time recovery, without a manual enable step, for databases on the production storage subsystem. The documented restore window is up to 7 days on Workers Free and up to 30 days on Workers Paid. The database's actual `version` must be checked; the project must not assume this database is eligible until that value is confirmed.
+### Layer A — D1 Time Travel
 
-A Time Travel restore overwrites the database in place. It is a recovery mechanism, not a substitute for an independently stored export or a tested restore procedure.
+Time Travel is the short-window recovery layer. The Cloudflare dashboard currently reports a 7-day restore window for this database.
 
-D1 also supports SQL export/import. Cloudflare documents that a running export blocks other database requests. Export files can contain private inquiry details and must never be committed to this public repository or stored in a public bucket.
+A Time Travel restore overwrites the current database. It is not an independent backup and does not restore R2 image objects. Never run a production restore as a routine test.
 
-References:
-- https://developers.cloudflare.com/d1/reference/time-travel/
-- https://developers.cloudflare.com/d1/best-practices/import-export-data/
+The owner-retrieved current bookmark is not reproduced in this public repository. Keep it in a private password manager or other private operational record.
 
-## Proposed backup approach — approval required before implementation
+### Layer B — Independent D1 SQL exports
 
-1. Confirm the D1 storage `version` and effective Time Travel retention for the actual database.
-2. Rely on Time Travel for short-window recovery only after eligibility and retention are verified.
-3. Before any schema migration or destructive data operation, capture a fresh SQL export and record its timestamp and database identity.
-4. Once real inquiries exist, schedule periodic SQL exports to a private backup destination. Keep an additional encrypted copy outside the same Cloudflare account for account-level recovery.
-5. Never put SQL exports, inquiry records, or backup credentials in GitHub.
-6. Test recovery using a separate disposable development database first. Never rehearse restore on the live customer database.
-7. Document who may initiate restore, how the incident is approved, and how post-restore data loss is assessed.
+Recommended implementation: a separate Cloudflare Workflow, scheduled once daily during a low-traffic period, exports the production D1 database through the Cloudflare D1 Export API and saves the SQL dump plus a small manifest to a new private R2 backup bucket.
 
-Suggested starting cadence for owner review: daily encrypted export while customer inquiries are actively collected, plus a pre-migration export. This is a proposal, not an active schedule.
+Suggested bucket name: `paver-blocks-backups-production`.
 
-## Data retention — owner decision required
+The backup bucket must be separate from the live project-image bucket, private (no public access), and used only for backups. SQL dumps contain private customer inquiry information and must never be placed in GitHub, a public bucket, or a public download route.
 
-No automatic deletion should be added until the business owner approves a written retention period.
+The D1 export API uses a polling process. Cloudflare documents that an in-progress export can make the database unavailable to serve queries until the export completes; the Workflow must poll until completion and the schedule should be placed in a quiet period. A failed or abandoned polling job must not be treated as a successful backup.
 
-Decisions required:
-- How long to retain new/unresolved inquiries with no recent activity.
-- How long to retain closed, completed, or declined inquiries.
-- Whether a customer deletion request should remove or anonymize the inquiry, subject to any legitimate business recordkeeping need.
-- How long to retain audit events.
-- Whether backups containing deleted inquiries should expire on a separate schedule.
+Each successful backup should record:
+- database name and ID;
+- export bookmark and completion timestamp;
+- SQL object key and reported file name;
+- backup format and success status;
+- image-archive scan result.
 
-Recommended safeguards:
-- Retention should be based on the inquiry's last meaningful activity, not only its creation date.
-- Do not delete open quotations or active project discussions automatically.
-- Keep audit events free of customer contact details and inquiry contents.
-- Any deletion/anonymization operation must be admin-only, narrowly scoped, logged, and tested against a development copy first.
-- Backups may retain deleted records until their documented expiry; the privacy notice must not promise immediate erasure from every backup unless that is technically guaranteed.
+A backup is not successful merely because a Workflow started. The SQL object and manifest must both be written successfully.
 
-## Audit-log review
+### Layer C — R2 project-image archive
 
-Current strengths:
-- Mutations write the business change and audit event in the same D1 batch.
-- Events identify the verified administrator and affected entity.
-- The audit table has a descending timestamp index.
-- No public API exposes the audit table.
+The current upload path stores project images in the live R2 bucket and stores object keys in D1. The current delete path permanently deletes the live object. A D1 SQL export alone therefore cannot restore deleted image files.
 
-Gaps before launch:
-- The application does not currently expose an authenticated audit-log viewer.
-- No retention/rotation process exists.
-- Append-only behavior is a design intention, not a database-enforced guarantee; no triggers currently prevent direct SQL updates/deletes.
-- Audit events do not record before/after values. Keep this minimal by default; do not add customer PII or full inquiry contents to audit events.
-- Define a safe procedure for exceptional audit-log deletion/retention maintenance before adding any cleanup task.
+Recommended implementation:
+1. Add a second, private R2 binding for the backup bucket to the production API Worker.
+2. When a project image is uploaded, write the image to both the live bucket and an immutable archive prefix in the backup bucket before committing its D1 metadata. If the required archive write fails, fail the upload safely and remove the incomplete live object.
+3. Never delete an archived copy when an administrator deletes the live project image.
+4. Include a scheduled backfill in the backup Workflow. It lists existing live project-image objects and archives any object not already present. This supports recovery for files that existed before the archive binding was enabled.
+5. Keep image archive keys and SQL dump keys in separate prefixes, and never expose either through public routes.
 
-## Restore runbook outline
+The live production image bucket currently reports 0 B, so no existing R2 objects were visible during this audit. Static website graphics committed to GitHub are separate from this R2 bucket.
 
-1. Stop or pause writes to the affected application.
-2. Identify the correct database and recovery point; confirm the incident and approval.
-3. Export the current state before any in-place restore, if the database is accessible.
-4. Restore only the development database during rehearsal. For a production incident, follow a separately approved incident procedure.
-5. Verify table counts, indexes, foreign keys, latest expected records, and Worker compatibility.
-6. Reconcile any valid inquiries created after the selected recovery point.
-7. Resume writes only after verification and record the recovery action in the incident log.
+## 3. Retention and cost controls
 
-## Explicit non-actions
+No automatic backup deletion or lifecycle expiry is enabled by this plan. The business owner must approve a retention period before a lifecycle rule is configured.
 
-- No restore has been run.
-- No backup has been exported or downloaded.
-- No backup schedule or Workflow has been created.
-- No retention period has been selected or implemented.
-- No customer or audit records have been deleted.
-- No Cloudflare settings, production resources, Worker deployment, or PR merge have been changed.
+Suggested policy for owner review:
+- daily D1 exports: 30 days;
+- weekly recovery points: 12 weeks;
+- monthly recovery points: 12 months;
+- image archive: retain at least as long as any D1 backup that may reference the image.
+
+This is a proposal, not an approved policy. Do not implement expiry until approved. Backups may contain inquiries that have since been deleted from the live database; the privacy notice must not promise immediate removal from all backups unless the backup-expiry process guarantees it.
+
+Cloudflare Workflows is available on the Workers Free plan, with published free quotas for requests, CPU time, steps, and workflow-state storage. R2 Standard currently includes a monthly free allowance for storage and operations. Usage beyond the applicable free allowances may be billable. Monitor usage and do not upgrade the account or enable paid services without owner approval.
+
+## 4. Secrets and access
+
+The backup Workflow needs a Cloudflare API token stored only as the Worker secret `D1_REST_API_TOKEN`, with the minimum D1 permission needed to export the intended database. Never send the token in chat, commit it to GitHub, or store it in ordinary Worker variables.
+
+The Workflow should have access only to the required production D1 export API and the private backup R2 bucket. The production API Worker should have write access to the archive prefix only through its R2 binding. No public route should expose backup objects.
+
+The backup bucket is in the same Cloudflare account. This protects against accidental deletion of live objects but not against loss or compromise of the entire Cloudflare account. An additional encrypted copy outside the account is a later resilience improvement and may introduce separate storage costs.
+
+## 5. Restore runbook — manual and approval-gated
+
+1. Confirm the incident, affected service, correct production database identity, and recovery point.
+2. Pause or restrict application writes where practical.
+3. If the database is accessible, create a fresh pre-restore export before changing production.
+4. Rehearse the SQL import and image recovery on a disposable development database and isolated bucket first.
+5. Obtain explicit owner approval before any production restore.
+6. Restore D1 and the matching archived images. Do not assume a D1 restore also restores R2.
+7. Verify table counts, indexes, foreign keys, expected inquiry records, image object availability, and Worker compatibility.
+8. Reconcile valid inquiries created after the recovery point.
+9. Resume writes only after verification, and record the incident and recovery outcome.
+
+There must be no public one-click production restore endpoint and no automatic restore on backup failure.
+
+## 6. Implementation checklist
+
+The first implementation code is prepared in PR #43: a separate scheduled Workflow, D1 export polling, private SQL/manifest storage, R2 image archiving on upload, and initial unit/smoke tests. This is source code only; it is not deployed or active. See `backup-worker/README.md` for the owner setup and deployment sequence.
+
+- [ ] Create the separate private R2 backup bucket.
+- [x] Author a scheduled D1 export Workflow with polling, retries, a manifest, and failure handling (PR #43; deployment pending).
+- [x] Author immutable R2 image archiving in the production upload path (PR #43; production binding/deployment pending).
+- [x] Author paginated image-archive backfill in the scheduled Workflow (PR #43; deployment pending).
+- [ ] Configure the D1 export API token as a Worker secret.
+- [ ] Pass GitHub Actions tests and Wrangler dry-run validation for the backup Worker and production API config.
+- [ ] Deploy only after the owner reviews the PR, creates the bucket, and configures the secret.
+- [ ] Run the first backup and verify both SQL dump and image archive.
+- [ ] Rehearse restore on development resources.
+- [ ] Obtain owner approval for retention before enabling lifecycle expiry.
+- [ ] Add a private backup-status view to the admin panel only after the backup process is proven reliable.
+
+## 7. Explicit non-actions
+
+- No D1 restore has been run.
+- No SQL export has been created or downloaded.
+- No scheduled backup has been deployed or activated.
+- No R2 object has been copied, deleted, or modified.
+- No production Worker, D1 database, R2 bucket, or Cloudflare setting has been changed.
+- No retention or lifecycle deletion rule has been configured.
+- No production backup token or secret has been created.

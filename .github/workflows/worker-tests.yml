@@ -6,11 +6,13 @@ on:
       - development/site-foundation
     paths:
       - 'worker/**'
+      - 'backup-worker/**'
       - 'worker-admin/**'
       - '.github/workflows/worker-tests.yml'
   pull_request:
     paths:
       - 'worker/**'
+      - 'backup-worker/**'
       - 'worker-admin/**'
       - '.github/workflows/worker-tests.yml'
 
@@ -36,6 +38,9 @@ jobs:
       - name: Validate Wrangler configuration without deploying
         working-directory: worker
         run: npm run check:config
+      - name: Validate production API Wrangler configuration without deploying
+        working-directory: worker
+        run: npx wrangler deploy --dry-run --config wrangler.production.toml
       - name: Install admin gateway tooling
         working-directory: worker-admin
         run: npm install --no-audit --no-fund
@@ -44,4 +49,14 @@ jobs:
         run: npm test
       - name: Validate admin gateway Wrangler configuration without deploying
         working-directory: worker-admin
+        run: npm run check:config
+
+      - name: Install backup Worker tooling
+        working-directory: backup-worker
+        run: npm install --no-audit --no-fund
+      - name: Run backup Worker tests
+        working-directory: backup-worker
+        run: npm test
+      - name: Validate backup Worker Wrangler configuration without deploying
+        working-directory: backup-worker
         run: npm run check:config

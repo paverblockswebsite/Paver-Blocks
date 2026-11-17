@@ -1217,3 +1217,107 @@ test("draft project image previews are private and never shared-cacheable", asyn
   );
   assert.equal(preview.headers.get("cache-control"), "private, no-store");
 });
+
+
+test("production image upload fails closed when archive binding is missing", async () => {
+  let databaseTouched = false;
+  const response = await uploadProjectImage(
+    new Request("https://api.example/api/admin/projects/123e4567-e89b-12d3-a456-426614174000/images", { method: "POST" }),
+    {
+      REQUIRE_IMAGE_ARCHIVE: "true",
+      PROJECT_IMAGES: { async put() {} },
+      DB: { prepare() { databaseTouched = true; throw new Error("D1 must not be touched."); } },
+    },
+    "123e4567-e89b-12d3-a456-426614174000",
+    { email: "admin@example.com" },
+    (request, env, body, status) => new Response(JSON.stringify(body), { status }),
+  );
+  assert.equal(response.status, 503);
+  assert.equal(databaseTouched, false);
+});
+
+test("project image upload archives the image before writing D1 metadata", async () => {
+  const projectId = "123e4567-e89b-12d3-a456-426614174000";
+  const events = [];
+  const env = {
+    PROJECT_IMAGES: { async put(key) { events.push(["live", key]); }, async delete(key) { events.push(["delete-live", key]); } },
+    PROJECT_IMAGE_ARCHIVE: { async put(key) { events.push(["archive", key]); } },
+    DB: {
+      prepare(sql) {
+        return {
+          bind(...values) {
+            return {
+              async first() { return { id: projectId }; },
+              sql, values,
+            };
+          },
+        };
+      },
+      async batch(statements) { events.push(["d1-batch", statements.length]); },
+    },
+  };
+  const form = new FormData();
+  form.set("file", new File([new Uint8Array([255, 216, 255, 1])], "test.jpg", { type: "image/jpeg" }));
+  form.set("alt_text", "Test project image");
+  const draftRequest = new Request("https://api.example/api/admin/projects/" + projectId + "/images", {
+    method: "POST",
+    body: form,
+  });
+  const body = await draftRequest.arrayBuffer();
+  const request = new Request("https://api.example/api/admin/projects/" + projectId + "/images", {
+    method: "POST",
+    headers: {
+      "content-length": String(body.byteLength),
+      "content-type": draftRequest.headers.get("content-type"),
+    },
+    body,
+  });
+  const response = await uploadProjectImage(
+    request, env, projectId, { email: "admin@example.com" },
+    (req, bindings, body, status) => new Response(JSON.stringify(body), { status }),
+  );
+  assert.equal(response.status, 201);
+  assert.equal(events[0][0], "live");
+  assert.equal(events[1][0], "archive");
+  assert.equal(events[2][0], "d1-batch");
+});
+
+test("project image upload rolls back live object when archive write fails", async () => {
+  const projectId = "123e4567-e89b-12d3-a456-426614174000";
+  const events = [];
+  const env = {
+    PROJECT_IMAGES: {
+      async put(key) { events.push(["live", key]); },
+      async delete(key) { events.push(["delete-live", key]); },
+    },
+    PROJECT_IMAGE_ARCHIVE: { async put() { throw new Error("archive unavailable"); } },
+    DB: {
+      prepare() {
+        return { bind() { return { async first() { return { id: projectId }; } }; } };
+      },
+      async batch() { throw new Error("D1 metadata must not be written after archive failure."); },
+    },
+  };
+  const form = new FormData();
+  form.set("file", new File([new Uint8Array([255, 216, 255, 1])], "test.jpg", { type: "image/jpeg" }));
+  form.set("alt_text", "Test project image");
+  const draftRequest = new Request("https://api.example/api/admin/projects/" + projectId + "/images", {
+    method: "POST",
+    body: form,
+  });
+  const body = await draftRequest.arrayBuffer();
+  const request = new Request("https://api.example/api/admin/projects/" + projectId + "/images", {
+    method: "POST",
+    headers: {
+      "content-length": String(body.byteLength),
+      "content-type": draftRequest.headers.get("content-type"),
+    },
+    body,
+  });
+  const response = await uploadProjectImage(
+    request, env, projectId, { email: "admin@example.com" },
+    (req, bindings, body, status) => new Response(JSON.stringify(body), { status }),
+  );
+  assert.equal(response.status, 503);
+  assert.deepEqual(events.map((event) => event[0]), ["live", "delete-live"]);
+});

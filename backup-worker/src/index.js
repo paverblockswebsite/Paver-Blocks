@@ -44,9 +44,14 @@ async function requestD1Export(env, body) {
 export class ProductionBackupWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
     const env = this.env;
-    required(env.BACKUPS, "BACKUPS R2 binding");
-    required(env.PROJECT_IMAGES, "PROJECT_IMAGES R2 binding");
-    required(env.PROJECT_IMAGE_ARCHIVE, "PROJECT_IMAGE_ARCHIVE R2 binding");
+    if (!env.BACKUPS || typeof env.BACKUPS.put !== "function" ||
+        typeof env.BACKUPS.head !== "function") {
+      throw new Error("The private BACKUPS R2 binding is not configured.");
+    }
+    if (!env.PROJECT_IMAGES || typeof env.PROJECT_IMAGES.list !== "function" ||
+        typeof env.PROJECT_IMAGES.get !== "function") {
+      throw new Error("The live PROJECT_IMAGES R2 binding is not configured.");
+    }
     const databaseId = required(env.D1_DATABASE_ID, "D1_DATABASE_ID");
     const databaseName = required(env.D1_DATABASE_NAME, "D1_DATABASE_NAME");
     const scheduledAt = event.schedule?.scheduledTime
@@ -63,7 +68,7 @@ export class ProductionBackupWorkflow extends WorkflowEntrypoint {
       const page = await step.do("archive image page " + pageNumber, async () => {
         return await archiveListedImagePage(
           env.PROJECT_IMAGES,
-          env.PROJECT_IMAGE_ARCHIVE,
+          env.BACKUPS,
           cursor,
           scheduledAt,
         );

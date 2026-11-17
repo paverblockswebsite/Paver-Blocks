@@ -107,11 +107,11 @@ const nav = [
         main.querySelectorAll(":scope > section:not(.hero):not(.page-hero)").forEach((section) => {
           section.setAttribute("data-motion", "reveal");
         });
-        main.querySelectorAll(".card-grid,.paver-design-grid,.design-grid,.faq-list").forEach((grid) => {
+        main.querySelectorAll(".card-grid,.paver-design-grid,.design-grid,.faq-list,.profile-feature,.story-steps,.showcase-track").forEach((grid) => {
           grid.setAttribute("data-motion", "stagger");
         });
         // Keep every source image visible; animate its surrounding section/card instead.
-        main.querySelectorAll(".info-card,.paver-design-card,.design-card,.faq-item").forEach((card) => {
+        main.querySelectorAll(".info-card,.paver-design-card,.design-card,.faq-item,.story-step,.showcase-card").forEach((card) => {
           card.classList.add("motion-hover-lift");
         });
 
@@ -131,6 +131,9 @@ const nav = [
               Array.from(target.children).forEach((child, index) => {
                 child.classList.add("motion-stagger-item");
                 child.style.setProperty("--motion-stagger-index", String(Math.min(index, 8)));
+                if (target.classList.contains("profile-feature")) child.classList.add("motion-profile-item");
+                if (target.classList.contains("story-steps")) child.classList.add("motion-story-item");
+                if (target.classList.contains("showcase-track")) child.classList.add("motion-showcase-item");
               });
             }
             revealObserver.observe(target);
@@ -262,6 +265,19 @@ const nav = [
   .motion-ready [data-motion="reveal"].motion-visible,.motion-ready [data-motion="stagger"].motion-visible{opacity:1;transform:translate3d(0,0,0)}
   .motion-ready [data-motion="stagger"]>.motion-stagger-item{opacity:0;transform:translate3d(0,16px,0);transition:opacity var(--motion-duration-base) var(--motion-ease),transform var(--motion-duration-base) var(--motion-ease);transition-delay:calc(var(--motion-stagger-index,0)*65ms)}
   .motion-ready [data-motion="stagger"].motion-visible>.motion-stagger-item{opacity:1;transform:translate3d(0,0,0)}
+
+  /* Homepage feature animations: deliberately visible, but still restrained. */
+  .motion-ready .profile-feature>.motion-profile-item{transform:translate3d(-64px,0,0) scale(.94);filter:blur(5px);transition:opacity 850ms cubic-bezier(.2,.75,.2,1),transform 850ms cubic-bezier(.2,.75,.2,1),filter 850ms ease;transition-delay:calc(var(--motion-stagger-index,0)*180ms)}
+  .motion-ready .profile-feature>.motion-profile-item:last-child{transform:translate3d(64px,30px,0) scale(.88) rotate(2deg)}
+  .motion-ready .profile-feature.motion-visible>.motion-profile-item{opacity:1;transform:translate3d(0,0,0) scale(1) rotate(0);filter:blur(0)}
+  .motion-ready .story-steps>.motion-story-item{transform:translate3d(0,54px,0) scale(.92) rotateX(7deg);transform-origin:center bottom;transition:opacity 760ms cubic-bezier(.2,.75,.2,1),transform 760ms cubic-bezier(.2,.75,.2,1);transition-delay:calc(var(--motion-stagger-index,0)*220ms)}
+  .motion-ready .story-steps.motion-visible>.motion-story-item{opacity:1;transform:translate3d(0,0,0) scale(1) rotateX(0)}
+  .motion-ready .showcase-track>.motion-showcase-item{transform:translate3d(0,58px,0) scale(.9);transition:opacity 780ms cubic-bezier(.2,.75,.2,1),transform 780ms cubic-bezier(.2,.75,.2,1);transition-delay:calc(var(--motion-stagger-index,0)*150ms)}
+  .motion-ready .showcase-track.motion-visible>.motion-showcase-item{opacity:1;transform:translate3d(0,0,0) scale(1)}
+  .motion-ready .showcase-card img{transform:scale(1.12);transition:transform 1100ms cubic-bezier(.2,.75,.2,1)}
+  .motion-ready .showcase-track.motion-visible .showcase-card img{transform:scale(1)}
+  @media(prefers-reduced-motion:reduce){.motion-ready .profile-feature>.motion-profile-item,.motion-ready .story-steps>.motion-story-item,.motion-ready .showcase-track>.motion-showcase-item{filter:none;transform:none!important;transition:none!important}.motion-ready .showcase-card img{transform:none!important;transition:none!important}}
+
   .motion-hover-lift{transition:transform var(--motion-duration-fast) var(--motion-ease),box-shadow var(--motion-duration-fast) var(--motion-ease)}
   @media(hover:hover) and (pointer:fine){.motion-hover-lift:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(23,43,69,.12)}.button:hover,.nav-cta:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(23,43,69,.14)}}
   .button,.nav-cta{transition:transform var(--motion-duration-fast) var(--motion-ease),box-shadow var(--motion-duration-fast) var(--motion-ease)}

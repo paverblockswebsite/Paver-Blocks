@@ -1,12 +1,14 @@
 ---
 import ServiceDetail from "../../components/ServiceDetail.astro";
+import { fetchPublicList } from "../../lib/public-cms.js";
+const cmsService = (await fetchPublicList("/api/public/services")).find((service) => service?.slug === "parking-area-construction");
 ---
 <ServiceDetail
-  title="Parking Area Construction"
+  title={cmsService?.title || "Parking Area Construction"}
   image="/images/services/PAC4.webp"
-  description="Paving and construction enquiries for parking spaces and vehicle-use areas at suitable residential, commercial and institutional sites."
+  description={(cmsService?.short_description || "Paving and construction enquiries for parking spaces and vehicle-use areas at suitable residential, commercial and institutional sites.").slice(0, 300)}
   canonical="https://paverblocks.com.pk/services/parking-area-construction/"
-  intro="A parking area needs to be understood in terms of vehicle type, expected movement, available space, access and the existing site condition. These factors influence the surface and installation requirements to be discussed."
+  intro={cmsService?.description || "A parking area needs to be understood in terms of vehicle type, expected movement, available space, access and the existing site condition. These factors influence the surface and installation requirements to be discussed."}
   approach="Paver selection and the proposed installation scope should be appropriate for the expected use and site conditions. Drainage, edges, entry transitions and circulation layout should also be identified before a quotation is prepared."
   uses={["Residential parking spaces and driveways","Commercial customer and staff parking","Institutional and office premises","Suitable industrial parking areas"]}
   considerations={["Approximate parking area and site dimensions","Types of vehicles expected to use the area","Entry, exit and turning requirements","Existing surface, levels and drainage","Any layout plan or preferred paver option"]}

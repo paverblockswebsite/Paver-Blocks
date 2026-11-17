@@ -37,6 +37,9 @@ jobs:
       - name: Validate Wrangler configuration without deploying
         working-directory: worker
         run: npm run check:config
+      - name: Validate production API Wrangler configuration without deploying
+        working-directory: worker
+        run: npx wrangler deploy --dry-run --config wrangler.production.toml
       - name: Install admin gateway tooling
         working-directory: worker-admin
         run: npm install --no-audit --no-fund

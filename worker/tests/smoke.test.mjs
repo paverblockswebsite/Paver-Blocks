@@ -470,6 +470,8 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.match(dashboardHtml, /id="design-form"/);
     assert.match(dashboardHtml, /id="testimonial-form"/);
     assert.match(dashboardHtml, /id="homepage-form"/);
+    assert.match(dashboardHtml, /id="audit-list"/);
+    assert.match(dashboardHtml, /id="audit-entity-filter"/);
     assert.match(dashboardHtml, /id="load-more-inquiries"/);
     assert.match(dashboardHtml, /permission_confirmed/);
     assert.match(dashboardHtml, /https:\/\/development-site\.example/);
@@ -491,6 +493,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
         assert.match(assetText, /api\/admin\/paver-designs/);
         assert.match(assetText, /api\/admin\/testimonials/);
         assert.match(assetText, /api\/admin\/homepage-content/);
+        assert.match(assetText, /api\/admin\/audit-log/);
         assert.match(assetText, /method:id\?"PATCH":"POST"/);
         assert.match(assetText, /method:"DELETE"/);
         assert.match(assetText, /limit:String\(inquiryPageSize\),offset:String\(offset\)/);

@@ -1259,22 +1259,21 @@ test("project image upload archives the image before writing D1 metadata", async
   const form = new FormData();
   form.set("file", new File([new Uint8Array([255, 216, 255, 1])], "test.jpg", { type: "image/jpeg" }));
   form.set("alt_text", "Test project image");
+  const draftRequest = new Request("https://api.example/api/admin/projects/" + projectId + "/images", {
+    method: "POST",
+    body: form,
+  });
+  const body = await draftRequest.arrayBuffer();
   const request = new Request("https://api.example/api/admin/projects/" + projectId + "/images", {
     method: "POST",
-    headers: { "content-length": "100", "content-type": "multipart/form-data; boundary=test" },
-    body: form,
+    headers: {
+      "content-length": String(body.byteLength),
+      "content-type": draftRequest.headers.get("content-type"),
+    },
+    body,
   });
-  // Request supplies its own multipart boundary; replace the header with the generated one.
-  const actualRequest = new Request("https://api.example/api/admin/projects/" + projectId + "/images", {
-    method: "POST",
-    body: form,
-  });
-  Object.defineProperty(actualRequest, "headers", { value: new Headers({
-    "content-length": "100",
-    "content-type": request.headers.get("content-type"),
-  }) });
   const response = await uploadProjectImage(
-    actualRequest, env, projectId, { email: "admin@example.com" },
+    request, env, projectId, { email: "admin@example.com" },
     (req, bindings, body, status) => new Response(JSON.stringify(body), { status }),
   );
   assert.equal(response.status, 201);
@@ -1297,9 +1296,18 @@ test("project image upload rolls back live object when archive write fails", asy
   const form = new FormData();
   form.set("file", new File([new Uint8Array([255, 216, 255, 1])], "test.jpg", { type: "image/jpeg" }));
   form.set("alt_text", "Test project image");
-  const request = new Request("https://api.example/api/admin/projects/" + projectId + "/images", {
+  const draftRequest = new Request("https://api.example/api/admin/projects/" + projectId + "/images", {
     method: "POST",
     body: form,
+  });
+  const body = await draftRequest.arrayBuffer();
+  const request = new Request("https://api.example/api/admin/projects/" + projectId + "/images", {
+    method: "POST",
+    headers: {
+      "content-length": String(body.byteLength),
+      "content-type": draftRequest.headers.get("content-type"),
+    },
+    body,
   });
   const response = await uploadProjectImage(
     request, env, projectId, { email: "admin@example.com" },

@@ -145,18 +145,18 @@ CREATE TABLE IF NOT EXISTS blog_settings (
 
 -- Initial Knowledge Hub taxonomy. Records remain editable from Admin.
 INSERT OR IGNORE INTO blog_categories (id, name, slug, description, sort_order) VALUES
-  ('blog-cat-01', 'Paver Block Installation', 'paver-block-installation', 'Installation methods, base preparation, laying patterns, joint filling and maintenance.', 1),
-  ('blog-cat-02', 'Paver Block Types & Designs', 'paver-block-types-designs', 'Paver shapes, patterns, dimensions, thicknesses, colours and applications.', 2),
-  ('blog-cat-03', 'Road Construction', 'road-construction', 'Road preparation, pavement layers, construction methods and maintenance.', 3),
-  ('blog-cat-04', 'Parking Area Construction', 'parking-area-construction', 'Residential, commercial and heavy-vehicle parking surfaces.', 4),
-  ('blog-cat-05', 'Footpath & Walkway Construction', 'footpath-walkway-construction', 'Pedestrian paths, kerbs, accessibility and walkway design.', 5),
-  ('blog-cat-06', 'Industrial Flooring', 'industrial-flooring', 'Warehouse, industrial and heavy-duty flooring guidance.', 6),
-  ('blog-cat-07', 'Paver Block Manufacturing', 'paver-block-manufacturing', 'Manufacturing processes, concrete materials, curing and quality control.', 7),
-  ('blog-cat-08', 'Materials & Supply', 'materials-supply', 'Material selection, sourcing, supply, transportation and estimation.', 8),
-  ('blog-cat-09', 'Civil Engineering & Technical Guides', 'civil-engineering-technical-guides', 'Construction terminology, measurements, specifications and site inspection.', 9),
-  ('blog-cat-10', 'Government & Private Contracts', 'government-private-contracts', 'Tender awareness, project planning, documentation and contracts.', 10),
-  ('blog-cat-11', 'Projects & Case Studies', 'projects-case-studies', 'Project stories, work processes, challenges and documented results.', 11),
-  ('blog-cat-12', 'Construction in Pakistan', 'construction-in-pakistan', 'Construction guidance for Pakistan’s regional conditions and infrastructure.', 12);
+  ('00000000-0000-4000-8000-000000000001', 'Paver Block Installation', 'paver-block-installation', 'Installation methods, base preparation, laying patterns, joint filling and maintenance.', 1),
+  ('00000000-0000-4000-8000-000000000002', 'Paver Block Types & Designs', 'paver-block-types-designs', 'Paver shapes, patterns, dimensions, thicknesses, colours and applications.', 2),
+  ('00000000-0000-4000-8000-000000000003', 'Road Construction', 'road-construction', 'Road preparation, pavement layers, construction methods and maintenance.', 3),
+  ('00000000-0000-4000-8000-000000000004', 'Parking Area Construction', 'parking-area-construction', 'Residential, commercial and heavy-vehicle parking surfaces.', 4),
+  ('00000000-0000-4000-8000-000000000005', 'Footpath & Walkway Construction', 'footpath-walkway-construction', 'Pedestrian paths, kerbs, accessibility and walkway design.', 5),
+  ('00000000-0000-4000-8000-000000000006', 'Industrial Flooring', 'industrial-flooring', 'Warehouse, industrial and heavy-duty flooring guidance.', 6),
+  ('00000000-0000-4000-8000-000000000007', 'Paver Block Manufacturing', 'paver-block-manufacturing', 'Manufacturing processes, concrete materials, curing and quality control.', 7),
+  ('00000000-0000-4000-8000-000000000008', 'Materials & Supply', 'materials-supply', 'Material selection, sourcing, supply, transportation and estimation.', 8),
+  ('00000000-0000-4000-8000-000000000009', 'Civil Engineering & Technical Guides', 'civil-engineering-technical-guides', 'Construction terminology, measurements, specifications and site inspection.', 9),
+  ('00000000-0000-4000-8000-000000000010', 'Government & Private Contracts', 'government-private-contracts', 'Tender awareness, project planning, documentation and contracts.', 10),
+  ('00000000-0000-4000-8000-000000000011', 'Projects & Case Studies', 'projects-case-studies', 'Project stories, work processes, challenges and documented results.', 11),
+  ('00000000-0000-4000-8000-000000000012', 'Construction in Pakistan', 'construction-in-pakistan', 'Construction guidance for Pakistan’s regional conditions and infrastructure.', 12);
 
 -- Optional comments, subscriptions, and visitor-level analytics are deliberately
 -- excluded from this foundational migration until privacy and consent requirements

@@ -4,7 +4,7 @@ This is a separate Cloudflare Worker containing a scheduled Cloudflare Workflow.
 
 ## What it does
 
-- Runs daily at 21:00 UTC (02:00 Pakistan Standard Time).
+- A standard Worker Cron Trigger fires daily at 21:00 UTC (02:00 Pakistan Standard Time) and starts the bound Backup Workflow. This avoids the direct Workflow `schedules` configuration that failed deployment on this account.
 - Archives existing project-image objects from the live private R2 bucket into the private backup bucket under the `images/` prefix.
 - Requests a D1 SQL export in Cloudflare's import-compatible `d1` format.
 - Polls the D1 export endpoint until it completes (maximum 40 polls, 10 seconds apart).
@@ -37,10 +37,11 @@ Never put either value in Git, ordinary variables, a public issue, or chat. The 
 2. Review this code and its GitHub Actions tests.
 3. Configure the production API Worker's `PROJECT_IMAGE_ARCHIVE` binding to that bucket. Its production config sets `REQUIRE_IMAGE_ARCHIVE = "true"`; image uploads will fail closed if the required archive binding is missing or archive writes fail.
 4. Deploy the production API Worker only after the bucket binding is confirmed.
-5. Create the separate backup Worker from this directory (`backup-worker`) and configure both encrypted secrets.
-6. Deploy the backup Worker and confirm the Workflow schedule is registered.
-7. Verify the first completed Workflow run, SQL object, and manifest in the private bucket.
-8. Rehearse SQL restore only against a disposable development database and isolated image bucket.
+5. Create the separate backup Worker from this directory (`backup-worker`). The schedule is a standard Worker Cron Trigger (`[triggers].crons`), and the `scheduled()` handler starts the bound Workflow.
+6. Configure both encrypted secrets only after owner approval for the first production D1 export and recurring schedule.
+7. Deploy the backup Worker and confirm the Cron Trigger is registered. Do not manually invoke the Workflow against production without approval.
+8. After explicit approval, verify the first completed Workflow run, SQL object, and manifest in the private bucket.
+9. Rehearse SQL restore only against a disposable development database and isolated image bucket.
 
 No production restore endpoint or automatic restore is included. Never restore production without a separate incident review, a fresh pre-restore backup, and the owner's explicit approval.
 
@@ -50,4 +51,4 @@ Cloudflare lists Workflows as available on Workers Free. Published free quotas i
 
 ## Current state
 
-The private backup bucket has been created and confirmed with Public Access disabled. The code and tests are prepared in GitHub PR #43. This Worker and the updated production API Worker have **not** been deployed; no SQL export, image copy, or restore has been run. The API token and Worker secrets have not been created.
+The private backup bucket has been created and confirmed with Public Access disabled. The production API Worker has the image-archive binding. GitHub PR #43 was merged. The dedicated D1 export API token has been created, but its value has not been added to Worker secrets. The first backup Worker build failed because direct Workflow schedules were rejected on this account; a standard Worker Cron Trigger is now used in the follow-up fix. No SQL export, image copy, or restore has been run.

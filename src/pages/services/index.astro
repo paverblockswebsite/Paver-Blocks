@@ -37,7 +37,7 @@ const services = publishedServices.length
       <img src="/images/services/labour-team.webp" alt="Paver Blocks labour team" width="1920" height="1080" fetchpriority="high" decoding="async" />
     </div>
   </section>
-  <section class="content-section soft-section"><div class="card-grid">{services.map((service, index) => <article class="info-card">{service.image && <img class="service-card-image" src={service.image} alt={service.name} loading={index < 3 ? "eager" : "lazy"} fetchpriority={index < 3 ? "high" : "auto"} decoding="async" />}<p class="eyebrow">Paver Blocks / Service</p><h3>{service.name}</h3><p>{service.description}</p><a class="button" href={service.url}>Discuss service</a></article>)}</div></section>
+  <section class="content-section soft-section"><div class="card-grid">{services.map((service, index) => <article class="info-card">{service.image && <img class="service-card-image" src={service.image} alt={service.name} loading={index < 3 ? "eager" : "lazy"} fetchpriority={index < 3 ? "high" : "auto"} decoding="async" />}<p class="eyebrow">Paver Blocks / Service</p><h3>{service.name}</h3><p>{service.description}</p><a class="button" href={service.url}>{service.image ? "Explore service" : "Discuss service"}</a></article>)}</div></section>
   <section class="content-section"><h2>Need help defining the scope?</h2><p>Share your project location, intended use and approximate area so we can understand your requirements.</p><div class="actions"><a class="button button-primary" href="/get-a-quote/">Request a Quote</a><a class="button" href="https://wa.me/923162753210">WhatsApp Us</a></div></section>
 </SiteLayout>
 <style>

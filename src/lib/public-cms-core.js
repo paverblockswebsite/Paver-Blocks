@@ -16,6 +16,13 @@ export function resolvePublicApiOrigin(value) {
   }
 }
 
+export function selectPublicApiBase(configured, pagesBranch) {
+  if (typeof configured === "string" && configured.trim()) return configured;
+  return pagesBranch === "main"
+    ? "https://paver-blocks-api.hellopaverblocks.workers.dev"
+    : "https://paver-blocks-api-dev.hellopaverblocks.workers.dev";
+}
+
 export function createPublicCmsClient(apiBase, fetchImpl = fetch) {
   const origin = resolvePublicApiOrigin(apiBase);
   const listCache = new Map();

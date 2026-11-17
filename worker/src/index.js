@@ -500,7 +500,7 @@ const ADMIN_HTML = `<!doctype html>
     </section>
     <div class="toolbar" aria-label="Audit log filters">
       <label for="audit-entity-filter">Record type</label>
-      <select id="audit-entity-filter"><option value="">All types</option><option value="inquiry">Inquiries</option><option value="project">Projects</option><option value="service">Services</option><option value="paver_design">Paver designs</option><option value="testimonial">Testimonials</option><option value="homepage_content">Homepage</option></select>
+      <select id="audit-entity-filter"><option value="">All types</option><option value="inquiry">Inquiries</option><option value="project">Projects</option><option value="service">Services</option><option value="paver_design">Paver designs</option><option value="testimonial">Testimonials</option><option value="homepage_content">Homepage</option><option value="project_image">Project images</option><option value="project_gallery">Project galleries</option></select>
       <label for="audit-action-filter">Action</label>
       <select id="audit-action-filter"><option value="">All actions</option><option value="create">Created</option><option value="update">Updated</option><option value="delete">Deleted</option></select>
       <button id="audit-refresh" type="button" class="button secondary">Refresh log</button>
@@ -508,7 +508,7 @@ const ADMIN_HTML = `<!doctype html>
     <p id="audit-notice" class="notice" role="status" aria-live="polite">Loading audit history…</p>
     <section id="audit-list" class="project-list" aria-label="Administrative audit history"></section>
     <div class="form-actions"><button id="audit-load-more" type="button" class="button secondary" hidden>Load older activity</button></div>
-    <p class="footnote">Audit history records actions supported by the current logging system. It is not a backup or a complete record of file-level changes.</p>
+    <p class="footnote">Audit history shows recorded content and project image/gallery changes. It is not a backup or a record of changes made outside the admin system.</p>
 
     <p class="footnote">Private business information. Sign out of your Cloudflare Access session on shared devices.</p>
   </main>
@@ -1357,8 +1357,8 @@ async function handleAdmin(request, env, url, identity) {
   }
   const path = url.pathname;
   if (request.method === "GET" && path === "/api/admin/audit-log") {
-    const allowedEntities = new Set(["inquiry", "project", "service", "paver_design", "testimonial", "homepage_content"]);
-    const allowedActions = new Set(["create", "update", "delete"]);
+    const allowedEntities = new Set(["inquiry", "project", "service", "paver_design", "testimonial", "homepage_content", "project_image", "project_gallery"]);
+    const allowedActions = new Set(["create", "update", "delete", "upload", "reorder"]);
     const entityType = url.searchParams.get("entity_type") || "";
     const action = url.searchParams.get("action") || "";
     if ((entityType && !allowedEntities.has(entityType)) || (action && !allowedActions.has(action))) {

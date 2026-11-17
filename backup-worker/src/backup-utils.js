@@ -12,7 +12,7 @@ export async function archiveListedImagePage(sourceBucket, archiveBucket, cursor
     throw new Error("Both source and archive R2 buckets must be configured.");
   }
 
-  const page = await sourceBucket.list({ cursor, limit: 100 });
+  const page = await sourceBucket.list({ cursor, limit: 25 });
   let archived = 0;
   let skipped = 0;
 

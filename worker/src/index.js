@@ -1,3 +1,4 @@
+// Deployment trigger: harmless comment-only commit to verify the B2 development Worker build.
 import { uploadProjectImage, serveProjectImage, deleteProjectImage, reorderProjectImages } from "./project-images.js";
 import { handleBlogAdmin, handleBlogPublic } from "./blog.js";
 

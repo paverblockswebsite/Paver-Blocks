@@ -402,6 +402,7 @@ export async function handleBlogAdmin(request, env, url, identity) {
 
 export async function handleBlogPublic(request, env, url, respond) {
   const path = url.pathname;
+  if (!path.startsWith("/api/public/blog/")) return null;
   if (request.method !== "GET") return respond(request, env, { error: "Method not allowed." }, 405, { allow: "GET" });
   if (path === "/api/public/blog/categories") {
     const rows = await env.DB.prepare("SELECT id, name, slug, description FROM blog_categories WHERE is_active = 1 ORDER BY sort_order ASC, name ASC").all();

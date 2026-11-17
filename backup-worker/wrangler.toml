@@ -17,9 +17,6 @@ bucket_name = "paver-blocks-backups-production"
 binding = "PROJECT_IMAGES"
 bucket_name = "paver-blocks-project-images-production"
 
-[[r2_buckets]]
-binding = "PROJECT_IMAGE_ARCHIVE"
-bucket_name = "paver-blocks-backups-production"
 
 [[workflows]]
 name = "paver-blocks-production-backup"

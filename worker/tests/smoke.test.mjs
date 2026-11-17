@@ -359,6 +359,7 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
   const dbBatches = [];
   const preparedStatements = [];
   let projectImageCount = 0;
+  let exportRows = false;
   const env = makeEnv({
     ACCESS_TEAM_DOMAIN: teamDomain,
     ACCESS_AUD: "test-access-audience",
@@ -369,7 +370,16 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
           sql,
           values: [],
           bind(...values) { statement.values = values; return statement; },
-          async all() { return sql.includes("FROM admin_audit_log") ? { results: [{ id: "audit-1", admin_email: "hellopaverblocks@gmail.com", action: "upload", entity_type: "project_image", entity_id: "image-1", created_at: "2026-11-17 05:00:00" }] } : { results: [] }; },
+          async all() {
+            if (sql.includes("FROM admin_audit_log")) return { results: [{ id: "audit-1", admin_email: "hellopaverblocks@gmail.com", action: "upload", entity_type: "project_image", entity_id: "image-1", created_at: "2026-11-17 05:00:00" }] };
+            if (sql.includes("FROM inquiries") && exportRows) return { results: [{
+              customer_name: "=2+2", phone: "+923162753210", email: "customer@example.com",
+              location: "Hyderabad", work_type: "Paver installation", approximate_area: "20000 sq ft",
+              budget: "20000", project_details: "First line,\nSecond line", status: "new",
+              created_at: "2026-11-17 05:00:00", internal_notes: "Must never be exported",
+            }] };
+            return { results: [] };
+          },
           async first() {
             if (sql.includes("COUNT(*) AS image_count")) return { image_count: projectImageCount };
             return sql.includes("permission_confirmed, status FROM testimonials") ? { permission_confirmed: 0, status: "draft" } : { id: "123e4567-e89b-12d3-a456-426614174000" };
@@ -437,6 +447,44 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     const pagedQuery = preparedStatements.at(-1);
     assert.match(pagedQuery.sql, /ORDER BY created_at DESC LIMIT \? OFFSET \?$/);
     assert.deepEqual(pagedQuery.values, [20, 40]);
+
+    const searchedInquiryResponse = await requestWithToken(
+      validToken,
+      "/api/admin/inquiries?status=new&search=Hyderabad&limit=25&offset=5",
+    );
+    assert.equal(searchedInquiryResponse.status, 200);
+    assert.deepEqual(await searchedInquiryResponse.json(), { data: [], limit: 25, offset: 5 });
+    const searchQuery = preparedStatements.at(-1);
+    assert.match(searchQuery.sql, /customer_name LIKE \? COLLATE NOCASE/);
+    assert.match(searchQuery.sql, /project_details LIKE \? COLLATE NOCASE/);
+    assert.deepEqual(searchQuery.values, ["new", "%Hyderabad%", "%Hyderabad%", "%Hyderabad%", "%Hyderabad%", "%Hyderabad%", "%Hyderabad%", 25, 5]);
+
+    const invalidSearch = await requestWithToken(validToken, "/api/admin/inquiries?search=" + "x".repeat(121));
+    assert.equal(invalidSearch.status, 400, "inquiry search input must have a strict length limit");
+
+    exportRows = true;
+    const exportResponse = await requestWithToken(
+      validToken,
+      "/api/admin/inquiries/export?status=new&search=Hyderabad",
+    );
+    assert.equal(exportResponse.status, 200);
+    assert.match(exportResponse.headers.get("content-type") || "", /text\/csv/);
+    assert.equal(exportResponse.headers.get("cache-control"), "no-store");
+    assert.equal(exportResponse.headers.get("pragma"), "no-cache");
+    assert.equal(exportResponse.headers.get("x-export-truncated"), "false");
+    const csvBytes = new Uint8Array(await exportResponse.arrayBuffer());
+    assert.deepEqual(Array.from(csvBytes.slice(0, 3)), [0xEF, 0xBB, 0xBF], "CSV should include a UTF-8 BOM");
+    const csv = new TextDecoder().decode(csvBytes);
+    assert.ok(csv.includes('"Customer name"'), "CSV should include a stable header row");
+    assert.match(csv, /"'=2\+2"/, "formula-like values must be neutralized for spreadsheet applications");
+    assert.match(csv, /"'\+923162753210"/, "phone values beginning with plus must be safe in spreadsheets");
+    assert.match(csv, /"First line, Second line"/, "multiline fields should remain one CSV cell");
+    assert.doesNotMatch(csv, /Must never be exported|internal_notes/, "internal notes must never appear in inquiry exports");
+    const exportQuery = preparedStatements.at(-1);
+    assert.match(exportQuery.sql, /FROM inquiries/);
+    assert.match(exportQuery.sql, /LIMIT \?$/);
+    assert.deepEqual(exportQuery.values, ["new", "%Hyderabad%", "%Hyderabad%", "%Hyderabad%", "%Hyderabad%", "%Hyderabad%", "%Hyderabad%", 5001]);
+    exportRows = false;
 
     const missingOriginMutation = await worker.fetch(new Request(
       "https://api.example/api/admin/projects",
@@ -880,6 +928,7 @@ test("every admin API family rejects unauthenticated requests before touching th
   });
   const requests = [
     ["GET", "/api/admin/inquiries"],
+    ["GET", "/api/admin/inquiries/export"],
     ["PATCH", "/api/admin/inquiries/123e4567-e89b-12d3-a456-426614174000"],
     ["GET", "/api/admin/projects"],
     ["POST", "/api/admin/projects"],

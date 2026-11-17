@@ -83,9 +83,12 @@ export class ProductionBackupWorkflow extends WorkflowEntrypoint {
     }
     const databaseId = required(env.D1_DATABASE_ID, "D1_DATABASE_ID");
     const databaseName = required(env.D1_DATABASE_NAME, "D1_DATABASE_NAME");
+    const payloadScheduledTime = event.payload?.scheduledTime;
     const scheduledAt = event.schedule?.scheduledTime
       ? new Date(event.schedule.scheduledTime).toISOString()
-      : new Date().toISOString();
+      : payloadScheduledTime
+        ? new Date(payloadScheduledTime).toISOString()
+        : new Date().toISOString();
     const date = scheduledAt.slice(0, 10);
     const runId = date + "T" + scheduledAt.slice(11, 19).replace(/:/g, "-");
     const sqlKey = "d1/" + date + "/" + runId + ".sql";
@@ -189,6 +192,21 @@ export class ProductionBackupWorkflow extends WorkflowEntrypoint {
 }
 
 export default {
+  async scheduled(controller, env) {
+    if (!env.BACKUP_WORKFLOW || typeof env.BACKUP_WORKFLOW.create !== "function") {
+      throw new Error("The BACKUP_WORKFLOW binding is not configured.");
+    }
+
+    const instanceId = "daily-backup-" + controller.scheduledTime;
+    await env.BACKUP_WORKFLOW.create({
+      id: instanceId,
+      params: {
+        scheduledTime: controller.scheduledTime,
+        cron: controller.cron,
+      },
+    });
+  },
+
   async fetch() {
     return new Response("Not Found", { status: 404, headers: { "cache-control": "no-store" } });
   },

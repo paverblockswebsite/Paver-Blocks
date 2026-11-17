@@ -13,7 +13,7 @@ const projects = await Promise.all(projectRecords.map(async (project) => {
         url: publicProjectImageUrl(image.object_key),
         alt: typeof image.alt_text === "string" ? image.alt_text : project.title,
         caption: typeof image.caption === "string" ? image.caption : "",
-      })).filter((image) => image.url)
+      })).filter((image) => image.url).slice(0, 12)
     : [];
   return {
     ...project,

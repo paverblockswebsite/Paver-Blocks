@@ -6,6 +6,7 @@ on:
       - development/site-foundation
     paths:
       - 'worker/**'
+      - 'backup-worker/**'
       - 'worker-admin/**'
       - '.github/workflows/worker-tests.yml'
   pull_request:

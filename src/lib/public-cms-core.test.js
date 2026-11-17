@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createPublicCmsClient, resolvePublicApiOrigin } from "./public-cms-core.js";
+import { createPublicCmsClient, resolvePublicApiOrigin, selectPublicApiBase } from "./public-cms-core.js";
 
 test("accepts only safe HTTPS API origins (and local HTTP development)", () => {
   assert.equal(resolvePublicApiOrigin("https://api.example.com"), "https://api.example.com");
@@ -14,6 +14,21 @@ test("accepts only safe HTTPS API origins (and local HTTP development)", () => {
     "https://user:pass@api.example.com",
     "https://api.example.com#fragment",
   ]) assert.equal(resolvePublicApiOrigin(value), null, String(value));
+});
+
+test("uses development API for preview builds and production API only on main", () => {
+  assert.equal(
+    selectPublicApiBase("", "feature/admin-cms-public-integration"),
+    "https://paver-blocks-api-dev.hellopaverblocks.workers.dev",
+  );
+  assert.equal(
+    selectPublicApiBase("", "main"),
+    "https://paver-blocks-api.hellopaverblocks.workers.dev",
+  );
+  assert.equal(
+    selectPublicApiBase("https://custom-api.example.com", "main"),
+    "https://custom-api.example.com",
+  );
 });
 
 test("does not call fetch when no valid API origin is configured", async () => {

@@ -5,3 +5,7 @@ compatibility_date = "2026-11-07"
 [vars]
 # Development API origin only. The gateway accepts only admin routes.
 API_ORIGIN = "https://paver-blocks-api-dev.hellopaverblocks.workers.dev"
+# Route development admin requests directly to the development API Worker.
+[[services]]
+binding = "API"
+service = "paver-blocks-api-dev"

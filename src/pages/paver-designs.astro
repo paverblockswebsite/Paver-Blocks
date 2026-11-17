@@ -19,7 +19,7 @@ const designs = publishedDesigns.length
         ...design,
         image: knownDesign?.image || "",
         alt: knownDesign?.alt || `${design.name} paver design`,
-        url: knownDesign ? `/paver-designs/${design.slug}/` : `/get-a-quote/?design=${encodeURIComponent(design.slug)}`,
+        url: `/paver-designs/${design.slug}/`,
       };
     })
   : staticDesigns.map((design) => ({ ...design, url: `/paver-designs/${design.slug}/` }));

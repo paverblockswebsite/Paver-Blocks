@@ -472,8 +472,9 @@ test("Cloudflare Access admin identity validates signature, issuer, audience, ex
     assert.equal(exportResponse.headers.get("cache-control"), "no-store");
     assert.equal(exportResponse.headers.get("pragma"), "no-cache");
     assert.equal(exportResponse.headers.get("x-export-truncated"), "false");
-    const csv = await exportResponse.text();
-    assert.equal(csv.charCodeAt(0), 0xFEFF, "CSV should include a UTF-8 BOM");
+    const csvBytes = new Uint8Array(await exportResponse.arrayBuffer());
+    assert.deepEqual(Array.from(csvBytes.slice(0, 3)), [0xEF, 0xBB, 0xBF], "CSV should include a UTF-8 BOM");
+    const csv = new TextDecoder().decode(csvBytes);
     assert.ok(csv.includes('"Customer name"'), "CSV should include a stable header row");
     assert.match(csv, /"'=2\+2"/, "formula-like values must be neutralized for spreadsheet applications");
     assert.match(csv, /"'\+923162753210"/, "phone values beginning with plus must be safe in spreadsheets");

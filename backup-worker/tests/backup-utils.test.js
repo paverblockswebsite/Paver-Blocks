@@ -19,9 +19,7 @@ test("only validated project image keys are eligible for archive", () => {
 test("image archive copies object and metadata without deleting the source", async () => {
   const events = [];
   const sourceBucket = {
-    async list() {
-      return { objects: [{ key: imageKey }], truncated: false };
-    },
+    async list() { return { objects: [{ key: imageKey }], truncated: false }; },
     async get(key) {
       events.push(["get", key]);
       return {
@@ -66,20 +64,20 @@ test("image archive skips an existing immutable archive object", async () => {
   assert.equal(archiveWrites, 0);
 });
 
-test("D1 export parser accepts a running polling response", () => {
+test("D1 export parser accepts Cloudflare's documented running polling response", () => {
   assert.deepEqual(parseD1ExportResponse({
     success: true,
-    result: { status: "running", at_bookmark: "bookmark-123" },
+    result: { at_bookmark: "bookmark-123" },
   }), { status: "running", bookmark: "bookmark-123" });
 });
 
-test("D1 export parser requires a signed URL after completion", () => {
+test("D1 export parser accepts Cloudflare's documented completed response", () => {
   assert.deepEqual(parseD1ExportResponse({
     success: true,
     result: {
-      status: "complete",
       at_bookmark: "bookmark-456",
-      result: { filename: "export.sql", signed_url: "https://example.invalid/export.sql" },
+      filename: "export.sql",
+      signed_url: "https://example.invalid/export.sql",
     },
   }), {
     status: "complete",
@@ -87,13 +85,9 @@ test("D1 export parser requires a signed URL after completion", () => {
     filename: "export.sql",
     signedUrl: "https://example.invalid/export.sql",
   });
-  assert.throws(() => parseD1ExportResponse({
-    success: true,
-    result: { status: "complete", result: { filename: "export.sql" } },
-  }), /downloadable SQL file/);
 });
 
-test("D1 export parser rejects API errors and missing polling bookmarks", () => {
+test("D1 export parser rejects API errors and incomplete responses", () => {
   assert.throws(() => parseD1ExportResponse({ success: false }), /unsuccessful response/);
   assert.throws(() => parseD1ExportResponse({
     success: true,
@@ -102,5 +96,9 @@ test("D1 export parser rejects API errors and missing polling bookmarks", () => 
   assert.throws(() => parseD1ExportResponse({
     success: true,
     result: { status: "running" },
-  }), /polling bookmark/);
+  }), /neither a polling bookmark nor a downloadable SQL file/);
+  assert.throws(() => parseD1ExportResponse({
+    success: true,
+    result: { filename: "export.sql" },
+  }), /neither a polling bookmark nor a downloadable SQL file/);
 });

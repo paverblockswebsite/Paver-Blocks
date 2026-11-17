@@ -1550,13 +1550,13 @@ async function handleAdmin(request, env, url, identity) {
     ];
     const csvCell = (value) => {
       let text = value === null || value === undefined ? "" : String(value);
-      if (/^[\\t\\r ]*[=+\\-@]/.test(text)) text = "'" + text;
-      return '"' + text.replace(/"/g, '""').replace(/\\r?\\n/g, " ") + '"';
+      if (/^[\t\r ]*[=+\-@]/.test(text)) text = "'" + text;
+      return '"' + text.replace(/"/g, '""').replace(/\r?\n/g, " ") + '"';
     };
-    const csv = "\\uFEFF" + [
+    const csv = "\uFEFF" + [
       columns.map(([label]) => csvCell(label)).join(","),
       ...rows.map((row) => columns.map(([, key]) => csvCell(row[key])).join(",")),
-    ].join("\\r\\n");
+    ].join("\r\n");
     const filenameDate = new Date().toISOString().slice(0, 10);
     return new Response(csv, {
       status: 200,

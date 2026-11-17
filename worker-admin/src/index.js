@@ -1,3 +1,4 @@
+// Deployment trigger: harmless comment-only commit to verify the B2 development Admin Worker build.
 const JSON_HEADERS = {
   "content-type": "application/json; charset=utf-8",
   "cache-control": "no-store",

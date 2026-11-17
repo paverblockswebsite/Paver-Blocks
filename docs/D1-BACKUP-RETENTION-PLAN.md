@@ -11,7 +11,7 @@
 - Production API Worker configuration binds D1 as `DB` and the private R2 bucket `paver-blocks-project-images-production` as `PROJECT_IMAGES`.
 - The production R2 bucket showed Standard storage, Public Access disabled, and 0 B stored at the time of the owner check.
 - Project-image uploads write an object to R2 and metadata to D1. The current delete path removes the original R2 object and then its D1 metadata. There is no independent image archive in the current implementation.
-- No scheduled D1 export Workflow, backup bucket binding, or automated restore process is currently configured.
+- No scheduled D1 export Workflow or backup bucket binding is deployed yet. Implementation code and a separate production backup Worker configuration are being prepared in PR #43; production resources and secrets still require owner setup. No automated restore process is planned.
 - The existing production API Worker and admin dashboard are deployed. This replaces earlier project notes that incorrectly described the Worker as undeployed or the production database as unconnected.
 
 ## 2. Recovery layers
@@ -94,12 +94,14 @@ There must be no public one-click production restore endpoint and no automatic r
 
 ## 6. Implementation checklist
 
+The first implementation code is prepared in PR #43: a separate scheduled Workflow, D1 export polling, private SQL/manifest storage, R2 image archiving on upload, and initial unit/smoke tests. This is source code only; it is not deployed or active. See `backup-worker/README.md` for the owner setup and deployment sequence.
+
 - [ ] Create the separate private R2 backup bucket.
-- [ ] Add a scheduled D1 export Workflow with polling, retries, a manifest, and clear failure reporting.
-- [ ] Add immutable R2 image archiving to the production upload path.
-- [ ] Add a scheduled image-archive backfill for existing objects.
+- [x] Author a scheduled D1 export Workflow with polling, retries, a manifest, and failure handling (PR #43; deployment pending).
+- [x] Author immutable R2 image archiving in the production upload path (PR #43; production binding/deployment pending).
+- [x] Author paginated image-archive backfill in the scheduled Workflow (PR #43; deployment pending).
 - [ ] Configure the D1 export API token as a Worker secret.
-- [ ] Validate Wrangler configuration and automated tests without deploying.
+- [ ] Pass GitHub Actions tests and Wrangler dry-run validation for the backup Worker and production API config.
 - [ ] Deploy only after the owner reviews the PR, creates the bucket, and configures the secret.
 - [ ] Run the first backup and verify both SQL dump and image archive.
 - [ ] Rehearse restore on development resources.

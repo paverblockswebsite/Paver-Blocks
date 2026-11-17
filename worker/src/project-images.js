@@ -37,6 +37,11 @@ async function readBoundedForm(request, maximumBytes) {
 export async function uploadProjectImage(request, env, projectId, identity, respond) {
   const bucket = env.PROJECT_IMAGES;
   if (!bucket || typeof bucket.put !== "function") return respond(request, env, { error: "Project image storage is not configured yet." }, 503);
+  const archiveBucket = env.PROJECT_IMAGE_ARCHIVE;
+  if (env.REQUIRE_IMAGE_ARCHIVE === "true" &&
+      (!archiveBucket || typeof archiveBucket.put !== "function")) {
+    return respond(request, env, { error: "Project image archive is not configured yet." }, 503);
+  }
   const length = request.headers.get("content-length");
   if (!length || !/^\d+$/.test(length) || Number(length) > MAX_BYTES + FORM_OVERHEAD) {
     return respond(request, env, { error: "Image upload must include a valid size and be no larger than 5 MB." }, 413);
@@ -72,10 +77,22 @@ export async function uploadProjectImage(request, env, projectId, identity, resp
   if (!project) return respond(request, env, { error: "Project not found." }, 404);
   const imageId = crypto.randomUUID();
   const objectKey = "projects/" + projectId + "/" + imageId + "." + format.ext;
-  await bucket.put(objectKey, bytes, {
+  const imageOptions = {
     httpMetadata: { contentType: file.type, cacheControl: "public, max-age=31536000, immutable" },
     customMetadata: { projectId, imageId },
-  });
+  };
+  await bucket.put(objectKey, bytes, imageOptions);
+  if (archiveBucket) {
+    try {
+      await archiveBucket.put("images/" + objectKey, bytes, {
+        httpMetadata: imageOptions.httpMetadata,
+        customMetadata: { projectId, imageId, originalKey: objectKey, archivedAt: new Date().toISOString() },
+      });
+    } catch {
+      try { await bucket.delete(objectKey); } catch {}
+      return respond(request, env, { error: "The project image could not be safely archived. Please retry." }, 503);
+    }
+  }
   try {
     await env.DB.batch([
       env.DB.prepare("INSERT INTO project_images (id, project_id, object_key, alt_text, caption, sort_order) VALUES (?, ?, ?, ?, ?, ?)").bind(imageId, projectId, objectKey, altText.trim(), caption.trim() || null, 0),
@@ -129,8 +146,9 @@ export async function deleteProjectImage(env, projectId, imageId, identity, resp
     return respond(request, env, { error: "Project photo not found." }, 404);
   }
 
-  // Delete the object first. R2 deletion is idempotent; if the following D1
-  // batch fails, the still-present row can be retried without exposing the file.
+  // Delete only the live object. The immutable archive copy under images/
+  // is intentionally retained so a later recovery can restore deleted photos.
+  // If the following D1 batch fails, the still-present row can be retried safely.
   try {
     await bucket.delete(image.object_key);
   } catch {

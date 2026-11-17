@@ -12,6 +12,7 @@ on:
   pull_request:
     paths:
       - 'worker/**'
+      - 'backup-worker/**'
       - 'worker-admin/**'
       - '.github/workflows/worker-tests.yml'
 

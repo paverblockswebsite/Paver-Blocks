@@ -88,7 +88,7 @@ export class ProductionBackupWorkflow extends WorkflowEntrypoint {
       });
     });
 
-    for (let pollNumber = 0; exportState.status !== "complete" && pollNumber < 90; pollNumber++) {
+    for (let pollNumber = 0; exportState.status !== "complete" && pollNumber < 40; pollNumber++) {
       if (!exportState.bookmark) throw new Error("D1 export polling bookmark is missing.");
       await step.sleep("wait for D1 export poll " + pollNumber, "10 seconds");
       exportState = await step.do("poll D1 SQL export " + pollNumber, async () => {

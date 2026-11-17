@@ -495,6 +495,21 @@ const ADMIN_HTML = `<!doctype html>
     </form>
 
 
+    <section class="content-heading">
+      <div><p class="eyebrow">SECURITY &amp; ACCOUNTABILITY</p><h2>Audit log</h2><p class="muted">Review recorded administrator changes. Customer inquiry details are not shown here.</p></div>
+    </section>
+    <div class="toolbar" aria-label="Audit log filters">
+      <label for="audit-entity-filter">Record type</label>
+      <select id="audit-entity-filter"><option value="">All types</option><option value="inquiry">Inquiries</option><option value="project">Projects</option><option value="service">Services</option><option value="paver_design">Paver designs</option><option value="testimonial">Testimonials</option><option value="homepage_content">Homepage</option><option value="project_image">Project images</option><option value="project_gallery">Project galleries</option></select>
+      <label for="audit-action-filter">Action</label>
+      <select id="audit-action-filter"><option value="">All actions</option><option value="create">Created</option><option value="update">Updated</option><option value="delete">Deleted</option><option value="upload">Uploaded</option><option value="reorder">Reordered</option></select>
+      <button id="audit-refresh" type="button" class="button secondary">Refresh log</button>
+    </div>
+    <p id="audit-notice" class="notice" role="status" aria-live="polite">Loading audit history…</p>
+    <section id="audit-list" class="project-list" aria-label="Administrative audit history"></section>
+    <div class="form-actions"><button id="audit-load-more" type="button" class="button secondary" hidden>Load older activity</button></div>
+    <p class="footnote">Audit history shows recorded content and project image/gallery changes. It is not a backup or a record of changes made outside the admin system.</p>
+
     <p class="footnote">Private business information. Sign out of your Cloudflare Access session on shared devices.</p>
   </main>
 </body>
@@ -959,6 +974,59 @@ homepageForm.addEventListener("submit",async event=>{
 loadTestimonials();
 loadHomepageContent();
 
+const auditList=document.querySelector("#audit-list");
+const auditNotice=document.querySelector("#audit-notice");
+const auditEntityFilter=document.querySelector("#audit-entity-filter");
+const auditActionFilter=document.querySelector("#audit-action-filter");
+const auditMore=document.querySelector("#audit-load-more");
+let auditOffset=0;
+let auditSequence=0;
+const auditPageSize=50;
+function auditText(tag,value,className="") {
+  const node=document.createElement(tag);
+  if(className)node.className=className;
+  node.textContent=value==null?"":String(value);
+  return node;
+}
+async function loadAudit(append=false) {
+  const sequence=++auditSequence;
+  const offset=append?auditOffset:0;
+  if(!append){auditOffset=0;auditList.replaceChildren();auditMore.hidden=true;}
+  auditNotice.className="notice";
+  auditNotice.textContent="Loading audit history…";
+  try {
+    const params=new URLSearchParams({limit:String(auditPageSize),offset:String(offset)});
+    if(auditEntityFilter.value)params.set("entity_type",auditEntityFilter.value);
+    if(auditActionFilter.value)params.set("action",auditActionFilter.value);
+    const payload=await api("/api/admin/audit-log?"+params.toString());
+    if(sequence!==auditSequence)return;
+    const items=Array.isArray(payload.data)?payload.data:[];
+    if(!append&&items.length===0)auditList.append(auditText("div","No audit activity has been recorded yet.","empty"));
+    for(const item of items){
+      const card=auditText("article","","project-card");
+      const head=auditText("div","","project-head");
+      const detail=auditText("div","");
+      detail.append(auditText("h3",String(item.action||"Activity").replace(/^./,c=>c.toUpperCase())+" · "+String(item.entity_type||"record").replaceAll("_"," ")));
+      detail.append(auditText("p","Administrator: "+(item.admin_email||"Unknown"),"meta"));
+      detail.append(auditText("p","Record ID: "+(item.entity_id||"—"),"meta"));
+      detail.append(auditText("p",item.created_at||"Timestamp unavailable","meta"));
+      head.append(detail);
+      card.append(head);
+      auditList.append(card);
+    }
+    auditOffset=offset+items.length;
+    auditMore.hidden=items.length<auditPageSize;
+    auditNotice.textContent=auditOffset+" audit entr"+(auditOffset===1?"y":"ies")+" loaded.";
+  } catch(error) {
+    if(sequence===auditSequence){auditNotice.className="notice error";auditNotice.textContent=error.message;}
+  }
+}
+auditEntityFilter.addEventListener("change",()=>loadAudit());
+auditActionFilter.addEventListener("change",()=>loadAudit());
+document.querySelector("#audit-refresh").addEventListener("click",()=>loadAudit());
+auditMore.addEventListener("click",()=>loadAudit(true));
+loadAudit();
+
 load();
 loadProjects();
 `;
@@ -1288,6 +1356,29 @@ async function handleAdmin(request, env, url, identity) {
     return deleteProjectImage(env, imageDeleteMatch[1], imageDeleteMatch[2], identity, response, request);
   }
   const path = url.pathname;
+  if (request.method === "GET" && path === "/api/admin/audit-log") {
+    const allowedEntities = new Set(["inquiry", "project", "service", "paver_design", "testimonial", "homepage_content", "project_image", "project_gallery"]);
+    const allowedActions = new Set(["create", "update", "delete", "upload", "reorder"]);
+    const entityType = url.searchParams.get("entity_type") || "";
+    const action = url.searchParams.get("action") || "";
+    if ((entityType && !allowedEntities.has(entityType)) || (action && !allowedActions.has(action))) {
+      return response(request, env, { error: "Invalid audit log filter." }, 400);
+    }
+    const rawLimit = Number(url.searchParams.get("limit") || 50);
+    const rawOffset = Number(url.searchParams.get("offset") || 0);
+    const limit = Number.isInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 50;
+    const offset = Number.isInteger(rawOffset) ? Math.min(Math.max(rawOffset, 0), 1000000) : 0;
+    const conditions = [];
+    const bindings = [];
+    if (entityType) { conditions.push("entity_type = ?"); bindings.push(entityType); }
+    if (action) { conditions.push("action = ?"); bindings.push(action); }
+    const where = conditions.length ? " WHERE " + conditions.join(" AND ") : "";
+    const rows = await env.DB.prepare(
+      "SELECT id, admin_email, action, entity_type, entity_id, created_at FROM admin_audit_log" + where +
+      " ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?",
+    ).bind(...bindings, limit, offset).all();
+    return response(request, env, { data: rows.results || [], limit, offset });
+  }
   const contentResponse = await handleAdminContent(request, env, url, identity);
   if (contentResponse) return contentResponse;
   const editorialResponse = await handleAdminEditorial(request, env, url, identity);

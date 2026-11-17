@@ -71,13 +71,16 @@ test("D1 export parser accepts Cloudflare's documented running polling response"
   }), { status: "running", bookmark: "bookmark-123" });
 });
 
-test("D1 export parser accepts Cloudflare's documented completed response", () => {
+test("D1 export parser accepts Cloudflare's documented nested completed response", () => {
   assert.deepEqual(parseD1ExportResponse({
     success: true,
     result: {
       at_bookmark: "bookmark-456",
-      filename: "export.sql",
-      signed_url: "https://example.invalid/export.sql",
+      status: "complete",
+      result: {
+        filename: "export.sql",
+        signed_url: "https://example.invalid/export.sql",
+      },
     },
   }), {
     status: "complete",
@@ -95,10 +98,10 @@ test("D1 export parser rejects API errors and incomplete responses", () => {
   }), /export failed/);
   assert.throws(() => parseD1ExportResponse({
     success: true,
-    result: { status: "running" },
-  }), /neither a polling bookmark nor a downloadable SQL file/);
+    result: { status: "complete" },
+  }), /missing its SQL download details/);
   assert.throws(() => parseD1ExportResponse({
     success: true,
-    result: { filename: "export.sql" },
-  }), /neither a polling bookmark nor a downloadable SQL file/);
+    result: { status: "running" },
+  }), /neither a polling bookmark nor a completed SQL file/);
 });

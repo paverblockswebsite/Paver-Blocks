@@ -4,7 +4,7 @@ import { fetchPublicList, fetchPublicProject, publicProjectImageUrl } from "../.
 
 const projectRecords = (await fetchPublicList("/api/public/projects"))
   .filter((project) => project && typeof project.title === "string" &&
-    typeof project.slug === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(project.slug));
+    typeof project.slug === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(project.slug)).slice(0, 24);
 
 const projects = await Promise.all(projectRecords.map(async (project) => {
   const detail = await fetchPublicProject(project.slug);

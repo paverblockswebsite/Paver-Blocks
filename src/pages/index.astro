@@ -1,6 +1,8 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
+import { fetchPublicList } from "../lib/public-cms.js";
 const publicApiBase = import.meta.env.VITE_PUBLIC_API_BASE_URL || "";
+const testimonials = await fetchPublicList("/api/public/testimonials");
 const services = [
   { name: "Paver Block Installation", description: "Professional paver installation for suitable outdoor surfaces.", url: "/services/paver-block-installation/", image: "/images/services/paver-block-installation.jpg", alt: "Paver block installation on an outdoor paved surface" },
   { name: "Road Construction & Paving", description: "Road paving and related civil construction work.", url: "/services/road-construction/", image: "/images/services/road-construction.jpg", alt: "Road construction and paving work" },
@@ -76,6 +78,13 @@ const services = [
   </section>
   <section class="content-section dark-band"><p class="eyebrow">Experience Since 1986</p><h2>Personal experience you can build on.</h2><p>Every project has its own requirements. Share your location, intended use and approximate area so we can understand the work involved.</p><a class="button button-primary" href="/get-a-quote/">Start a conversation</a></section>
   <section class="content-section portfolio"><p class="eyebrow">Our Work</p><h2>Project portfolio</h2><p>Explore verified project details and real photographs as they are added.</p><a class="button" href="/projects/">View project portfolio</a></section>
+  {testimonials.length > 0 && <section class="content-section testimonials" aria-labelledby="testimonials-title">
+    <p class="eyebrow">Client Feedback</p><h2 id="testimonials-title">What clients say.</h2>
+    <div class="card-grid">{testimonials.map((testimonial) => <article class="info-card testimonial-card">
+      <blockquote><p>{testimonial.testimonial_text}</p></blockquote>
+      <p class="testimonial-author"><strong>{testimonial.customer_display_name}</strong>{testimonial.customer_role_or_company && <span> · {testimonial.customer_role_or_company}</span>}</p>
+    </article>)}</div>
+  </section>}
   <section class="content-section contact"><p class="eyebrow">Start a Conversation</p><h2>Tell us about your project.</h2><p>Based in Hyderabad, Sindh · Serving clients across Pakistan</p><div class="actions"><a class="button button-primary" href="https://wa.me/923162753210">WhatsApp: +92 316 2753210</a><a class="button" href="tel:+923162753210">Call Us</a></div><a class="email-link" href="mailto:hellopaverblocks@gmail.com">hellopaverblocks@gmail.com</a></section>
 </SiteLayout>
 

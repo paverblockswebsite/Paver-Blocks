@@ -86,32 +86,9 @@ const nav = [
             <span><span aria-hidden="true">⌖</span> Hyderabad, Sindh · Serving Pakistan</span>
           </div>
         </section>
-        <nav class="footer-column" aria-label="Explore">
-          <h2>Explore</h2>
-          <a href="/about/">About Us</a>
-          <a href="/services/">Our Services</a>
-          <a href="/paver-designs/">Paver Designs</a>
-          <a href="/projects/">Our Projects</a>
-          <a href="/faqs/">FAQs</a>
-          <a href="/contact/">Contact Us</a>
-        </nav>
-        <nav class="footer-column" aria-label="Services">
-          <h2>Our Services</h2>
-          <a href="/services/paver-block-installation/">Paver Block Installation</a>
-          <a href="/services/road-construction/">Road Construction</a>
-          <a href="/services/footpath-construction/">Footpath Construction</a>
-          <a href="/services/parking-area-construction/">Parking Area Construction</a>
-          <a href="/services/industrial-flooring/">Industrial Flooring</a>
-          <a href="/services/contracts/">Government &amp; Private Contracts</a>
-        </nav>
-        <nav class="footer-column footer-legal" aria-label="Legal and support">
-          <h2>Legal &amp; Support</h2>
-          <a href="/get-a-quote/">Request a Quote</a>
-          <a href="/privacy-policy/">Privacy Policy</a>
-          <a href="/cookie-policy/">Cookie Policy</a>
-          <a href="/terms-and-conditions/">Terms &amp; Conditions</a>
-          <a href="/contact/">Contact &amp; Enquiries</a>
-        </nav>
+        <nav class="footer-column" aria-label="Explore"><details class="footer-accordion"><summary><h2>Explore</h2><span class="footer-accordion-icon" aria-hidden="true"></span></summary><div class="footer-accordion-links"><a href="/about/">About Us</a><a href="/services/">Our Services</a><a href="/paver-designs/">Paver Designs</a><a href="/projects/">Our Projects</a><a href="/faqs/">FAQs</a><a href="/contact/">Contact Us</a></div></details></nav>
+        <nav class="footer-column" aria-label="Services"><details class="footer-accordion"><summary><h2>Our Services</h2><span class="footer-accordion-icon" aria-hidden="true"></span></summary><div class="footer-accordion-links"><a href="/services/paver-block-installation/">Paver Block Installation</a><a href="/services/road-construction/">Road Construction</a><a href="/services/footpath-construction/">Footpath Construction</a><a href="/services/parking-area-construction/">Parking Area Construction</a><a href="/services/industrial-flooring/">Industrial Flooring</a><a href="/services/contracts/">Government &amp; Private Contracts</a></div></details></nav>
+        <nav class="footer-column footer-legal" aria-label="Legal and support"><details class="footer-accordion"><summary><h2>Legal &amp; Support</h2><span class="footer-accordion-icon" aria-hidden="true"></span></summary><div class="footer-accordion-links"><a href="/get-a-quote/">Request a Quote</a><a href="/privacy-policy/">Privacy Policy</a><a href="/cookie-policy/">Cookie Policy</a><a href="/terms-and-conditions/">Terms &amp; Conditions</a><a href="/contact/">Contact &amp; Enquiries</a></div></details></nav>
       </div>
       <div class="footer-bottom">
         <p>© 2026 Paver Blocks. All Rights Reserved.</p>
@@ -140,13 +117,24 @@ const nav = [
       });
       window.matchMedia("(min-width: 761px)").addEventListener("change", closeMobileMenu);
 
+      // Keep footer links expanded on desktop and collapsed by default on mobile.
+      const footerAccordionMedia = window.matchMedia("(min-width: 761px)");
+      const footerAccordions = document.querySelectorAll(".footer-accordion");
+      const syncFooterAccordions = () => {
+        footerAccordions.forEach((accordion) => {
+          accordion.open = footerAccordionMedia.matches;
+        });
+      };
+      syncFooterAccordions();
+      footerAccordionMedia.addEventListener("change", syncFooterAccordions);
+
       // Phase 1: progressively enhance content already present in the page.
       const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
       const prefersMotion = !motionPreference.matches;
       const main = document.querySelector("main");
 
       if (main && prefersMotion && "IntersectionObserver" in window) {
-        main.querySelectorAll(":scope > section:not(.hero):not(.page-hero)").forEach((section) => {
+        main.querySelectorAll(":scope > section:not(.hero):not(.page-hero):not(.policy-wrap):not(.terms-wrap)").forEach((section) => {
           section.setAttribute("data-motion", "reveal");
         });
         main.querySelectorAll(".card-grid,.paver-design-grid,.design-grid,.faq-list,.profile-feature,.story-steps,.showcase-track").forEach((grid) => {
@@ -302,6 +290,7 @@ const nav = [
   .page-hero{padding:76px max(8vw,24px);color:#fff;background:radial-gradient(ellipse at 85% 10%,#294969 0,transparent 42%),var(--navy)}.eyebrow{margin:0 0 14px;color:#b18408;font-size:12px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}.page-hero .eyebrow{color:var(--yellow)}h1,h2,h3,p{margin-top:0}h1{max-width:900px;margin-bottom:18px;font-size:clamp(40px,5.6vw,68px);line-height:1.08;letter-spacing:-.05em}.page-hero p:last-child{max-width:760px;color:#dce4ed;font-size:18px}
   .content-section{padding:72px max(8vw,24px)}.content-section h2{font-size:clamp(28px,3.5vw,44px);line-height:1.15;letter-spacing:-.04em}.content-section p{max-width:800px;color:var(--muted)}.soft-section{background:var(--soft)}.card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.info-card{padding:24px;border:1px solid #e0e5eb;border-radius:10px;background:#fff}.info-card h3{margin:12px 0 8px}.info-card p{margin:0;font-size:14px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:11px 18px;border:1px solid #aab5c1;border-radius:6px;font-weight:750}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
   .site-footer{padding:54px max(5vw,24px) 0;color:#dce4ed;background:linear-gradient(135deg,#101e30 0%,#172b45 100%);font-size:13px}.footer-main{display:grid;grid-template-columns:minmax(230px,1.55fr) repeat(3,minmax(145px,1fr));gap:clamp(24px,4vw,56px);max-width:1440px;margin:0 auto;padding-bottom:42px}.footer-brand{display:flex;flex-direction:column;align-items:flex-start;gap:10px}.footer-brand-link{display:inline-flex;align-items:center}.footer-brand-logo{display:block;width:158px;height:auto;max-height:92px;object-fit:contain;object-position:left center}.footer-tagline{max-width:280px;margin:0;color:#fff;font-size:13px;font-weight:750;line-height:1.5}.footer-intro{max-width:310px;margin:0;color:#b8c5d3;line-height:1.75}.footer-contact{display:flex;flex-direction:column;gap:9px;margin-top:7px;padding-top:14px;border-top:1px solid rgba(220,228,237,.18);width:100%}.footer-contact a,.footer-contact>span{display:flex;align-items:flex-start;gap:9px;overflow-wrap:anywhere;color:#dce4ed}.footer-contact a:hover,.footer-column a:hover{color:#F5C542}.footer-contact>span{color:#b8c5d3}.footer-column{display:flex;flex-direction:column;align-items:flex-start;gap:11px}.footer-column h2{margin:5px 0 8px;color:#F5C542;font-size:14px;font-weight:800;letter-spacing:.04em}.footer-column a{color:#dce4ed;line-height:1.55;transition:color 160ms ease}.footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1440px;margin:0 auto;padding:18px 0;border-top:1px solid rgba(220,228,237,.18);color:#aebdcd;font-size:12px}.footer-bottom p{margin:0}
+  .footer-accordion{width:100%}.footer-accordion summary{display:flex;align-items:center;justify-content:space-between;gap:10px;list-style:none;cursor:default}.footer-accordion summary::-webkit-details-marker{display:none}.footer-accordion summary h2{margin:5px 0 8px;color:#F5C542;font-size:14px;font-weight:800;letter-spacing:.04em}.footer-accordion-icon{display:none}.footer-accordion-links{display:flex;flex-direction:column;align-items:flex-start;gap:11px}.footer-accordion-links a{color:#dce4ed;line-height:1.55;transition:color 160ms ease}.footer-accordion-links a:hover{color:#F5C542}
   /* Scroll reveals and staggered cards remain opt-in until the script is ready. */
   .motion-ready [data-motion="reveal"],.motion-ready [data-motion="stagger"]{opacity:0;transform:translate3d(0,20px,0);transition:opacity var(--motion-duration-base) var(--motion-ease),transform var(--motion-duration-base) var(--motion-ease)}
   .motion-ready [data-motion="reveal"].motion-visible,.motion-ready [data-motion="stagger"].motion-visible{opacity:1;transform:translate3d(0,0,0)}
@@ -340,9 +329,9 @@ const nav = [
     #primary-navigation a{display:block;padding:12px 14px;border-radius:7px;font-size:15px}
     #primary-navigation a:hover{background:#f4f6f8}
     #primary-navigation .nav-cta{margin-top:5px;text-align:center;background:var(--yellow)}
-    .page-hero{padding-top:58px;padding-bottom:58px}.content-section{padding-top:54px;padding-bottom:54px}.card-grid{grid-template-columns:1fr}.footer-main{grid-template-columns:repeat(2,minmax(0,1fr));gap:30px 24px}.footer-brand{grid-column:1/-1}.footer-bottom{align-items:flex-start;flex-direction:column;gap:7px}
+    .page-hero{padding-top:58px;padding-bottom:58px}.content-section{padding-top:54px;padding-bottom:54px}.card-grid{grid-template-columns:1fr}.footer-main{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px;padding-bottom:20px}.footer-brand{grid-column:1/-1}.footer-accordion summary{cursor:pointer;min-height:42px;padding:8px 0;border-bottom:1px solid rgba(220,228,237,.2)}.footer-accordion summary h2{margin:0;font-size:13px}.footer-accordion-icon{display:block;position:relative;flex:0 0 16px;width:16px;height:16px}.footer-accordion-icon::before,.footer-accordion-icon::after{content:"";position:absolute;top:7px;left:2px;width:12px;height:2px;border-radius:2px;background:#F5C542;transition:transform 180ms ease}.footer-accordion-icon::after{transform:rotate(90deg)}.footer-accordion[open] .footer-accordion-icon::after{transform:rotate(0)}.footer-accordion-links{display:none;padding:10px 0 4px;gap:8px}.footer-accordion[open] .footer-accordion-links{display:flex}.footer-column{gap:0}.footer-bottom{align-items:flex-start;flex-direction:column;gap:6px}
   }
-  @media(max-width:420px){.site-footer{padding:38px 20px 0}.footer-main{grid-template-columns:1fr;gap:25px;padding-bottom:30px}.footer-brand{grid-column:auto}.footer-bottom{padding:16px 0}.footer-column h2{margin-bottom:3px}}
+  @media(max-width:420px){.site-footer{padding:26px 18px 0}.footer-main{grid-template-columns:1fr;gap:8px;padding-bottom:16px}.footer-brand{grid-column:1;gap:6px}.footer-brand-logo{width:118px;max-height:68px}.footer-tagline{font-size:12px;line-height:1.35}.footer-intro{font-size:12px;line-height:1.4}.footer-contact{gap:5px;margin-top:2px;padding-top:8px;font-size:11px}.footer-contact a,.footer-contact>span{gap:6px;line-height:1.35}.footer-column{gap:0;min-width:0}.footer-accordion summary{min-height:40px}.footer-accordion summary h2{font-size:12px}.footer-accordion-links{gap:7px;padding:9px 0 5px}.footer-accordion-links a{font-size:12px;line-height:1.4;overflow-wrap:anywhere}.footer-bottom{padding:12px 0;font-size:10px;gap:4px}}
   @media(prefers-reduced-motion:reduce){.mobile-menu-toggle span,#primary-navigation,.footer-column a{transition:none!important}}
   @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.scroll-progress span{will-change:auto}.motion-ready [data-motion],.motion-ready [data-motion]>.motion-stagger-item{opacity:1!important;transform:none!important;clip-path:none!important}}
   /* Phase 5 interaction layer: restrained, touch-safe and motion-preference aware. */

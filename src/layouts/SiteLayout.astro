@@ -134,7 +134,7 @@ const nav = [
       const main = document.querySelector("main");
 
       if (main && prefersMotion && "IntersectionObserver" in window) {
-        main.querySelectorAll(":scope > section:not(.hero):not(.page-hero)").forEach((section) => {
+        main.querySelectorAll(":scope > section:not(.hero):not(.page-hero):not(.policy-wrap):not(.terms-wrap)").forEach((section) => {
           section.setAttribute("data-motion", "reveal");
         });
         main.querySelectorAll(".card-grid,.paver-design-grid,.design-grid,.faq-list,.profile-feature,.story-steps,.showcase-track").forEach((grid) => {

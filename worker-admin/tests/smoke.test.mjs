@@ -22,7 +22,7 @@ test("legacy public fetch fallback preserves request and security headers", asyn
   const old=globalThis.fetch; let got;
   globalThis.fetch=async r=>{got=r;return new Response("admin response",{status:200,headers:{"content-type":"text/plain"}});};
   try {
-    const res=await gateway.fetch(new Request("https://admin.example/api/admin/inquiries?limit=10",{method:"PATCH",headers:{"Cf-Access-Jwt-Assertion":JWT,Cookie:"CF_Authorization=x",Origin:"https://admin.example","Sec-Fetch-Site":"same-origin","Content-Type":"application/json"},body:'{"status":"contacted}'}),env());
+    const res=await gateway.fetch(new Request("https://admin.example/api/admin/inquiries?limit=10",{method:"PATCH",headers:{"Cf-Access-Jwt-Assertion":JWT,Cookie:"CF_Authorization=x",Origin:"https://admin.example","Sec-Fetch-Site":"same-origin","Content-Type":"application/json"},body:'{"status":"contacted"}'}),env());
     assert.equal(res.status,200); assert.equal(await res.text(),"admin response");
     assert.equal(got.url,"https://paver-blocks-api-dev.hellopaverblocks.workers.dev/api/admin/inquiries?limit=10");
     assert.equal(got.method,"PATCH"); assert.equal(got.headers.get("Cf-Access-Jwt-Assertion"),JWT);

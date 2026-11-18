@@ -69,10 +69,16 @@ test("binding failures return 502",async()=>{
 });
 test("production config declares only the intended API service binding",()=>{
   const s=readFileSync(new URL("../wrangler.production.toml",import.meta.url),"utf8");
-  assert.equal((s.match(/^\[\[services\]\]$/gm)||[]).length,1);
-  assert.match(s,/^binding\s*=\s*"API"$/m);assert.match(s,/^service\s*=\s*"paver-blocks-api"$/m);
+  const lines=s.split(/\r?\n/);
+  assert.equal(lines.filter(line=>line.trim()==="[[services]]").length,1);
+  assert.ok(lines.includes('binding = "API"'));
+  assert.ok(lines.includes('service = "paver-blocks-api"'));
 });
-test("development config remains without a service binding",()=>{
+test("development config declares only the intended development API service binding",()=>{
   const s=readFileSync(new URL("../wrangler.toml",import.meta.url),"utf8");
-  assert.doesNotMatch(s,/^\[\[services\]\]$/m);
+  const lines=s.split(/\r?\n/);
+  assert.equal(lines.filter(line=>line.trim()==="[[services]]").length,1);
+  assert.ok(lines.includes('binding = "API"'));
+  assert.ok(lines.includes('service = "paver-blocks-api-dev"'));
+  assert.ok(!lines.includes('service = "paver-blocks-api"'));
 });

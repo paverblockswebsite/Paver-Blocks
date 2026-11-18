@@ -1,4 +1,6 @@
+// Deployment trigger: harmless comment-only commit to verify the B2 development Worker build.
 import { uploadProjectImage, serveProjectImage, deleteProjectImage, reorderProjectImages } from "./project-images.js";
+import { handleBlogAdmin, handleBlogPublic } from "./blog.js";
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" };
 const MAX_BODY_BYTES = 16384;
@@ -250,6 +252,8 @@ async function publicList(request, env, table, columns, extraWhere = "") {
 }
 
 async function handlePublic(request, env, url) {
+  const blogResponse = await handleBlogPublic(request, env, url, response);
+  if (blogResponse) return blogResponse;
   const path = url.pathname;
 
   if (request.method === "GET" && path === "/api/public/projects") {
@@ -1372,6 +1376,8 @@ async function handleAdminContent(request, env, url, identity) {
 }
 
 async function handleAdmin(request, env, url, identity) {
+  const blogResponse = await handleBlogAdmin(request, env, url, identity);
+  if (blogResponse) return blogResponse;
   const projectImagesMatch = url.pathname.match(/^\/api\/admin\/projects\/([0-9a-f-]{36})\/images$/i);
   if (request.method === "GET" && projectImagesMatch) {
     const project = await env.DB.prepare("SELECT id FROM projects WHERE id = ? LIMIT 1").bind(projectImagesMatch[1]).first();
@@ -1399,7 +1405,7 @@ async function handleAdmin(request, env, url, identity) {
   }
   const path = url.pathname;
   if (request.method === "GET" && path === "/api/admin/audit-log") {
-    const allowedEntities = new Set(["inquiry", "project", "service", "paver_design", "testimonial", "homepage_content", "project_image", "project_gallery"]);
+    const allowedEntities = new Set(["inquiry", "project", "service", "paver_design", "testimonial", "homepage_content", "project_image", "project_gallery", "blog_article", "blog_category", "blog_tag", "blog_author"]);
     const allowedActions = new Set(["create", "update", "delete", "upload", "reorder"]);
     const entityType = url.searchParams.get("entity_type") || "";
     const action = url.searchParams.get("action") || "";

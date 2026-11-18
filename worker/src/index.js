@@ -525,7 +525,7 @@ const ADMIN_HTML = `<!doctype html>
         <label>Status<select name="status"><option value="draft">Draft</option><option value="in_review">In review</option><option value="scheduled">Scheduled</option><option value="published">Published</option><option value="archived">Archived</option></select></label>
         <label>Scheduled date/time (with timezone)<input name="scheduled_at" type="datetime-local"></label>
         <label>Reading time (minutes)<input name="reading_minutes" type="number" min="1" max="120" value="5"></label>
-        <label>Tags (comma-separated IDs)<input name="tag_ids" maxlength="1200" placeholder="Create/select tags below"></label>
+        <label>Tags<select name="tag_ids" multiple size="5" aria-describedby="blog-tags-help"></select><small id="blog-tags-help">Hold Command (Mac) or Ctrl (Windows) to select multiple tags.</small></label>
         <label class="wide">Article content blocks (JSON)<textarea name="content" rows="10" required>[{"type":"paragraph","text":"Write your article content here."}]</textarea><small>Allowed blocks: paragraph, heading, list, image, quote, callout, table, faq. Raw HTML/scripts are not accepted.</small></label>
         <label>SEO title<input name="seo_title" maxlength="70"></label>
         <label>Focus keyword<input name="focus_keyword" maxlength="120"></label>
@@ -1114,6 +1114,8 @@ async function loadBlogTaxonomy(){
     const categorySelect=blogFields.namedItem("category_id"),authorSelect=blogFields.namedItem("author_id");
     categorySelect.replaceChildren(new Option("Choose category",""));authorSelect.replaceChildren(new Option("Choose author",""));
     blogCategories.forEach(item=>categorySelect.add(new Option(item.name,item.id)));
+    const tagSelect=blogFields.namedItem("tag_ids");tagSelect.replaceChildren();
+    blogTags.forEach(item=>tagSelect.add(new Option(item.name,item.id)));
     blogAuthors.forEach(item=>authorSelect.add(new Option(item.display_name,item.id)));
     blogTaxonomyList.replaceChildren();
     for(const [label,items,nameKey] of [["Categories",blogCategories,"name"],["Tags",blogTags,"name"],["Authors",blogAuthors,"display_name"]]){
@@ -1136,7 +1138,8 @@ async function openBlogArticle(id){
     blogForm.reset();blogFields.namedItem("id").value=item.id;
     for(const key of ["title","slug","excerpt","category_id","author_id","status","scheduled_at","reading_minutes","seo_title","meta_description","focus_keyword","canonical_url"])blogFields.namedItem(key).value=item[key]??"";
     blogFields.namedItem("content").value=JSON.stringify(item.content||[],null,2);
-    blogFields.namedItem("tag_ids").value=(item.tags||[]).map(tag=>tag.id).join(", ");
+    const selectedTagIds=new Set((item.tags||[]).map(tag=>tag.id));
+    Array.from(blogFields.namedItem("tag_ids").options).forEach(option=>{option.selected=selectedTagIds.has(option.value);});
     blogFields.namedItem("robots_index").value=item.robots_index?"true":"false";
     blogFields.namedItem("is_featured").checked=Boolean(item.is_featured);
     document.querySelector("#blog-form-title").textContent="Edit article";blogForm.hidden=false;blogForm.scrollIntoView({behavior:"smooth",block:"start"});
@@ -1149,7 +1152,7 @@ blogStatusFilter.addEventListener("change",loadBlogArticles);blogSearch.addEvent
 blogForm.addEventListener("submit",async event=>{
   event.preventDefault();const id=blogFields.namedItem("id").value;
   let content;try{content=JSON.parse(blogFields.namedItem("content").value);}catch{blogNotice.className="notice error";blogNotice.textContent="Article content must be valid JSON.";return;}
-  const tagIds=blogFields.namedItem("tag_ids").value.split(",").map(value=>value.trim()).filter(Boolean);
+  const tagIds=Array.from(blogFields.namedItem("tag_ids").selectedOptions).map(option=>option.value);
   const scheduledRaw=blogFields.namedItem("scheduled_at").value;
   const body={
     title:blogFields.namedItem("title").value,slug:blogFields.namedItem("slug").value,excerpt:blogFields.namedItem("excerpt").value,

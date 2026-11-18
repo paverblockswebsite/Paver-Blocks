@@ -117,6 +117,17 @@ const nav = [
       });
       window.matchMedia("(min-width: 761px)").addEventListener("change", closeMobileMenu);
 
+      // Keep footer links expanded on desktop and collapsed by default on mobile.
+      const footerAccordionMedia = window.matchMedia("(min-width: 761px)");
+      const footerAccordions = document.querySelectorAll(".footer-accordion");
+      const syncFooterAccordions = () => {
+        footerAccordions.forEach((accordion) => {
+          accordion.open = footerAccordionMedia.matches;
+        });
+      };
+      syncFooterAccordions();
+      footerAccordionMedia.addEventListener("change", syncFooterAccordions);
+
       // Phase 1: progressively enhance content already present in the page.
       const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
       const prefersMotion = !motionPreference.matches;

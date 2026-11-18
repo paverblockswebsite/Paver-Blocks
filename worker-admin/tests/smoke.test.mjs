@@ -22,7 +22,7 @@ test("legacy public fetch fallback preserves request and security headers", asyn
   const old=globalThis.fetch; let got;
   globalThis.fetch=async r=>{got=r;return new Response("admin response",{status:200,headers:{"content-type":"text/plain"}});};
   try {
-    const res=await gateway.fetch(new Request("https://admin.example/api/admin/inquiries?limit=10",{method:"PATCH",headers:{"Cf-Access-Jwt-Assertion":JWT,Cookie:"CF_Authorization=x",Origin:"https://admin.example","Sec-Fetch-Site":"same-origin","Content-Type":"application/json"},body:'{"status":"contacted"}'}),env());
+    const res=await gateway.fetch(new Request("https://admin.example/api/admin/inquiries?limit=10",{method:"PATCH",headers:{"Cf-Access-Jwt-Assertion":JWT,Cookie:"CF_Authorization=x",Origin:"https://admin.example","Sec-Fetch-Site":"same-origin","Content-Type":"application/json"},body:'{"status":"contacted}'}),env());
     assert.equal(res.status,200); assert.equal(await res.text(),"admin response");
     assert.equal(got.url,"https://paver-blocks-api-dev.hellopaverblocks.workers.dev/api/admin/inquiries?limit=10");
     assert.equal(got.method,"PATCH"); assert.equal(got.headers.get("Cf-Access-Jwt-Assertion"),JWT);
@@ -69,10 +69,12 @@ test("binding failures return 502",async()=>{
 });
 test("production config declares only the intended API service binding",()=>{
   const s=readFileSync(new URL("../wrangler.production.toml",import.meta.url),"utf8");
-  assert.equal((s.match(/^\[\[services\]\]$/gm)||[]).length,1);
-  assert.match(s,/^binding\s*=\s*"API"$/m);assert.match(s,/^service\s*=\s*"paver-blocks-api"$/m);
+  assert.equal((s.match(/^\\[\\[services\\]\\]$/gm)||[]).length,1);
+  assert.match(s,/^binding\\s*=\\s*"API"$/m);assert.match(s,/^service\\s*=\\s*"paver-blocks-api"$/m);
 });
-test("development config remains without a service binding",()=>{
+test("development config declares only the intended development API service binding",()=>{
   const s=readFileSync(new URL("../wrangler.toml",import.meta.url),"utf8");
-  assert.doesNotMatch(s,/^\[\[services\]\]$/m);
+  assert.equal((s.match(/^\\[\\[services\\]\\]$/gm)||[]).length,1);
+  assert.match(s,/^binding\\s*=\\s*"API"$/m);assert.match(s,/^service\\s*=\\s*"paver-blocks-api-dev"$/m);
+  assert.doesNotMatch(s,/^service\\s*=\\s*"paver-blocks-api"$/m);
 });

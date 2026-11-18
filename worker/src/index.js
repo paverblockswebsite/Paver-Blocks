@@ -503,6 +503,53 @@ const ADMIN_HTML = `<!doctype html>
 
 
     <section class="content-heading">
+      <div><p class="eyebrow">KNOWLEDGE HUB</p><h2>Blog articles</h2><p class="muted">Create, edit and manage search-ready articles. Drafts remain private until published.</p></div>
+      <button id="blog-new" type="button" class="button primary">New article</button>
+    </section>
+    <div class="toolbar" aria-label="Blog article filters">
+      <label for="blog-status-filter">Status</label>
+      <select id="blog-status-filter"><option value="">All statuses</option><option value="draft">Draft</option><option value="in_review">In review</option><option value="scheduled">Scheduled</option><option value="published">Published</option><option value="archived">Archived</option></select>
+      <label for="blog-search">Search</label><input id="blog-search" type="search" maxlength="120" placeholder="Article title or slug…" autocomplete="off">
+      <button id="blog-refresh" type="button" class="button secondary">Refresh articles</button>
+    </div>
+    <p id="blog-notice" class="notice" role="status" aria-live="polite">Loading blog articles…</p>
+    <section id="blog-list" class="project-list" aria-label="Blog articles"></section>
+    <form id="blog-form" class="content-form" hidden>
+      <h3 id="blog-form-title">New article</h3><input type="hidden" name="id">
+      <div class="content-fields">
+        <label>Article title<input name="title" maxlength="180" required></label>
+        <label>URL slug<input name="slug" maxlength="180" pattern="[a-z0-9]+(-[a-z0-9]+)*" required></label>
+        <label class="wide">Excerpt<textarea name="excerpt" maxlength="500" rows="2"></textarea></label>
+        <label>Category<select name="category_id"><option value="">Choose category</option></select></label>
+        <label>Author<select name="author_id"><option value="">Choose author</option></select></label>
+        <label>Status<select name="status"><option value="draft">Draft</option><option value="in_review">In review</option><option value="scheduled">Scheduled</option><option value="published">Published</option><option value="archived">Archived</option></select></label>
+        <label>Scheduled date/time (with timezone)<input name="scheduled_at" type="datetime-local"></label>
+        <label>Reading time (minutes)<input name="reading_minutes" type="number" min="1" max="120" value="5"></label>
+        <label>Tags (comma-separated IDs)<input name="tag_ids" maxlength="1200" placeholder="Create/select tags below"></label>
+        <label class="wide">Article content blocks (JSON)<textarea name="content" rows="10" required>[{"type":"paragraph","text":"Write your article content here."}]</textarea><small>Allowed blocks: paragraph, heading, list, image, quote, callout, table, faq. Raw HTML/scripts are not accepted.</small></label>
+        <label>SEO title<input name="seo_title" maxlength="70"></label>
+        <label>Focus keyword<input name="focus_keyword" maxlength="120"></label>
+        <label class="wide">Meta description<textarea name="meta_description" maxlength="170" rows="2"></textarea></label>
+        <label>Canonical URL<input name="canonical_url" type="url" maxlength="500" placeholder="https://…"></label>
+        <label>Robots indexing<select name="robots_index"><option value="true">Index, follow</option><option value="false">Noindex</option></select></label>
+        <label class="consent"><input name="is_featured" type="checkbox"> Feature this article</label>
+      </div>
+      <div class="form-actions"><button type="submit" class="button primary">Save article</button><button id="blog-cancel" type="button" class="button secondary">Cancel</button></div>
+    </form>
+    <section class="content-heading">
+      <div><p class="eyebrow">BLOG TAXONOMY</p><h2>Categories, tags &amp; authors</h2><p class="muted">Maintain the classification and bylines used by Knowledge Hub articles.</p></div>
+    </section>
+    <p id="blog-taxonomy-notice" class="notice" role="status" aria-live="polite">Loading blog taxonomy…</p>
+    <div class="project-list">
+      <form id="blog-category-form" class="content-form"><h3>Add category</h3><div class="content-fields"><label>Name<input name="name" maxlength="100" required></label><label>Slug<input name="slug" maxlength="120" pattern="[a-z0-9]+(-[a-z0-9]+)*" required></label><label class="wide">Description<textarea name="description" maxlength="1000" rows="2"></textarea></label></div><div class="form-actions"><button class="button secondary" type="submit">Add category</button></div></form>
+      <form id="blog-tag-form" class="content-form"><h3>Add tag</h3><div class="content-fields"><label>Name<input name="name" maxlength="80" required></label><label>Slug<input name="slug" maxlength="100" pattern="[a-z0-9]+(-[a-z0-9]+)*" required></label></div><div class="form-actions"><button class="button secondary" type="submit">Add tag</button></div></form>
+      <form id="blog-author-form" class="content-form"><h3>Add author</h3><div class="content-fields"><label>Display name<input name="display_name" maxlength="120" required></label><label>Slug<input name="slug" maxlength="140" pattern="[a-z0-9]+(-[a-z0-9]+)*" required></label><label>Role / credentials<input name="role_or_credentials" maxlength="160"></label><label class="wide">Biography<textarea name="biography" maxlength="3000" rows="3"></textarea></label></div><div class="form-actions"><button class="button secondary" type="submit">Add author</button></div></form>
+    </div>
+    <section id="blog-taxonomy-list" class="project-list" aria-label="Blog taxonomy records"></section>
+
+
+
+    <section class="content-heading">
       <div><p class="eyebrow">SECURITY &amp; ACCOUNTABILITY</p><h2>Audit log</h2><p class="muted">Review recorded administrator changes. Customer inquiry details are not shown here.</p></div>
     </section>
     <div class="toolbar" aria-label="Audit log filters">
@@ -532,7 +579,8 @@ const ADMIN_CSS = `
 .notice{min-height:26px;color:var(--muted)}.notice.error{color:#a12626}.inquiry-list,.project-list{display:grid;gap:14px}.inquiry,.project-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 2px 8px #172b4508}.inquiry-head,.project-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.inquiry h2,.project-card h3{font-size:1.12rem;color:var(--navy);margin:0 0 4px}.meta{color:var(--muted);font-size:.9rem}.pill{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;border-radius:30px;padding:5px 9px;background:#edf1f5;color:#43546a;white-space:nowrap}.details{white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0}.facts{display:flex;gap:10px 18px;flex-wrap:wrap;font-size:.9rem;color:#48576a}.editor{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;display:grid;grid-template-columns:minmax(140px,220px) 1fr auto;gap:10px;align-items:end}.editor label,.project-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.editor textarea,.project-fields input,.project-fields select,.project-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.editor textarea{min-height:42px;resize:vertical}.empty{background:#fff;border:1px dashed #bdc7d3;border-radius:14px;padding:30px;text-align:center;color:var(--muted)}.content-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:48px 0 12px}.content-heading h2{font-size:1.7rem;color:var(--navy);margin:4px 0}.project-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.project-form h3{margin:0 0 16px;color:var(--navy)}.project-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.project-fields .wide{grid-column:1/-1}.project-fields small{font-weight:400;color:var(--muted)}.form-actions{display:flex;gap:10px;margin-top:18px}.project-card p{margin:8px 0}.project-card .project-actions{display:flex;gap:8px;margin-top:14px}.footnote{font-size:.82rem;margin-top:34px}
 .content-fields .consent{display:flex;align-items:flex-start;gap:10px}.content-fields .consent input{width:auto;margin-top:4px}
 .content-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.content-form h3{margin:0 0 16px;color:var(--navy)}.content-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.content-fields label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.content-fields input,.content-fields select,.content-fields textarea{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:10px;background:#fff;color:var(--ink);width:100%}.content-fields .wide{grid-column:1/-1}.content-actions{display:flex;gap:8px;margin-top:14px}.image-upload-form{display:grid;gap:10px;border-top:1px solid var(--line);margin-top:16px;padding-top:14px}.image-upload-form label{display:grid;gap:5px;font-size:.85rem;font-weight:650}.image-upload-form input{font:inherit;border:1px solid #bdc7d3;border-radius:8px;padding:9px;max-width:100%}.image-upload-form .meta{margin:0}.project-gallery{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}.project-gallery h4{margin:0 0 8px;font-size:.95rem}.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}.gallery-item{margin:0;min-width:0}.gallery-item img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--line);border-radius:8px;background:#eef1f4}.gallery-item figcaption{font-size:.78rem;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}.gallery-controls{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}.gallery-controls .button{font-size:.72rem;padding:6px 8px}.button.danger{background:#fae8e8;color:#8b1e1e}
-@media(max-width:650px){.shell{padding-top:28px}.editor{grid-template-columns:1fr}.inquiry-head,.project-head{align-items:flex-start}.topbar{padding:0 16px}.project-fields{grid-template-columns:1fr}.project-fields .wide{grid-column:auto}.content-heading{align-items:flex-start;flex-direction:column}}
+.content-form textarea[name="content"]{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.86rem;line-height:1.5}.content-form small{font-weight:400;color:var(--muted)}
+ @media(max-width:650px){.shell{padding-top:28px}.editor{grid-template-columns:1fr}.inquiry-head,.project-head{align-items:flex-start}.topbar{padding:0 16px}.project-fields{grid-template-columns:1fr}.project-fields .wide{grid-column:auto}.content-heading{align-items:flex-start;flex-direction:column}}
 `;
 
 const ADMIN_JS = `
@@ -1019,6 +1067,116 @@ homepageForm.addEventListener("submit",async event=>{
 });
 loadTestimonials();
 loadHomepageContent();
+
+// Knowledge Hub admin: article CRUD and taxonomy creation.
+const blogList=document.querySelector("#blog-list");
+const blogNotice=document.querySelector("#blog-notice");
+const blogForm=document.querySelector("#blog-form");
+const blogFields=blogForm.elements;
+const blogStatusFilter=document.querySelector("#blog-status-filter");
+const blogSearch=document.querySelector("#blog-search");
+const blogTaxonomyNotice=document.querySelector("#blog-taxonomy-notice");
+const blogTaxonomyList=document.querySelector("#blog-taxonomy-list");
+let blogArticles=[];
+let blogCategories=[];
+let blogTags=[];
+let blogAuthors=[];
+function blogText(tag,value,className=""){const node=document.createElement(tag);if(className)node.className=className;node.textContent=value==null?"":String(value);return node;}
+function renderBlogArticles(){
+  const query=blogSearch.value.trim().toLowerCase();
+  const items=blogArticles.filter(item=>(!blogStatusFilter.value||item.status===blogStatusFilter.value)&&(!query||(item.title+" "+item.slug).toLowerCase().includes(query)));
+  blogList.replaceChildren();
+  if(!items.length){blogList.append(blogText("div","No articles match this filter.","empty"));return;}
+  for(const item of items){
+    const card=blogText("article","","project-card"),head=blogText("div","","project-head"),info=blogText("div","");
+    info.append(blogText("h3",item.title||"Untitled article"),blogText("p","/"+(item.slug||"")+" · "+(item.category_name||"Uncategorised")+" · "+(item.author_name||"No author"),"meta"));
+    head.append(info,blogText("span",String(item.status||"draft").replaceAll("_"," "),"pill"));card.append(head);
+    if(item.excerpt)card.append(blogText("p",item.excerpt));
+    card.append(blogText("p","Updated: "+(item.updated_at||"Not available"),"meta"));
+    const edit=blogText("button","Edit article","button secondary");edit.type="button";edit.addEventListener("click",()=>openBlogArticle(item.id));
+    const actions=blogText("div","","content-actions");actions.append(edit);card.append(actions);blogList.append(card);
+  }
+}
+async function loadBlogArticles(){
+  blogNotice.className="notice";blogNotice.textContent="Loading blog articles…";
+  try{
+    const params=new URLSearchParams({limit:"100",offset:"0"});if(blogStatusFilter.value)params.set("status",blogStatusFilter.value);
+    const payload=await api("/api/admin/blog/articles?"+params.toString());
+    blogArticles=Array.isArray(payload.data)?payload.data:[];
+    blogNotice.textContent=blogArticles.length+" article record"+(blogArticles.length===1?"":"s")+" loaded.";
+    renderBlogArticles();
+  }catch(error){blogNotice.className="notice error";blogNotice.textContent=error.message;blogList.replaceChildren();}
+}
+async function loadBlogTaxonomy(){
+  try{
+    const [categories,tags,authors]=await Promise.all(["categories","tags","authors"].map(name=>api("/api/admin/blog/"+name)));
+    blogCategories=categories.data||[];blogTags=tags.data||[];blogAuthors=authors.data||[];
+    const categorySelect=blogFields.namedItem("category_id"),authorSelect=blogFields.namedItem("author_id");
+    categorySelect.replaceChildren(new Option("Choose category",""));authorSelect.replaceChildren(new Option("Choose author",""));
+    blogCategories.forEach(item=>categorySelect.add(new Option(item.name,item.id)));
+    blogAuthors.forEach(item=>authorSelect.add(new Option(item.display_name,item.id)));
+    blogTaxonomyList.replaceChildren();
+    for(const [label,items,nameKey] of [["Categories",blogCategories,"name"],["Tags",blogTags,"name"],["Authors",blogAuthors,"display_name"]]){
+      const card=blogText("article","","project-card");card.append(blogText("h3",label));
+      card.append(blogText("p",items.length?items.map(item=>item[nameKey]+" · "+item.slug).join(" | "):"No records yet."));
+      blogTaxonomyList.append(card);
+    }
+    blogTaxonomyNotice.textContent=blogCategories.length+" categories · "+blogTags.length+" tags · "+blogAuthors.length+" authors loaded.";
+  }catch(error){blogTaxonomyNotice.className="notice error";blogTaxonomyNotice.textContent=error.message;}
+}
+function openNewBlogArticle(){
+  blogForm.reset();blogFields.namedItem("id").value="";blogFields.namedItem("status").value="draft";
+  blogFields.namedItem("reading_minutes").value="5";blogFields.namedItem("content").value='[{"type":"paragraph","text":"Write your article content here."}]';
+  document.querySelector("#blog-form-title").textContent="New article";blogForm.hidden=false;blogFields.namedItem("title").focus();
+}
+async function openBlogArticle(id){
+  blogNotice.textContent="Loading article…";
+  try{
+    const payload=await api("/api/admin/blog/articles/"+encodeURIComponent(id));const item=payload.data;
+    blogForm.reset();blogFields.namedItem("id").value=item.id;
+    for(const key of ["title","slug","excerpt","category_id","author_id","status","scheduled_at","reading_minutes","seo_title","meta_description","focus_keyword","canonical_url"])blogFields.namedItem(key).value=item[key]??"";
+    blogFields.namedItem("content").value=JSON.stringify(item.content||[],null,2);
+    blogFields.namedItem("tag_ids").value=(item.tags||[]).map(tag=>tag.id).join(", ");
+    blogFields.namedItem("robots_index").value=item.robots_index?"true":"false";
+    blogFields.namedItem("is_featured").checked=Boolean(item.is_featured);
+    document.querySelector("#blog-form-title").textContent="Edit article";blogForm.hidden=false;blogForm.scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(error){blogNotice.className="notice error";blogNotice.textContent=error.message;}
+}
+document.querySelector("#blog-new").addEventListener("click",openNewBlogArticle);
+document.querySelector("#blog-cancel").addEventListener("click",()=>{blogForm.hidden=true;blogForm.reset();});
+document.querySelector("#blog-refresh").addEventListener("click",loadBlogArticles);
+blogStatusFilter.addEventListener("change",loadBlogArticles);blogSearch.addEventListener("input",renderBlogArticles);
+blogForm.addEventListener("submit",async event=>{
+  event.preventDefault();const id=blogFields.namedItem("id").value;
+  let content;try{content=JSON.parse(blogFields.namedItem("content").value);}catch{blogNotice.className="notice error";blogNotice.textContent="Article content must be valid JSON.";return;}
+  const tagIds=blogFields.namedItem("tag_ids").value.split(",").map(value=>value.trim()).filter(Boolean);
+  const scheduledRaw=blogFields.namedItem("scheduled_at").value;
+  const body={
+    title:blogFields.namedItem("title").value,slug:blogFields.namedItem("slug").value,excerpt:blogFields.namedItem("excerpt").value,
+    content,status:blogFields.namedItem("status").value,category_id:blogFields.namedItem("category_id").value,
+    author_id:blogFields.namedItem("author_id").value,tag_ids,seo_title:blogFields.namedItem("seo_title").value,
+    meta_description:blogFields.namedItem("meta_description").value,focus_keyword:blogFields.namedItem("focus_keyword").value,
+    canonical_url:blogFields.namedItem("canonical_url").value,robots_index:blogFields.namedItem("robots_index").value==="true",
+    is_featured:blogFields.namedItem("is_featured").checked,reading_minutes:Number(blogFields.namedItem("reading_minutes").value),
+    scheduled_at:scheduledRaw?new Date(scheduledRaw).toISOString():""
+  };
+  const save=blogForm.querySelector('button[type="submit"]');save.disabled=true;save.textContent="Saving…";
+  try{await api(id?"/api/admin/blog/articles/"+encodeURIComponent(id):"/api/admin/blog/articles",{method:id?"PATCH":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    blogForm.hidden=true;blogNotice.className="notice";blogNotice.textContent="Article saved. Publishing/rebuild status will be added in a later phase.";await loadBlogArticles();
+  }catch(error){blogNotice.className="notice error";blogNotice.textContent=error.message;}
+  finally{save.disabled=false;save.textContent="Save article";}
+});
+async function addBlogTaxonomy(form,resource){
+  form.addEventListener("submit",async event=>{event.preventDefault();const body={};for(const [key,value] of new FormData(form).entries())body[key]=value;
+    if(resource==="categories")body.sort_order=blogCategories.length;
+    try{await api("/api/admin/blog/"+resource,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});form.reset();blogTaxonomyNotice.className="notice";blogTaxonomyNotice.textContent=resource.slice(0,-1)+" added.";await loadBlogTaxonomy();}
+    catch(error){blogTaxonomyNotice.className="notice error";blogTaxonomyNotice.textContent=error.message;}
+  });
+}
+addBlogTaxonomy(document.querySelector("#blog-category-form"),"categories");
+addBlogTaxonomy(document.querySelector("#blog-tag-form"),"tags");
+addBlogTaxonomy(document.querySelector("#blog-author-form"),"authors");
+loadBlogArticles();loadBlogTaxonomy();
 
 const auditList=document.querySelector("#audit-list");
 const auditNotice=document.querySelector("#audit-notice");

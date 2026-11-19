@@ -1,0 +1,22 @@
+userName: ${BROWSERSTACK_USERNAME}
+accessKey: ${BROWSERSTACK_ACCESS_KEY}
+framework: playwright
+projectName: "Paver Blocks Website"
+buildName: "Paver Blocks Manual Smoke Audit"
+platforms:
+  - os: Windows
+    osVersion: "11"
+    browserName: chrome
+    browserVersion: latest
+    playwrightConfigOptions:
+      name: windows-chrome
+  - deviceName: Samsung Galaxy S24
+    osVersion: "14.0"
+    browserName: chrome
+    deviceOrientation: portrait
+    playwrightConfigOptions:
+      name: android-samsung-galaxy-s24
+parallelsPerPlatform: 1
+browserstackLocal: false
+debug: true
+video: true

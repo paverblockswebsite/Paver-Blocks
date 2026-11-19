@@ -1,0 +1,44 @@
+name: BrowserStack public website smoke tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      site_url:
+        description: "Public website URL to test"
+        required: true
+        default: "https://paver-blocks.pages.dev"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  browserstack-smoke:
+    name: BrowserStack desktop and Android smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+      BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+      SITE_BASE_URL: ${{ inputs.site_url }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Verify required secrets are configured
+        shell: bash
+        run: |
+          test -n "$BROWSERSTACK_USERNAME" || { echo "::error::BROWSERSTACK_USERNAME repository secret is missing"; exit 1; }
+          test -n "$BROWSERSTACK_ACCESS_KEY" || { echo "::error::BROWSERSTACK_ACCESS_KEY repository secret is missing"; exit 1; }
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run public website smoke tests on BrowserStack
+        run: npm run test:browserstack

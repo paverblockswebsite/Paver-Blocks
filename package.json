@@ -9,7 +9,8 @@
     "build": "astro build",
     "prebuild": "node scripts/optimize-service-images.mjs",
     "preview": "astro preview",
-    "check": "astro check"
+    "check": "astro check",
+    "test:browserstack": "browserstack-node-sdk npx playwright test"
   },
   "dependencies": {
     "astro": "latest",
@@ -17,6 +18,8 @@
   },
   "devDependencies": {
     "@astrojs/check": "latest",
+    "@playwright/test": "^1.56.1",
+    "browserstack-node-sdk": "^1.21.1",
     "typescript": "latest"
   }
 }
